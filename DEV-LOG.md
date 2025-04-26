@@ -88,9 +88,24 @@
   - Status flag behavior: B flag doesn't physically exist in the P register, but appears when pushed to the stack
   - JSR/RTS behavior: JSR pushes PC-1 to the stack, and RTS pulls the address and adds 1 to get the return address
 
+### Enhanced Tracing Functionality
+
+- Implemented detailed CPU tracing using the disassembler
+- Added a comprehensive trace output that includes:
+  - Current address and disassembled instruction
+  - CPU register state (A, X, Y, SP, P)
+  - Status flags with visual indication (NV-BDIZC format)
+- Created a test program that demonstrates the trace functionality
+- The trace now shows assembly language instructions instead of raw opcodes
+- This provides much better debugging capabilities, allowing users to:
+  - Follow the execution flow
+  - See how each instruction affects CPU state
+  - Track register values through program execution
+  - Debug complex programs by watching how values change
+
 ### Future Improvements
 
 - Implement the BRK and RTI instructions
-- Add examples of running simple 6502 programs
-- Improve debugging capabilities with memory dump and tracing functionality
+- Add more examples of running simple 6502 programs
+- Add a memory dump visualization feature
 - Add more tests to further increase test coverage

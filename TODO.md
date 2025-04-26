@@ -47,5 +47,5 @@
 
 - [ ] Potential future improvements:
   - [ ] Implement BRK and RTI instructions (system functions)
-  - [ ] Add examples of running simple 6502 programs
-  - [ ] Improve debugging with memory dump and trace functionality
+  - [ ] Add more examples of running simple 6502 programs
+  - [x] Improve debugging with memory dump and trace functionality

@@ -1,3 +1,5 @@
+import { disassemble } from "./disasm";
+
 // Status register flag bits
 export const CARRY = 0x01;        // C - Bit 0
 export const ZERO = 0x02;         // Z - Bit 1
@@ -256,13 +258,49 @@ function compare(cpu: CPU, register: number, value: number): void {
     updateZeroAndNegativeFlags(cpu, result);
 }
 
+/**
+ * Formats the CPU status register as a string showing the flag states
+ * @param cpu The CPU to get the status from
+ * @returns A string representation of the status flags (NV-BDIZC)
+ */
+function getStatusString(cpu: CPU): string {
+    // Format is NV-BDIZC
+    return (
+        (cpu.p & NEGATIVE ? 'N' : 'n') +
+        (cpu.p & OVERFLOW ? 'V' : 'v') +
+        '-' +
+        (cpu.p & BREAK ? 'B' : 'b') +
+        (cpu.p & DECIMAL ? 'D' : 'd') +
+        (cpu.p & INTERRUPT ? 'I' : 'i') +
+        (cpu.p & ZERO ? 'Z' : 'z') +
+        (cpu.p & CARRY ? 'C' : 'c')
+    );
+}
+
 export function step6502(cpu: CPU, trace = false): number /* cycles */ {
+    // Save the current PC for trace output before it gets incremented
+    const currentPC = cpu.pc;
+    
     // Fetch opcode
     const opcode = readByte(cpu, cpu.pc++);
     let cycles = 0;
     
     if (trace) {
-        console.log(`PC: ${(cpu.pc-1).toString(16).padStart(4, '0')}, Opcode: ${opcode.toString(16).padStart(2, '0')}`);
+        // Disassemble the current instruction at the current PC
+        const [asmInstruction, instructionLength] = disassemble(cpu, currentPC);
+        
+        // Format CPU state with register values
+        const stateStr = `A:${cpu.a.toString(16).padStart(2, '0').toUpperCase()} ` +
+                         `X:${cpu.x.toString(16).padStart(2, '0').toUpperCase()} ` +
+                         `Y:${cpu.y.toString(16).padStart(2, '0').toUpperCase()} ` + 
+                         `SP:${cpu.sp.toString(16).padStart(2, '0').toUpperCase()} ` +
+                         `P:${cpu.p.toString(16).padStart(2, '0').toUpperCase()} [${getStatusString(cpu)}]`;
+        
+        // Log the PC, instruction, and CPU state
+        console.log(
+            `${currentPC.toString(16).padStart(4, '0').toUpperCase()}: ` +
+            `${asmInstruction.padEnd(12)} | ${stateStr}`
+        );
     }
     
     switch (opcode) {
