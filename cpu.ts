@@ -1766,7 +1766,39 @@ export function step6502(cpu: CPU, trace = false): number /* cycles */ {
             break;
         }
         
-        // Other instructions
+        // System functions
+        case 0x00: { // BRK - Force Interrupt
+            // PC increments by 1 already when opcode is fetched, need to increment by 1 more
+            // (BRK is a 2-byte instruction, 2nd byte is padding)
+            cpu.pc++;
+            
+            // Push program counter (effectively PC+2 from original BRK position)
+            pushWord(cpu, cpu.pc);
+            
+            // Push processor status with B flag set
+            pushByte(cpu, cpu.p | BREAK | UNUSED);
+            
+            // Set the interrupt disable flag
+            cpu.p |= INTERRUPT;
+            
+            // Load interrupt vector from FFFE-FFFF
+            cpu.pc = readWord(cpu, 0xFFFE);
+            
+            cycles = 7;
+            break;
+        }
+        
+        case 0x40: { // RTI - Return from Interrupt
+            // Pull processor status from stack (ignore B flag, keep UNUSED set)
+            cpu.p = (pullByte(cpu) & ~BREAK) | UNUSED;
+            
+            // Pull program counter from stack (low byte first, then high byte)
+            cpu.pc = pullWord(cpu);
+            
+            cycles = 6;
+            break;
+        }
+        
         case 0xEA: { // NOP - No Operation
             cycles = 2;
             break;

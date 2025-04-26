@@ -45,10 +45,10 @@
   - [x] Format branch targets as addresses
   - [x] Good test coverage
 
-- [ ] Missing instructions to implement:
-  - [ ] System functions:
-    - [ ] BRK ($00) - Force interrupt (pushes PC+2 and status to the stack)
-    - [ ] RTI ($40) - Return from interrupt (pulls status and PC from stack)
+- [x] Missing instructions to implement:
+  - [x] System functions:
+    - [x] BRK ($00) - Force interrupt (pushes PC+2 and status to the stack)
+    - [x] RTI ($40) - Return from interrupt (pulls status and PC from stack)
 
 - [x] Refactor test suite
   - [x] Split the large test file into multiple smaller files
