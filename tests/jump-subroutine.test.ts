@@ -1,0 +1,46 @@
+import { describe, expect, it } from "bun:test";
+import { createCPU, step6502 } from "./utils";
+
+describe("Jump and subroutine instructions", () => {
+  it("should perform JMP absolute instruction", () => {
+    const cpu = createCPU();
+    
+    // Set up memory
+    cpu.mem[0] = 0x4C; // JMP absolute
+    cpu.mem[1] = 0x34; // Low byte of target
+    cpu.mem[2] = 0x12; // High byte of target
+    
+    const cycles = step6502(cpu);
+    
+    expect(cpu.pc).toBe(0x1234);
+    expect(cycles).toBe(3);
+  });
+  
+  it("should perform JSR and RTS instructions", () => {
+    const cpu = createCPU();
+    
+    // Set up memory for JSR
+    cpu.mem[0] = 0x20; // JSR absolute
+    cpu.mem[1] = 0x34; // Low byte of target
+    cpu.mem[2] = 0x12; // High byte of target
+    
+    // Set up RTS at target location
+    cpu.mem[0x1234] = 0x60; // RTS
+    
+    // Execute JSR
+    let cycles = step6502(cpu);
+    
+    expect(cpu.pc).toBe(0x1234);
+    expect(cpu.sp).toBe(0xFB); // SP decremented by 2 (for 16-bit return address)
+    expect(cpu.mem[0x01FC]).toBe(0x00); // Low byte of return address - 1
+    expect(cpu.mem[0x01FD]).toBe(0x00); // High byte of return address - 1
+    expect(cycles).toBe(6);
+    
+    // Execute RTS
+    cycles = step6502(cpu);
+    
+    expect(cpu.pc).toBe(0x0002); // Return address + 2
+    expect(cpu.sp).toBe(0xFD); // SP incremented by 2
+    expect(cycles).toBe(6);
+  });
+});

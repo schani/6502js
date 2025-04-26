@@ -58,6 +58,22 @@
 - Added edge case testing for operations with specific flag behaviors
 - Achieved 100% test coverage for all implemented 6502 instructions
 
+### Refactored Test Suite
+
+- Split the large monolithic test file into multiple smaller test files:
+  - Created a utils.ts file for common test utilities and imports
+  - Organized tests by instruction category (load, store, arithmetic, etc.)
+  - Created separate test files for each instruction group
+- Benefits of this refactoring:
+  - Improved test readability and maintainability
+  - Easier to find and update specific tests
+  - Better organization of test cases by functionality
+  - Easier to run targeted tests for specific instruction groups
+  - More manageable file sizes for each test file
+- After refactoring, test coverage is at 95.65% for functions and 96.66% for lines
+- Additional tests were created for previously uncovered code paths
+- Implemented missing ADC and SBC operations with all addressing modes
+
 ### Notes on 6502 Design Decisions
 
 - The 6502 has several quirks that were important to implement correctly:

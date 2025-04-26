@@ -39,6 +39,12 @@
   - [x] Add tests for compare operations in all addressing modes
   - [x] Add tests for different edge cases
 
+- [x] Refactor test suite
+  - [x] Split the large test file into multiple smaller files
+  - [x] Create shared utilities for test functions
+  - [x] Organize tests by instruction type
+  - [x] Improve test coverage to over 95%
+
 - [ ] Potential future improvements:
   - [ ] Implement BRK and RTI instructions (system functions)
   - [ ] Add examples of running simple 6502 programs
