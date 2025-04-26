@@ -33,16 +33,16 @@ describe("CPU trace functionality", () => {
       expect(logCalls.length).toBe(3);
       
       // First log should be for LDA at PC=0
-      expect(logCalls[0]).toContain('PC: 0000');
-      expect(logCalls[0]).toContain('Opcode: a9');
+      expect(logCalls[0]).toContain('0000:');
+      expect(logCalls[0]).toContain('LDA #$42');
       
       // Second log should be for TAX at PC=2
-      expect(logCalls[1]).toContain('PC: 0002');
-      expect(logCalls[1]).toContain('Opcode: aa');
+      expect(logCalls[1]).toContain('0002:');
+      expect(logCalls[1]).toContain('TAX');
       
       // Third log should be for NOP at PC=3
-      expect(logCalls[2]).toContain('PC: 0003');
-      expect(logCalls[2]).toContain('Opcode: ea');
+      expect(logCalls[2]).toContain('0003:');
+      expect(logCalls[2]).toContain('NOP');
       
       // Verify the CPU state is correct after execution
       expect(cpu.a).toBe(0x42);

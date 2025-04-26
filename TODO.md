@@ -47,34 +47,8 @@
 
 - [ ] Missing instructions to implement:
   - [ ] System functions:
-    - [ ] BRK ($00) - Force interrupt
-    - [ ] RTI ($40) - Return from interrupt
-  - [ ] Arithmetic operations:
-    - [ ] ADC (Add with Carry) in various addressing modes:
-      - [ ] Zero Page ($65)
-      - [ ] Zero Page,X ($75)
-      - [ ] Absolute ($6D)
-      - [ ] Absolute,X ($7D)
-      - [ ] Absolute,Y ($79)
-      - [ ] (Indirect,X) ($61)
-      - [ ] (Indirect),Y ($71)
-    - [ ] SBC (Subtract with Carry) in various addressing modes:
-      - [ ] Zero Page ($E5)
-      - [ ] Zero Page,X ($F5)
-      - [ ] Absolute ($ED)
-      - [ ] Absolute,X ($FD)
-      - [ ] Absolute,Y ($F9)
-      - [ ] (Indirect,X) ($E1)
-      - [ ] (Indirect),Y ($F1)
-  - [ ] Memory operations:
-    - [ ] INC (Increment memory) in various addressing modes:
-      - [ ] Zero Page,X ($F6)
-      - [ ] Absolute ($EE)
-      - [ ] Absolute,X ($FE)
-    - [ ] DEC (Decrement memory) in various addressing modes:
-      - [ ] Zero Page,X ($D6)
-      - [ ] Absolute ($CE)
-      - [ ] Absolute,X ($DE)
+    - [ ] BRK ($00) - Force interrupt (pushes PC+2 and status to the stack)
+    - [ ] RTI ($40) - Return from interrupt (pulls status and PC from stack)
 
 - [x] Refactor test suite
   - [x] Split the large test file into multiple smaller files
