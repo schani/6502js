@@ -2,7 +2,8 @@
     "name": "6502-js",
     "private": true,
     "scripts": {
-        "typecheck": "bunx tsc --noEmit"
+        "typecheck": "bunx tsc --noEmit",
+        "test": "bun test-runner.ts"
     },
     "devDependencies": {
         "@types/bun": "latest"

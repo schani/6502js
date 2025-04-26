@@ -26,9 +26,9 @@
     - [x] Jumps and calls (JMP, JSR, RTS)
     - [x] Branches (BCC, BCS, BEQ, BMI, BNE, BPL, BVC, BVS)
     - [x] Status flag changes (CLC, CLD, CLI, CLV, SEC, SED, SEI)
-    - [x] System functions (NOP) 
+    - [x] System functions (NOP)
   - [x] Add cycle counting for accurate timing
-  
+
 - [x] Fix JSR and RTS implementation
   - [x] Fix JSR to push PC-1 onto the stack
   - [x] Fix RTS to add 2 to the value pulled from the stack
@@ -75,6 +75,13 @@
       - [ ] Zero Page,X ($D6)
       - [ ] Absolute ($CE)
       - [ ] Absolute,X ($DE)
+
+- [x] Refactor test suite
+  - [x] Split the large test file into multiple smaller files
+  - [x] Create shared utilities for test functions
+  - [x] Organize tests by instruction type
+  - [x] Improve test coverage to over 95%
+  - [x] Push test coverage to almost 98%
 
 - [ ] Potential future improvements:
   - [ ] Add more examples of running simple 6502 programs

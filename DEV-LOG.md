@@ -52,7 +52,7 @@
 
 - Analyzed the codebase to identify missing test coverage
 - Added tests for all addressing modes of logical operations (AND, ORA, EOR, BIT)
-- Added tests for memory-based shift and rotate operations (ASL, LSR, ROL, ROR) 
+- Added tests for memory-based shift and rotate operations (ASL, LSR, ROL, ROR)
 - Added tests for compare operations (CMP, CPX, CPY) in all addressing modes
 - Implemented the missing functionality for all these operations
 - Added edge case testing for operations with specific flag behaviors
@@ -77,6 +77,25 @@
 - Created comprehensive test suite for the disassembler, covering all addressing modes and instruction types
 - Used TDD approach to ensure 100% code coverage
 - Fixed TypeScript type issues to maintain strict type safety throughout the codebase
+
+### Refactored Test Suite
+
+- Split the large monolithic test file into multiple smaller test files:
+  - Created a utils.ts file for common test utilities and imports
+  - Organized tests by instruction category (load, store, arithmetic, etc.)
+  - Created separate test files for each instruction group
+- Benefits of this refactoring:
+  - Improved test readability and maintainability
+  - Easier to find and update specific tests
+  - Better organization of test cases by functionality
+  - Easier to run targeted tests for specific instruction groups
+  - More manageable file sizes for each test file
+- After refactoring, test coverage is at 95.65% for functions and 97.84% for lines
+- Additional tests were created for previously uncovered code paths
+- Implemented missing ADC and SBC operations with all addressing modes
+- Added INC and DEC operations for all addressing modes
+- Created comprehensive tests for branch instructions
+- Added tests for edge cases in memory operations and BIT instruction behavior
 
 ### Notes on 6502 Design Decisions
 
@@ -108,4 +127,9 @@
 - Implement the BRK and RTI instructions
 - Add more examples of running simple 6502 programs
 - Add a memory dump visualization feature
+- Add examples of running simple 6502 programs
+- Improve debugging capabilities with memory dump and tracing functionality
+- Add more tests to further increase test coverage
+- Add examples of running simple 6502 programs
+- Improve debugging capabilities with memory dump and tracing functionality
 - Add more tests to further increase test coverage

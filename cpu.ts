@@ -819,11 +819,109 @@ export function step6502(cpu: CPU, trace = false): number /* cycles */ {
             cycles = 2;
             break;
         }
+        case 0x65: { // ADC Zero Page
+            const addr = getZeroPageAddress(cpu);
+            const value = readByte(cpu, addr);
+            addWithCarry(cpu, value);
+            cycles = 3;
+            break;
+        }
+        case 0x75: { // ADC Zero Page,X
+            const addr = getZeroPageXAddress(cpu);
+            const value = readByte(cpu, addr);
+            addWithCarry(cpu, value);
+            cycles = 4;
+            break;
+        }
+        case 0x6D: { // ADC Absolute
+            const addr = getAbsoluteAddress(cpu);
+            const value = readByte(cpu, addr);
+            addWithCarry(cpu, value);
+            cycles = 4;
+            break;
+        }
+        case 0x7D: { // ADC Absolute,X
+            const { address, pageCrossed } = getAbsoluteXAddress(cpu);
+            const value = readByte(cpu, address);
+            addWithCarry(cpu, value);
+            cycles = 4 + (pageCrossed ? 1 : 0);
+            break;
+        }
+        case 0x79: { // ADC Absolute,Y
+            const { address, pageCrossed } = getAbsoluteYAddress(cpu);
+            const value = readByte(cpu, address);
+            addWithCarry(cpu, value);
+            cycles = 4 + (pageCrossed ? 1 : 0);
+            break;
+        }
+        case 0x61: { // ADC (Indirect,X)
+            const addr = getIndirectXAddress(cpu);
+            const value = readByte(cpu, addr);
+            addWithCarry(cpu, value);
+            cycles = 6;
+            break;
+        }
+        case 0x71: { // ADC (Indirect),Y
+            const { address, pageCrossed } = getIndirectYAddress(cpu);
+            const value = readByte(cpu, address);
+            addWithCarry(cpu, value);
+            cycles = 5 + (pageCrossed ? 1 : 0);
+            break;
+        }
         
         case 0xE9: { // SBC Immediate
             const value = readByte(cpu, cpu.pc++);
             subtractWithCarry(cpu, value);
             cycles = 2;
+            break;
+        }
+        case 0xE5: { // SBC Zero Page
+            const addr = getZeroPageAddress(cpu);
+            const value = readByte(cpu, addr);
+            subtractWithCarry(cpu, value);
+            cycles = 3;
+            break;
+        }
+        case 0xF5: { // SBC Zero Page,X
+            const addr = getZeroPageXAddress(cpu);
+            const value = readByte(cpu, addr);
+            subtractWithCarry(cpu, value);
+            cycles = 4;
+            break;
+        }
+        case 0xED: { // SBC Absolute
+            const addr = getAbsoluteAddress(cpu);
+            const value = readByte(cpu, addr);
+            subtractWithCarry(cpu, value);
+            cycles = 4;
+            break;
+        }
+        case 0xFD: { // SBC Absolute,X
+            const { address, pageCrossed } = getAbsoluteXAddress(cpu);
+            const value = readByte(cpu, address);
+            subtractWithCarry(cpu, value);
+            cycles = 4 + (pageCrossed ? 1 : 0);
+            break;
+        }
+        case 0xF9: { // SBC Absolute,Y
+            const { address, pageCrossed } = getAbsoluteYAddress(cpu);
+            const value = readByte(cpu, address);
+            subtractWithCarry(cpu, value);
+            cycles = 4 + (pageCrossed ? 1 : 0);
+            break;
+        }
+        case 0xE1: { // SBC (Indirect,X)
+            const addr = getIndirectXAddress(cpu);
+            const value = readByte(cpu, addr);
+            subtractWithCarry(cpu, value);
+            cycles = 6;
+            break;
+        }
+        case 0xF1: { // SBC (Indirect),Y
+            const { address, pageCrossed } = getIndirectYAddress(cpu);
+            const value = readByte(cpu, address);
+            subtractWithCarry(cpu, value);
+            cycles = 5 + (pageCrossed ? 1 : 0);
             break;
         }
         
@@ -963,12 +1061,66 @@ export function step6502(cpu: CPU, trace = false): number /* cycles */ {
             break;
         }
         
+        case 0xF6: { // INC Zero Page,X
+            const addr = getZeroPageXAddress(cpu);
+            const value = (readByte(cpu, addr) + 1) & 0xFF;
+            writeByte(cpu, addr, value);
+            updateZeroAndNegativeFlags(cpu, value);
+            cycles = 6;
+            break;
+        }
+        
+        case 0xEE: { // INC Absolute
+            const addr = getAbsoluteAddress(cpu);
+            const value = (readByte(cpu, addr) + 1) & 0xFF;
+            writeByte(cpu, addr, value);
+            updateZeroAndNegativeFlags(cpu, value);
+            cycles = 6;
+            break;
+        }
+        
+        case 0xFE: { // INC Absolute,X
+            const { address } = getAbsoluteXAddress(cpu);
+            const value = (readByte(cpu, address) + 1) & 0xFF;
+            writeByte(cpu, address, value);
+            updateZeroAndNegativeFlags(cpu, value);
+            cycles = 7;
+            break;
+        }
+        
         case 0xC6: { // DEC Zero Page
             const addr = getZeroPageAddress(cpu);
             const value = (readByte(cpu, addr) - 1) & 0xFF;
             writeByte(cpu, addr, value);
             updateZeroAndNegativeFlags(cpu, value);
             cycles = 5;
+            break;
+        }
+        
+        case 0xD6: { // DEC Zero Page,X
+            const addr = getZeroPageXAddress(cpu);
+            const value = (readByte(cpu, addr) - 1) & 0xFF;
+            writeByte(cpu, addr, value);
+            updateZeroAndNegativeFlags(cpu, value);
+            cycles = 6;
+            break;
+        }
+        
+        case 0xCE: { // DEC Absolute
+            const addr = getAbsoluteAddress(cpu);
+            const value = (readByte(cpu, addr) - 1) & 0xFF;
+            writeByte(cpu, addr, value);
+            updateZeroAndNegativeFlags(cpu, value);
+            cycles = 6;
+            break;
+        }
+        
+        case 0xDE: { // DEC Absolute,X
+            const { address } = getAbsoluteXAddress(cpu);
+            const value = (readByte(cpu, address) - 1) & 0xFF;
+            writeByte(cpu, address, value);
+            updateZeroAndNegativeFlags(cpu, value);
+            cycles = 7;
             break;
         }
         
