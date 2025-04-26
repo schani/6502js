@@ -1,10 +1,13 @@
 {
-  "name": "6502-js",
-  "private": true,
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  }
+    "name": "6502-js",
+    "private": true,
+    "scripts": {
+        "typecheck": "bunx tsc --noEmit"
+    },
+    "devDependencies": {
+        "@types/bun": "latest"
+    },
+    "peerDependencies": {
+        "typescript": "^5"
+    }
 }
