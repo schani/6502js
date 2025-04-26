@@ -44,7 +44,7 @@
   - [x] Create shared utilities for test functions
   - [x] Organize tests by instruction type
   - [x] Improve test coverage to over 95%
-  - [x] Push test coverage to almost 98%
+  - [x] Push test coverage to nearly 100% (achieved 98.30%)
 
 - [ ] Potential future improvements:
   - [ ] Implement BRK and RTI instructions (system functions)
