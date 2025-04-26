@@ -1023,12 +1023,66 @@ export function step6502(cpu: CPU, trace = false): number /* cycles */ {
             break;
         }
         
+        case 0xF6: { // INC Zero Page,X
+            const addr = getZeroPageXAddress(cpu);
+            const value = (readByte(cpu, addr) + 1) & 0xFF;
+            writeByte(cpu, addr, value);
+            updateZeroAndNegativeFlags(cpu, value);
+            cycles = 6;
+            break;
+        }
+        
+        case 0xEE: { // INC Absolute
+            const addr = getAbsoluteAddress(cpu);
+            const value = (readByte(cpu, addr) + 1) & 0xFF;
+            writeByte(cpu, addr, value);
+            updateZeroAndNegativeFlags(cpu, value);
+            cycles = 6;
+            break;
+        }
+        
+        case 0xFE: { // INC Absolute,X
+            const { address } = getAbsoluteXAddress(cpu);
+            const value = (readByte(cpu, address) + 1) & 0xFF;
+            writeByte(cpu, address, value);
+            updateZeroAndNegativeFlags(cpu, value);
+            cycles = 7;
+            break;
+        }
+        
         case 0xC6: { // DEC Zero Page
             const addr = getZeroPageAddress(cpu);
             const value = (readByte(cpu, addr) - 1) & 0xFF;
             writeByte(cpu, addr, value);
             updateZeroAndNegativeFlags(cpu, value);
             cycles = 5;
+            break;
+        }
+        
+        case 0xD6: { // DEC Zero Page,X
+            const addr = getZeroPageXAddress(cpu);
+            const value = (readByte(cpu, addr) - 1) & 0xFF;
+            writeByte(cpu, addr, value);
+            updateZeroAndNegativeFlags(cpu, value);
+            cycles = 6;
+            break;
+        }
+        
+        case 0xCE: { // DEC Absolute
+            const addr = getAbsoluteAddress(cpu);
+            const value = (readByte(cpu, addr) - 1) & 0xFF;
+            writeByte(cpu, addr, value);
+            updateZeroAndNegativeFlags(cpu, value);
+            cycles = 6;
+            break;
+        }
+        
+        case 0xDE: { // DEC Absolute,X
+            const { address } = getAbsoluteXAddress(cpu);
+            const value = (readByte(cpu, address) - 1) & 0xFF;
+            writeByte(cpu, address, value);
+            updateZeroAndNegativeFlags(cpu, value);
+            cycles = 7;
             break;
         }
         

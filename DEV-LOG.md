@@ -70,9 +70,12 @@
   - Better organization of test cases by functionality
   - Easier to run targeted tests for specific instruction groups
   - More manageable file sizes for each test file
-- After refactoring, test coverage is at 95.65% for functions and 96.66% for lines
+- After refactoring, test coverage is at 95.65% for functions and 97.84% for lines
 - Additional tests were created for previously uncovered code paths
 - Implemented missing ADC and SBC operations with all addressing modes
+- Added INC and DEC operations for all addressing modes
+- Created comprehensive tests for branch instructions
+- Added tests for edge cases in memory operations and BIT instruction behavior
 
 ### Notes on 6502 Design Decisions
 
