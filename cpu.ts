@@ -70,6 +70,9 @@ function writeWord(cpu: CPU, address: number, value: number): void {
     writeByte(cpu, address + 1, (value >> 8) & 0xFF);
 }
 
+// Export helper functions for testing
+export { readByte, readWord, writeByte, writeWord };
+
 // Stack operations
 function pushByte(cpu: CPU, value: number): void {
     writeByte(cpu, 0x0100 + cpu.sp, value);
