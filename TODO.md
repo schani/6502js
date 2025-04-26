@@ -45,7 +45,37 @@
   - [x] Format branch targets as addresses
   - [x] Good test coverage
 
+- [ ] Missing instructions to implement:
+  - [ ] System functions:
+    - [ ] BRK ($00) - Force interrupt
+    - [ ] RTI ($40) - Return from interrupt
+  - [ ] Arithmetic operations:
+    - [ ] ADC (Add with Carry) in various addressing modes:
+      - [ ] Zero Page ($65)
+      - [ ] Zero Page,X ($75)
+      - [ ] Absolute ($6D)
+      - [ ] Absolute,X ($7D)
+      - [ ] Absolute,Y ($79)
+      - [ ] (Indirect,X) ($61)
+      - [ ] (Indirect),Y ($71)
+    - [ ] SBC (Subtract with Carry) in various addressing modes:
+      - [ ] Zero Page ($E5)
+      - [ ] Zero Page,X ($F5)
+      - [ ] Absolute ($ED)
+      - [ ] Absolute,X ($FD)
+      - [ ] Absolute,Y ($F9)
+      - [ ] (Indirect,X) ($E1)
+      - [ ] (Indirect),Y ($F1)
+  - [ ] Memory operations:
+    - [ ] INC (Increment memory) in various addressing modes:
+      - [ ] Zero Page,X ($F6)
+      - [ ] Absolute ($EE)
+      - [ ] Absolute,X ($FE)
+    - [ ] DEC (Decrement memory) in various addressing modes:
+      - [ ] Zero Page,X ($D6)
+      - [ ] Absolute ($CE)
+      - [ ] Absolute,X ($DE)
+
 - [ ] Potential future improvements:
-  - [ ] Implement BRK and RTI instructions (system functions)
   - [ ] Add more examples of running simple 6502 programs
   - [x] Improve debugging with memory dump and trace functionality
