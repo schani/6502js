@@ -1,4 +1,4 @@
-import type { CPU } from "./cpu";
+import type { CPUState } from "./6502";
 
 // Addressing modes
 enum AddressingMode {
@@ -231,7 +231,7 @@ const INSTRUCTIONS: { [opcode: number]: Instruction } = {
  * @returns A tuple of [disassembled instruction string, instruction length in bytes]
  */
 export function disassemble(
-  cpu: CPU,
+  cpu: CPUState,
   addr: number,
 ): [asm: string, len: number] {
   const opcode = cpu.mem[addr] || 0;

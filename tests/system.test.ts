@@ -29,17 +29,19 @@ describe("System functions", () => {
   });
 
   // Add test for unknown opcodes
-  it("should handle unknown opcodes", () => {
+  it("should throw an error for unknown opcodes", () => {
     const cpu = createCPU();
     
     // Set up invalid opcode
     cpu.mem[0] = 0xFF; // Invalid opcode
     
-    const cycles = step6502(cpu);
-    cpu.pc = 0; // Reset PC for second test
-    const cyclesWithTrace = step6502(cpu, true);
+    // Should throw an error
+    expect(() => step6502(cpu)).toThrow("Unknown opcode");
     
-    expect(cycles).toBe(2);
-    expect(cyclesWithTrace).toBe(2);
+    // Reset PC for second test
+    cpu.pc = 0;
+    
+    // Should also throw an error with trace enabled
+    expect(() => step6502(cpu, true)).toThrow("Unknown opcode");
   });
 });

@@ -1,12 +1,12 @@
 import { describe, expect, it } from "bun:test";
-import { type CPU, createCPU, step6502, CARRY, ZERO, INTERRUPT, DECIMAL, BREAK, UNUSED, OVERFLOW, NEGATIVE } from "./utils";
+import { type CPU, createCPU, step6502, CARRY, ZERO, INTERRUPT, DECIMAL, BREAK, UNUSED, OVERFLOW, NEGATIVE, defined } from "./utils";
 
 describe("Edge cases and boundary conditions", () => {
   it("should test writeWord at memory boundaries", () => {
     // We need to access the CPU's internal functions directly
     function readWord(cpu: CPU, address: number): number {
-      const lo = cpu.mem[address & 0xFFFF];
-      const hi = cpu.mem[(address + 1) & 0xFFFF];
+      const lo = defined(cpu.mem[address & 0xFFFF]);
+      const hi = defined(cpu.mem[(address + 1) & 0xFFFF]);
       return (hi << 8) | lo;
     }
     

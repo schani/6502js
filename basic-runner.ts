@@ -20,7 +20,7 @@
 import { readFileSync } from "fs";
 import { exit } from "process";
 import { setTimeout } from "timers/promises";
-import { type CPU, step6502 } from "./cpu";
+import { CPU1, type CPUState } from "./6502";
 import { defined } from "@glideapps/ts-necessities";
 
 // rudimentary CLI flag
@@ -42,14 +42,14 @@ const ISCNTC = 0xffb7;
 const LOAD = 0xffb9;
 const SAVE = 0xffbc;
 
-function pop16(cpu: CPU): number {
+function pop16(cpu: CPUState): number {
     const lo = defined(cpu.mem[0x100 | ((cpu.sp + 1) & 0xff)]);
     const hi = defined(cpu.mem[0x100 | ((cpu.sp + 2) & 0xff)]);
     cpu.sp = (cpu.sp + 2) & 0xff;
     return (hi << 8) | lo;
 }
 
-function push16(cpu: CPU, val: number) {
+function push16(cpu: CPUState, val: number) {
     cpu.mem[0x100 | cpu.sp] = (val >> 8) & 0xff;
     cpu.sp = (cpu.sp - 1) & 0xff;
     cpu.mem[0x100 | cpu.sp] = val & 0xff;
@@ -60,9 +60,10 @@ function push16(cpu: CPU, val: number) {
 // CPU / memory initialisation
 // ---------------------------------------------------------------------------
 
-function buildCPU(): CPU {
-    const mem = new Uint8Array(0x10000);
-
+function buildCPU(): CPU1 {
+    const cpu = new CPU1();
+    const state = cpu.getState();
+    
     // Load BASIC ROM image
     let bin: Buffer;
     try {
@@ -81,24 +82,24 @@ function buildCPU(): CPU {
     }
     // KIM-1 kb9.bin layout: single contiguous blob expected to be loaded at $2000
     const maxLen = Math.min(bin.length, 0x10000 - 0x2000);
-    mem.set(bin.subarray(0, maxLen), 0x2000);
+    state.mem.set(bin.subarray(0, maxLen), 0x2000);
 
     // Write monitor stubs that are *not* inside the BASIC image (high ROM)
-    mem[LOAD] = 0x60;
-    mem[SAVE] = 0x60;
+    state.mem[LOAD] = 0x60;
+    state.mem[SAVE] = 0x60;
     // ISCNTC: CLC ; RTS
-    mem[ISCNTC] = 0x18; // CLC
-    mem[ISCNTC + 1] = 0x60; // RTS
+    state.mem[ISCNTC] = 0x18; // CLC
+    state.mem[ISCNTC + 1] = 0x60; // RTS
 
-    return {
-        a: 0,
-        x: 0,
-        y: 0,
-        sp: 0xfd,
-        p: 0x24,
-        pc: 0x4065,
-        mem,
-    };
+    // Initial state
+    state.a = 0;
+    state.x = 0;
+    state.y = 0;
+    state.sp = 0xfd;
+    state.p = 0x24;
+    state.pc = 0x4065;
+    
+    return cpu;
 }
 
 // ---------------------------------------------------------------------------
@@ -161,23 +162,24 @@ function writeChar(c: number) {
 
 async function main() {
     const cpu = buildCPU();
+    const state = cpu.getState();
 
     const trapSet = new Set([MONRDKEY, MONCOUT, ISCNTC, LOAD, SAVE]);
 
     while (true) {
         // Intercept before executing the opcode at PC
-        if (trapSet.has(cpu.pc)) {
-            const addr = cpu.pc;
-            const ret = pop16(cpu) + 1; // emulate RTS
+        if (trapSet.has(state.pc)) {
+            const addr = state.pc;
+            const ret = pop16(state) + 1; // emulate RTS
 
             switch (addr) {
                 case MONRDKEY: {
                     const c = await readChar();
-                    cpu.a = c & 0xff;
+                    state.a = c & 0xff;
                     break;
                 }
                 case MONCOUT: {
-                    writeChar(cpu.a);
+                    writeChar(state.a);
                     break;
                 }
                 case ISCNTC: {
@@ -190,11 +192,11 @@ async function main() {
                     break;
             }
 
-            cpu.pc = ret;
+            state.pc = ret;
             continue;
         }
 
-        step6502(cpu, TRACE);
+        cpu.step(TRACE);
     }
 }
 

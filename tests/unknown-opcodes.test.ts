@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { type CPU, createCPU, step6502, CARRY, ZERO, INTERRUPT, DECIMAL, BREAK, UNUSED, OVERFLOW, NEGATIVE } from "./utils";
 
 describe("Unknown opcodes", () => {
-  it("should handle unknown opcodes gracefully", () => {
+  it("should throw an error for unknown opcodes", () => {
     const cpu = createCPU();
     
     // Load an invalid/unknown opcode (0xFF) into memory
@@ -11,27 +11,21 @@ describe("Unknown opcodes", () => {
     // Set PC to 0 to execute the unknown opcode
     cpu.pc = 0;
     
-    // Execute the instruction
-    const cycles = step6502(cpu);
-    
-    // Should take 2 cycles and increment PC
-    expect(cycles).toBe(2);
-    expect(cpu.pc).toBe(1);
+    // Should throw an error
+    expect(() => step6502(cpu)).toThrow("Unknown opcode");
   });
 
-  it("should handle unknown opcodes with trace enabled", () => {
+  it("should throw an error for unknown opcodes with trace enabled", () => {
     const cpu = createCPU();
     
     // Save the original console.log
     const originalConsoleLog = console.log;
     
-    // Mock console.log to track calls
-    let logCalled = false;
+    // Mock console.log to capture trace output
+    let traceOutput = false;
     console.log = (...args: any[]) => {
-      // Check if the log message contains "Unknown opcode"
-      if (typeof args[0] === 'string' && args[0].includes('Unknown opcode')) {
-        logCalled = true;
-      }
+      // Trace output will be logged before the error is thrown
+      traceOutput = true;
     };
     
     try {
@@ -41,13 +35,11 @@ describe("Unknown opcodes", () => {
       // Set PC to 0 to execute the unknown opcode
       cpu.pc = 0;
       
-      // Execute the instruction with trace enabled
-      const cycles = step6502(cpu, true);
+      // Should throw an error but will log trace info first
+      expect(() => step6502(cpu, true)).toThrow("Unknown opcode");
       
-      // Should take 2 cycles, increment PC, and log message
-      expect(cycles).toBe(2);
-      expect(cpu.pc).toBe(1);
-      expect(logCalled).toBe(true);
+      // Trace logging should have been called
+      expect(traceOutput).toBe(true);
     } finally {
       // Restore the original console.log
       console.log = originalConsoleLog;

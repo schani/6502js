@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { BREAK, CARRY, DECIMAL, INTERRUPT, NEGATIVE, OVERFLOW, UNUSED, ZERO, createCPU, step6502 } from "../cpu";
+import { BREAK, CARRY, DECIMAL, INTERRUPT, NEGATIVE, OVERFLOW, UNUSED, ZERO, createCPU, step6502, defined } from "../cpu";
 
 describe("System instructions", () => {
   it("should perform BRK instruction", () => {
@@ -94,7 +94,7 @@ describe("System instructions", () => {
     expect(cpu.pc).toBe(0x4000);
     
     // Original status should be on stack with B flag set
-    const pushedStatus = cpu.mem[0x0100 + cpu.sp + 1];
+    const pushedStatus = defined(cpu.mem[0x0100 + cpu.sp + 1]);
     expect(pushedStatus & (UNUSED | CARRY | ZERO | NEGATIVE | OVERFLOW | DECIMAL | BREAK))
       .toBe(UNUSED | CARRY | ZERO | NEGATIVE | OVERFLOW | DECIMAL | BREAK);
     
