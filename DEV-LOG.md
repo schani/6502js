@@ -58,6 +58,26 @@
 - Added edge case testing for operations with specific flag behaviors
 - Achieved 100% test coverage for all implemented 6502 instructions
 
+### Implemented Disassembler
+
+- Created a full 6502 disassembler module
+- Built an instruction table with all supported opcodes, mnemonics, addressing modes, and instruction lengths
+- Implemented formatting for all 6502 addressing modes:
+  - Immediate (#$xx)
+  - Zero Page ($xx)
+  - Zero Page,X and Zero Page,Y ($xx,X and $xx,Y)
+  - Absolute ($xxxx)
+  - Absolute,X and Absolute,Y ($xxxx,X and $xxxx,Y)
+  - Indirect (($xxxx))
+  - Indexed Indirect (($xx,X))
+  - Indirect Indexed (($xx),Y)
+  - Relative (for branch instructions)
+- Special care was taken to format branch instructions with their absolute target addresses
+- Added special handling for unknown opcodes (displayed as .byte directives)
+- Created comprehensive test suite for the disassembler, covering all addressing modes and instruction types
+- Used TDD approach to ensure 100% code coverage
+- Fixed TypeScript type issues to maintain strict type safety throughout the codebase
+
 ### Notes on 6502 Design Decisions
 
 - The 6502 has several quirks that were important to implement correctly:

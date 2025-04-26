@@ -39,6 +39,12 @@
   - [x] Add tests for compare operations in all addressing modes
   - [x] Add tests for different edge cases
 
+- [x] Implement disassembler
+  - [x] Support for all 6502 addressing modes
+  - [x] Handle all supported instructions
+  - [x] Format branch targets as addresses
+  - [x] Good test coverage
+
 - [ ] Potential future improvements:
   - [ ] Implement BRK and RTI instructions (system functions)
   - [ ] Add examples of running simple 6502 programs
