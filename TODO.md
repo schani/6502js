@@ -29,6 +29,10 @@
     - [x] System functions (NOP) 
   - [x] Add cycle counting for accurate timing
   
+- [x] Fix JSR and RTS implementation
+  - [x] Fix JSR to push PC-1 onto the stack
+  - [x] Fix RTS to add 2 to the value pulled from the stack
+
 - [ ] Potential future improvements:
   - [ ] Implement BRK and RTI instructions (system functions)
   - [ ] Add more tests to increase coverage

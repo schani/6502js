@@ -37,6 +37,17 @@
 - Added page boundary crossing detection for appropriate addressing modes
 - Expanded test suite to cover all implemented instructions
 
+## 2025-04-26
+
+### Fixed JSR and RTS Implementation
+
+- Found and fixed a bug in the JSR instruction implementation
+- The 6502 pushes PC-1 onto the stack when executing JSR
+- When using RTS, the CPU pulls the value from the stack and adds 1 to it
+- The JSR bug was revealed through our test suite, which was expecting specific values on the stack
+- This subtle implementation detail is critical for correctly emulating 6502 programs that rely on manipulating the stack
+- All tests are now passing!
+
 ### Notes on 6502 Design Decisions
 
 - The 6502 has several quirks that were important to implement correctly:
@@ -45,6 +56,7 @@
   - Indirect JMP bug: When the indirect pointer address is at a page boundary (e.g., 0x02FF), the high byte is read from the beginning of the same page (0x0200) rather than the next page
   - Stack location: The stack is fixed at memory page 0x01 (0x0100-0x01FF)
   - Status flag behavior: B flag doesn't physically exist in the P register, but appears when pushed to the stack
+  - JSR/RTS behavior: JSR pushes PC-1 to the stack, and RTS pulls the address and adds 1 to get the return address
 
 ### Future Improvements
 

@@ -389,6 +389,42 @@ describe("6502 CPU", () => {
       expect(cpu.pc).toBe(1);
       expect(cycles).toBe(2);
     });
+    
+    it("should perform TSX instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up stack pointer
+      cpu.sp = 0x42;
+      
+      // TSX - Transfer Stack Pointer to X
+      cpu.mem[0] = 0xBA; // TSX
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.x).toBe(0x42);
+      expect(cpu.pc).toBe(1);
+      expect(cycles).toBe(2);
+      expect(cpu.p & ZERO).toBe(0); // Result is not zero
+      expect(cpu.p & NEGATIVE).toBe(0); // Result is not negative
+    });
+    
+    it("should perform TXS instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up X register
+      cpu.x = 0x42;
+      
+      // TXS - Transfer X to Stack Pointer
+      cpu.mem[0] = 0x9A; // TXS
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.sp).toBe(0x42);
+      expect(cpu.pc).toBe(1);
+      expect(cycles).toBe(2);
+      // TXS does not affect any flags
+      expect(cpu.p).toBe(INTERRUPT | UNUSED); // Original status
+    });
   });
   
   // Indirect addressing modes
@@ -754,6 +790,565 @@ describe("6502 CPU", () => {
     });
   });
   
+  // Increment and decrement operations
+  describe("Increment and decrement operations", () => {
+    it("should perform INX instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.x = 0x41;
+      
+      // Set up memory
+      cpu.mem[0] = 0xE8; // INX
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.x).toBe(0x42);
+      expect(cpu.p & ZERO).toBe(0); // Result is not zero
+      expect(cpu.p & NEGATIVE).toBe(0); // Result is not negative
+      expect(cpu.pc).toBe(1);
+      expect(cycles).toBe(2);
+      
+      // Test wrapping from 0xFF to 0x00
+      cpu.pc = 0;
+      cpu.x = 0xFF;
+      
+      step6502(cpu);
+      
+      expect(cpu.x).toBe(0x00);
+      expect(cpu.p & ZERO).toBe(ZERO); // Result is zero
+    });
+    
+    it("should perform INY instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.y = 0x41;
+      
+      // Set up memory
+      cpu.mem[0] = 0xC8; // INY
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.y).toBe(0x42);
+      expect(cpu.p & ZERO).toBe(0); // Result is not zero
+      expect(cpu.p & NEGATIVE).toBe(0); // Result is not negative
+      expect(cpu.pc).toBe(1);
+      expect(cycles).toBe(2);
+    });
+    
+    it("should perform DEX instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.x = 0x43;
+      
+      // Set up memory
+      cpu.mem[0] = 0xCA; // DEX
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.x).toBe(0x42);
+      expect(cpu.p & ZERO).toBe(0); // Result is not zero
+      expect(cpu.p & NEGATIVE).toBe(0); // Result is not negative
+      expect(cpu.pc).toBe(1);
+      expect(cycles).toBe(2);
+      
+      // Test wrapping from 0x00 to 0xFF
+      cpu.pc = 0;
+      cpu.x = 0x00;
+      
+      step6502(cpu);
+      
+      expect(cpu.x).toBe(0xFF);
+      expect(cpu.p & NEGATIVE).toBe(NEGATIVE); // Result is negative
+    });
+    
+    it("should perform DEY instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.y = 0x43;
+      
+      // Set up memory
+      cpu.mem[0] = 0x88; // DEY
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.y).toBe(0x42);
+      expect(cpu.p & ZERO).toBe(0); // Result is not zero
+      expect(cpu.p & NEGATIVE).toBe(0); // Result is not negative
+      expect(cpu.pc).toBe(1);
+      expect(cycles).toBe(2);
+    });
+    
+    it("should perform INC zero page instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up memory
+      cpu.mem[0] = 0xE6; // INC zero page
+      cpu.mem[1] = 0x20; // Zero page address
+      cpu.mem[0x20] = 0x41; // Value to increment
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.mem[0x20]).toBe(0x42);
+      expect(cpu.p & ZERO).toBe(0); // Result is not zero
+      expect(cpu.p & NEGATIVE).toBe(0); // Result is not negative
+      expect(cpu.pc).toBe(2);
+      expect(cycles).toBe(5);
+    });
+    
+    it("should perform DEC zero page instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up memory
+      cpu.mem[0] = 0xC6; // DEC zero page
+      cpu.mem[1] = 0x20; // Zero page address
+      cpu.mem[0x20] = 0x43; // Value to decrement
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.mem[0x20]).toBe(0x42);
+      expect(cpu.p & ZERO).toBe(0); // Result is not zero
+      expect(cpu.p & NEGATIVE).toBe(0); // Result is not negative
+      expect(cpu.pc).toBe(2);
+      expect(cycles).toBe(5);
+    });
+  });
+
+  // Shift and rotate instructions
+  describe("Shift and rotate instructions", () => {
+    it("should perform ASL A instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.a = 0x41; // 01000001
+      
+      // Set up memory
+      cpu.mem[0] = 0x0A; // ASL A
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.a).toBe(0x82); // 10000010
+      expect(cpu.p & CARRY).toBe(0); // Bit 7 was 0
+      expect(cpu.p & NEGATIVE).toBe(NEGATIVE); // Result has bit 7 set
+      expect(cpu.pc).toBe(1);
+      expect(cycles).toBe(2);
+      
+      // Test with carry out
+      cpu.pc = 0;
+      cpu.a = 0x81; // 10000001
+      
+      step6502(cpu);
+      
+      expect(cpu.a).toBe(0x02); // 00000010
+      expect(cpu.p & CARRY).toBe(CARRY); // Bit 7 was 1
+      expect(cpu.p & ZERO).toBe(0); // Result is not zero
+    });
+    
+    it("should perform LSR A instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.a = 0x41; // 01000001
+      
+      // Set up memory
+      cpu.mem[0] = 0x4A; // LSR A
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.a).toBe(0x20); // 00100000
+      expect(cpu.p & CARRY).toBe(CARRY); // Bit 0 was 1
+      expect(cpu.p & NEGATIVE).toBe(0); // Bit 7 is always cleared
+      expect(cpu.pc).toBe(1);
+      expect(cycles).toBe(2);
+      
+      // Test with zero result
+      cpu.pc = 0;
+      cpu.a = 0x01; // 00000001
+      
+      step6502(cpu);
+      
+      expect(cpu.a).toBe(0x00); // 00000000
+      expect(cpu.p & CARRY).toBe(CARRY); // Bit 0 was 1
+      expect(cpu.p & ZERO).toBe(ZERO); // Result is zero
+    });
+    
+    it("should perform ROL A instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.a = 0x41; // 01000001
+      cpu.p &= ~CARRY; // Clear carry flag
+      
+      // Set up memory
+      cpu.mem[0] = 0x2A; // ROL A
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.a).toBe(0x82); // 10000010
+      expect(cpu.p & CARRY).toBe(0); // Old bit 7 was 0
+      expect(cpu.p & NEGATIVE).toBe(NEGATIVE); // Result has bit 7 set
+      expect(cpu.pc).toBe(1);
+      expect(cycles).toBe(2);
+      
+      // Test with carry in and out
+      cpu.pc = 0;
+      cpu.a = 0x81; // 10000001
+      cpu.p |= CARRY; // Set carry flag
+      
+      step6502(cpu);
+      
+      expect(cpu.a).toBe(0x03); // 00000011 (carry in becomes bit 0)
+      expect(cpu.p & CARRY).toBe(CARRY); // Old bit 7 was 1
+      expect(cpu.p & ZERO).toBe(0); // Result is not zero
+    });
+    
+    it("should perform ROR A instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.a = 0x41; // 01000001
+      cpu.p &= ~CARRY; // Clear carry flag
+      
+      // Set up memory
+      cpu.mem[0] = 0x6A; // ROR A
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.a).toBe(0x20); // 00100000
+      expect(cpu.p & CARRY).toBe(CARRY); // Old bit 0 was 1
+      expect(cpu.p & NEGATIVE).toBe(0); // Result has bit 7 clear
+      expect(cpu.pc).toBe(1);
+      expect(cycles).toBe(2);
+      
+      // Test with carry in
+      cpu.pc = 0;
+      cpu.a = 0x01; // 00000001
+      cpu.p |= CARRY; // Set carry flag
+      
+      step6502(cpu);
+      
+      expect(cpu.a).toBe(0x80); // 10000000 (carry in becomes bit 7)
+      expect(cpu.p & CARRY).toBe(CARRY); // Old bit 0 was 1
+      expect(cpu.p & NEGATIVE).toBe(NEGATIVE); // Result has bit 7 set
+    });
+  });
+
+  // Jump and subroutine instructions
+  describe("Jump and subroutine instructions", () => {
+    it("should perform JMP absolute instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up memory
+      cpu.mem[0] = 0x4C; // JMP absolute
+      cpu.mem[1] = 0x34; // Low byte of target
+      cpu.mem[2] = 0x12; // High byte of target
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.pc).toBe(0x1234);
+      expect(cycles).toBe(3);
+    });
+    
+    it("should perform JSR and RTS instructions", () => {
+      const cpu = createCPU();
+      
+      // Set up memory for JSR
+      cpu.mem[0] = 0x20; // JSR absolute
+      cpu.mem[1] = 0x34; // Low byte of target
+      cpu.mem[2] = 0x12; // High byte of target
+      
+      // Set up RTS at target location
+      cpu.mem[0x1234] = 0x60; // RTS
+      
+      // Execute JSR
+      let cycles = step6502(cpu);
+      
+      expect(cpu.pc).toBe(0x1234);
+      expect(cpu.sp).toBe(0xFB); // SP decremented by 2 (for 16-bit return address)
+      expect(cpu.mem[0x01FC]).toBe(0x00); // Low byte of return address - 1
+      expect(cpu.mem[0x01FD]).toBe(0x00); // High byte of return address - 1
+      expect(cycles).toBe(6);
+      
+      // Execute RTS
+      cycles = step6502(cpu);
+      
+      expect(cpu.pc).toBe(0x0002); // Return address + 2
+      expect(cpu.sp).toBe(0xFD); // SP incremented by 2
+      expect(cycles).toBe(6);
+    });
+  });
+
+  // Status flag instructions
+  describe("Status flag instructions", () => {
+    it("should perform CLC instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.p |= CARRY; // Set carry flag
+      
+      // Set up memory
+      cpu.mem[0] = 0x18; // CLC
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.p & CARRY).toBe(0); // Carry should be cleared
+      expect(cpu.pc).toBe(1);
+      expect(cycles).toBe(2);
+    });
+    
+    it("should perform SEC instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.p &= ~CARRY; // Clear carry flag
+      
+      // Set up memory
+      cpu.mem[0] = 0x38; // SEC
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.p & CARRY).toBe(CARRY); // Carry should be set
+      expect(cpu.pc).toBe(1);
+      expect(cycles).toBe(2);
+    });
+    
+    it("should perform CLI instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.p |= INTERRUPT; // Set interrupt disable flag
+      
+      // Set up memory
+      cpu.mem[0] = 0x58; // CLI
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.p & INTERRUPT).toBe(0); // Interrupt disable should be cleared
+      expect(cpu.pc).toBe(1);
+      expect(cycles).toBe(2);
+    });
+    
+    it("should perform SEI instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.p &= ~INTERRUPT; // Clear interrupt disable flag
+      
+      // Set up memory
+      cpu.mem[0] = 0x78; // SEI
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.p & INTERRUPT).toBe(INTERRUPT); // Interrupt disable should be set
+      expect(cpu.pc).toBe(1);
+      expect(cycles).toBe(2);
+    });
+    
+    it("should perform CLD instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.p |= DECIMAL; // Set decimal flag
+      
+      // Set up memory
+      cpu.mem[0] = 0xD8; // CLD
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.p & DECIMAL).toBe(0); // Decimal flag should be cleared
+      expect(cpu.pc).toBe(1);
+      expect(cycles).toBe(2);
+    });
+    
+    it("should perform SED instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.p &= ~DECIMAL; // Clear decimal flag
+      
+      // Set up memory
+      cpu.mem[0] = 0xF8; // SED
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.p & DECIMAL).toBe(DECIMAL); // Decimal flag should be set
+      expect(cpu.pc).toBe(1);
+      expect(cycles).toBe(2);
+    });
+    
+    it("should perform CLV instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.p |= OVERFLOW; // Set overflow flag
+      
+      // Set up memory
+      cpu.mem[0] = 0xB8; // CLV
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.p & OVERFLOW).toBe(0); // Overflow flag should be cleared
+      expect(cpu.pc).toBe(1);
+      expect(cycles).toBe(2);
+    });
+  });
+
+  // Branch instructions
+  describe("Branch instructions", () => {
+    it("should perform BCC instruction (branch taken)", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.p &= ~CARRY; // Clear carry flag
+      
+      // Set up memory
+      cpu.mem[0] = 0x90; // BCC
+      cpu.mem[1] = 0x10; // Branch offset (forward 16 bytes)
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.pc).toBe(0x12); // 0x02 + 0x10 = 0x12
+      expect(cycles).toBe(3); // Base cycles (2) + branch taken (1)
+    });
+    
+    it("should perform BCC instruction (branch not taken)", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.p |= CARRY; // Set carry flag
+      
+      // Set up memory
+      cpu.mem[0] = 0x90; // BCC
+      cpu.mem[1] = 0x10; // Branch offset (forward 16 bytes)
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.pc).toBe(0x02); // PC advances past the branch instruction
+      expect(cycles).toBe(2); // Base cycles (2) only
+    });
+    
+    it("should add cycle when branch crosses page boundary", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.p &= ~CARRY; // Clear carry flag
+      cpu.pc = 0x00F0; // Set PC near page boundary
+      
+      // Set up memory
+      cpu.mem[0x00F0] = 0x90; // BCC
+      cpu.mem[0x00F1] = 0x20; // Branch offset (forward 32 bytes)
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.pc).toBe(0x0112); // 0x00F2 + 0x20 = 0x0112 (crosses page boundary)
+      expect(cycles).toBe(4); // Base cycles (2) + branch taken (1) + page boundary (1)
+    });
+
+    it("should handle negative branch offset", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.p &= ~CARRY; // Clear carry flag
+      cpu.pc = 0x0080;
+      
+      // Set up memory
+      cpu.mem[0x0080] = 0x90; // BCC
+      cpu.mem[0x0081] = 0xFE; // Branch offset (-2 in two's complement)
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.pc).toBe(0x0080); // 0x0082 - 2 = 0x0080 (branch back to the BCC instruction)
+      expect(cycles).toBe(3); // Base cycles (2) + branch taken (1)
+    });
+    
+    it("should perform all branch instructions correctly", () => {
+      const cpu = createCPU();
+      
+      // Test BCS (Branch if Carry Set)
+      cpu.pc = 0;
+      cpu.p |= CARRY; // Set carry flag
+      cpu.mem[0] = 0xB0; // BCS
+      cpu.mem[1] = 0x10; // Branch offset
+      
+      let cycles = step6502(cpu);
+      expect(cpu.pc).toBe(0x12); // Should branch
+      expect(cycles).toBe(3);
+      
+      // Test BEQ (Branch if Equal/Zero Set)
+      cpu.pc = 0;
+      cpu.p |= ZERO; // Set zero flag
+      cpu.mem[0] = 0xF0; // BEQ
+      
+      cycles = step6502(cpu);
+      expect(cpu.pc).toBe(0x12); // Should branch
+      expect(cycles).toBe(3);
+      
+      // Test BNE (Branch if Not Equal/Zero Clear)
+      cpu.pc = 0;
+      cpu.p &= ~ZERO; // Clear zero flag
+      cpu.mem[0] = 0xD0; // BNE
+      
+      cycles = step6502(cpu);
+      expect(cpu.pc).toBe(0x12); // Should branch
+      expect(cycles).toBe(3);
+      
+      // Test BMI (Branch if Minus/Negative Set)
+      cpu.pc = 0;
+      cpu.p |= NEGATIVE; // Set negative flag
+      cpu.mem[0] = 0x30; // BMI
+      
+      cycles = step6502(cpu);
+      expect(cpu.pc).toBe(0x12); // Should branch
+      expect(cycles).toBe(3);
+      
+      // Test BPL (Branch if Plus/Negative Clear)
+      cpu.pc = 0;
+      cpu.p &= ~NEGATIVE; // Clear negative flag
+      cpu.mem[0] = 0x10; // BPL
+      
+      cycles = step6502(cpu);
+      expect(cpu.pc).toBe(0x12); // Should branch
+      expect(cycles).toBe(3);
+      
+      // Test BVC (Branch if Overflow Clear)
+      cpu.pc = 0;
+      cpu.p &= ~OVERFLOW; // Clear overflow flag
+      cpu.mem[0] = 0x50; // BVC
+      
+      cycles = step6502(cpu);
+      expect(cpu.pc).toBe(0x12); // Should branch
+      expect(cycles).toBe(3);
+      
+      // Test BVS (Branch if Overflow Set)
+      cpu.pc = 0;
+      cpu.p |= OVERFLOW; // Set overflow flag
+      cpu.mem[0] = 0x70; // BVS
+      
+      cycles = step6502(cpu);
+      expect(cpu.pc).toBe(0x12); // Should branch
+      expect(cycles).toBe(3);
+    });
+  });
+
+  // NOP instruction
+  describe("System functions", () => {
+    it("should perform NOP instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up memory
+      cpu.mem[0] = 0xEA; // NOP
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.pc).toBe(1);
+      expect(cycles).toBe(2);
+      // NOP should not affect any registers or flags
+    });
+  });
+
   // Logical operations
   describe("Logical operations", () => {
     it("should perform AND immediate instruction", () => {
