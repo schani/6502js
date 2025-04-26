@@ -610,12 +610,110 @@ export function step6502(cpu: CPU, trace = false): number /* cycles */ {
             cycles = 2;
             break;
         }
+        case 0x05: { // ORA Zero Page
+            const addr = getZeroPageAddress(cpu);
+            cpu.a |= readByte(cpu, addr);
+            updateZeroAndNegativeFlags(cpu, cpu.a);
+            cycles = 3;
+            break;
+        }
+        case 0x15: { // ORA Zero Page,X
+            const addr = getZeroPageXAddress(cpu);
+            cpu.a |= readByte(cpu, addr);
+            updateZeroAndNegativeFlags(cpu, cpu.a);
+            cycles = 4;
+            break;
+        }
+        case 0x0D: { // ORA Absolute
+            const addr = getAbsoluteAddress(cpu);
+            cpu.a |= readByte(cpu, addr);
+            updateZeroAndNegativeFlags(cpu, cpu.a);
+            cycles = 4;
+            break;
+        }
+        case 0x1D: { // ORA Absolute,X
+            const { address, pageCrossed } = getAbsoluteXAddress(cpu);
+            cpu.a |= readByte(cpu, address);
+            updateZeroAndNegativeFlags(cpu, cpu.a);
+            cycles = 4 + (pageCrossed ? 1 : 0);
+            break;
+        }
+        case 0x19: { // ORA Absolute,Y
+            const { address, pageCrossed } = getAbsoluteYAddress(cpu);
+            cpu.a |= readByte(cpu, address);
+            updateZeroAndNegativeFlags(cpu, cpu.a);
+            cycles = 4 + (pageCrossed ? 1 : 0);
+            break;
+        }
+        case 0x01: { // ORA (Indirect,X)
+            const addr = getIndirectXAddress(cpu);
+            cpu.a |= readByte(cpu, addr);
+            updateZeroAndNegativeFlags(cpu, cpu.a);
+            cycles = 6;
+            break;
+        }
+        case 0x11: { // ORA (Indirect),Y
+            const { address, pageCrossed } = getIndirectYAddress(cpu);
+            cpu.a |= readByte(cpu, address);
+            updateZeroAndNegativeFlags(cpu, cpu.a);
+            cycles = 5 + (pageCrossed ? 1 : 0);
+            break;
+        }
         
         case 0x49: { // EOR Immediate
             const value = readByte(cpu, cpu.pc++);
             cpu.a ^= value;
             updateZeroAndNegativeFlags(cpu, cpu.a);
             cycles = 2;
+            break;
+        }
+        case 0x45: { // EOR Zero Page
+            const addr = getZeroPageAddress(cpu);
+            cpu.a ^= readByte(cpu, addr);
+            updateZeroAndNegativeFlags(cpu, cpu.a);
+            cycles = 3;
+            break;
+        }
+        case 0x55: { // EOR Zero Page,X
+            const addr = getZeroPageXAddress(cpu);
+            cpu.a ^= readByte(cpu, addr);
+            updateZeroAndNegativeFlags(cpu, cpu.a);
+            cycles = 4;
+            break;
+        }
+        case 0x4D: { // EOR Absolute
+            const addr = getAbsoluteAddress(cpu);
+            cpu.a ^= readByte(cpu, addr);
+            updateZeroAndNegativeFlags(cpu, cpu.a);
+            cycles = 4;
+            break;
+        }
+        case 0x5D: { // EOR Absolute,X
+            const { address, pageCrossed } = getAbsoluteXAddress(cpu);
+            cpu.a ^= readByte(cpu, address);
+            updateZeroAndNegativeFlags(cpu, cpu.a);
+            cycles = 4 + (pageCrossed ? 1 : 0);
+            break;
+        }
+        case 0x59: { // EOR Absolute,Y
+            const { address, pageCrossed } = getAbsoluteYAddress(cpu);
+            cpu.a ^= readByte(cpu, address);
+            updateZeroAndNegativeFlags(cpu, cpu.a);
+            cycles = 4 + (pageCrossed ? 1 : 0);
+            break;
+        }
+        case 0x41: { // EOR (Indirect,X)
+            const addr = getIndirectXAddress(cpu);
+            cpu.a ^= readByte(cpu, addr);
+            updateZeroAndNegativeFlags(cpu, cpu.a);
+            cycles = 6;
+            break;
+        }
+        case 0x51: { // EOR (Indirect),Y
+            const { address, pageCrossed } = getIndirectYAddress(cpu);
+            cpu.a ^= readByte(cpu, address);
+            updateZeroAndNegativeFlags(cpu, cpu.a);
+            cycles = 5 + (pageCrossed ? 1 : 0);
             break;
         }
         
@@ -697,6 +795,55 @@ export function step6502(cpu: CPU, trace = false): number /* cycles */ {
             cycles = 2;
             break;
         }
+        case 0xC5: { // CMP Zero Page
+            const addr = getZeroPageAddress(cpu);
+            const value = readByte(cpu, addr);
+            compare(cpu, cpu.a, value);
+            cycles = 3;
+            break;
+        }
+        case 0xD5: { // CMP Zero Page,X
+            const addr = getZeroPageXAddress(cpu);
+            const value = readByte(cpu, addr);
+            compare(cpu, cpu.a, value);
+            cycles = 4;
+            break;
+        }
+        case 0xCD: { // CMP Absolute
+            const addr = getAbsoluteAddress(cpu);
+            const value = readByte(cpu, addr);
+            compare(cpu, cpu.a, value);
+            cycles = 4;
+            break;
+        }
+        case 0xDD: { // CMP Absolute,X
+            const { address, pageCrossed } = getAbsoluteXAddress(cpu);
+            const value = readByte(cpu, address);
+            compare(cpu, cpu.a, value);
+            cycles = 4 + (pageCrossed ? 1 : 0);
+            break;
+        }
+        case 0xD9: { // CMP Absolute,Y
+            const { address, pageCrossed } = getAbsoluteYAddress(cpu);
+            const value = readByte(cpu, address);
+            compare(cpu, cpu.a, value);
+            cycles = 4 + (pageCrossed ? 1 : 0);
+            break;
+        }
+        case 0xC1: { // CMP (Indirect,X)
+            const addr = getIndirectXAddress(cpu);
+            const value = readByte(cpu, addr);
+            compare(cpu, cpu.a, value);
+            cycles = 6;
+            break;
+        }
+        case 0xD1: { // CMP (Indirect),Y
+            const { address, pageCrossed } = getIndirectYAddress(cpu);
+            const value = readByte(cpu, address);
+            compare(cpu, cpu.a, value);
+            cycles = 5 + (pageCrossed ? 1 : 0);
+            break;
+        }
         
         case 0xE0: { // CPX Immediate
             const value = readByte(cpu, cpu.pc++);
@@ -704,11 +851,39 @@ export function step6502(cpu: CPU, trace = false): number /* cycles */ {
             cycles = 2;
             break;
         }
+        case 0xE4: { // CPX Zero Page
+            const addr = getZeroPageAddress(cpu);
+            const value = readByte(cpu, addr);
+            compare(cpu, cpu.x, value);
+            cycles = 3;
+            break;
+        }
+        case 0xEC: { // CPX Absolute
+            const addr = getAbsoluteAddress(cpu);
+            const value = readByte(cpu, addr);
+            compare(cpu, cpu.x, value);
+            cycles = 4;
+            break;
+        }
         
         case 0xC0: { // CPY Immediate
             const value = readByte(cpu, cpu.pc++);
             compare(cpu, cpu.y, value);
             cycles = 2;
+            break;
+        }
+        case 0xC4: { // CPY Zero Page
+            const addr = getZeroPageAddress(cpu);
+            const value = readByte(cpu, addr);
+            compare(cpu, cpu.y, value);
+            cycles = 3;
+            break;
+        }
+        case 0xCC: { // CPY Absolute
+            const addr = getAbsoluteAddress(cpu);
+            const value = readByte(cpu, addr);
+            compare(cpu, cpu.y, value);
+            cycles = 4;
             break;
         }
         
@@ -778,6 +953,94 @@ export function step6502(cpu: CPU, trace = false): number /* cycles */ {
             cycles = 2;
             break;
         }
+        case 0x06: { // ASL Zero Page
+            const addr = getZeroPageAddress(cpu);
+            const value = readByte(cpu, addr);
+            
+            // Get the bit that will be shifted out
+            const carry = (value & 0x80) !== 0;
+            
+            // Shift left
+            const result = (value << 1) & 0xFF;
+            writeByte(cpu, addr, result);
+            
+            // Set carry flag based on the bit that was shifted out
+            if (carry) {
+                cpu.p |= CARRY;
+            } else {
+                cpu.p &= ~CARRY;
+            }
+            
+            updateZeroAndNegativeFlags(cpu, result);
+            cycles = 5;
+            break;
+        }
+        case 0x16: { // ASL Zero Page,X
+            const addr = getZeroPageXAddress(cpu);
+            const value = readByte(cpu, addr);
+            
+            // Get the bit that will be shifted out
+            const carry = (value & 0x80) !== 0;
+            
+            // Shift left
+            const result = (value << 1) & 0xFF;
+            writeByte(cpu, addr, result);
+            
+            // Set carry flag based on the bit that was shifted out
+            if (carry) {
+                cpu.p |= CARRY;
+            } else {
+                cpu.p &= ~CARRY;
+            }
+            
+            updateZeroAndNegativeFlags(cpu, result);
+            cycles = 6;
+            break;
+        }
+        case 0x0E: { // ASL Absolute
+            const addr = getAbsoluteAddress(cpu);
+            const value = readByte(cpu, addr);
+            
+            // Get the bit that will be shifted out
+            const carry = (value & 0x80) !== 0;
+            
+            // Shift left
+            const result = (value << 1) & 0xFF;
+            writeByte(cpu, addr, result);
+            
+            // Set carry flag based on the bit that was shifted out
+            if (carry) {
+                cpu.p |= CARRY;
+            } else {
+                cpu.p &= ~CARRY;
+            }
+            
+            updateZeroAndNegativeFlags(cpu, result);
+            cycles = 6;
+            break;
+        }
+        case 0x1E: { // ASL Absolute,X
+            const { address } = getAbsoluteXAddress(cpu);
+            const value = readByte(cpu, address);
+            
+            // Get the bit that will be shifted out
+            const carry = (value & 0x80) !== 0;
+            
+            // Shift left
+            const result = (value << 1) & 0xFF;
+            writeByte(cpu, address, result);
+            
+            // Set carry flag based on the bit that was shifted out
+            if (carry) {
+                cpu.p |= CARRY;
+            } else {
+                cpu.p &= ~CARRY;
+            }
+            
+            updateZeroAndNegativeFlags(cpu, result);
+            cycles = 7;
+            break;
+        }
         
         case 0x4A: { // LSR A (Accumulator)
             // Get the bit that will be shifted out
@@ -795,6 +1058,94 @@ export function step6502(cpu: CPU, trace = false): number /* cycles */ {
             
             updateZeroAndNegativeFlags(cpu, cpu.a);
             cycles = 2;
+            break;
+        }
+        case 0x46: { // LSR Zero Page
+            const addr = getZeroPageAddress(cpu);
+            const value = readByte(cpu, addr);
+            
+            // Get the bit that will be shifted out
+            const carry = (value & 0x01) !== 0;
+            
+            // Shift right
+            const result = (value >> 1) & 0xFF;
+            writeByte(cpu, addr, result);
+            
+            // Set carry flag based on the bit that was shifted out
+            if (carry) {
+                cpu.p |= CARRY;
+            } else {
+                cpu.p &= ~CARRY;
+            }
+            
+            updateZeroAndNegativeFlags(cpu, result);
+            cycles = 5;
+            break;
+        }
+        case 0x56: { // LSR Zero Page,X
+            const addr = getZeroPageXAddress(cpu);
+            const value = readByte(cpu, addr);
+            
+            // Get the bit that will be shifted out
+            const carry = (value & 0x01) !== 0;
+            
+            // Shift right
+            const result = (value >> 1) & 0xFF;
+            writeByte(cpu, addr, result);
+            
+            // Set carry flag based on the bit that was shifted out
+            if (carry) {
+                cpu.p |= CARRY;
+            } else {
+                cpu.p &= ~CARRY;
+            }
+            
+            updateZeroAndNegativeFlags(cpu, result);
+            cycles = 6;
+            break;
+        }
+        case 0x4E: { // LSR Absolute
+            const addr = getAbsoluteAddress(cpu);
+            const value = readByte(cpu, addr);
+            
+            // Get the bit that will be shifted out
+            const carry = (value & 0x01) !== 0;
+            
+            // Shift right
+            const result = (value >> 1) & 0xFF;
+            writeByte(cpu, addr, result);
+            
+            // Set carry flag based on the bit that was shifted out
+            if (carry) {
+                cpu.p |= CARRY;
+            } else {
+                cpu.p &= ~CARRY;
+            }
+            
+            updateZeroAndNegativeFlags(cpu, result);
+            cycles = 6;
+            break;
+        }
+        case 0x5E: { // LSR Absolute,X
+            const { address } = getAbsoluteXAddress(cpu);
+            const value = readByte(cpu, address);
+            
+            // Get the bit that will be shifted out
+            const carry = (value & 0x01) !== 0;
+            
+            // Shift right
+            const result = (value >> 1) & 0xFF;
+            writeByte(cpu, address, result);
+            
+            // Set carry flag based on the bit that was shifted out
+            if (carry) {
+                cpu.p |= CARRY;
+            } else {
+                cpu.p &= ~CARRY;
+            }
+            
+            updateZeroAndNegativeFlags(cpu, result);
+            cycles = 7;
             break;
         }
         
@@ -819,6 +1170,106 @@ export function step6502(cpu: CPU, trace = false): number /* cycles */ {
             cycles = 2;
             break;
         }
+        case 0x26: { // ROL Zero Page
+            const addr = getZeroPageAddress(cpu);
+            const value = readByte(cpu, addr);
+            
+            // Get the current state of the carry flag
+            const oldCarry = (cpu.p & CARRY) !== 0 ? 1 : 0;
+            
+            // Get the bit that will be shifted out
+            const newCarry = (value & 0x80) !== 0;
+            
+            // Rotate left: shift left and add old carry to bit 0
+            const result = ((value << 1) | oldCarry) & 0xFF;
+            writeByte(cpu, addr, result);
+            
+            // Set carry flag based on the bit that was shifted out
+            if (newCarry) {
+                cpu.p |= CARRY;
+            } else {
+                cpu.p &= ~CARRY;
+            }
+            
+            updateZeroAndNegativeFlags(cpu, result);
+            cycles = 5;
+            break;
+        }
+        case 0x36: { // ROL Zero Page,X
+            const addr = getZeroPageXAddress(cpu);
+            const value = readByte(cpu, addr);
+            
+            // Get the current state of the carry flag
+            const oldCarry = (cpu.p & CARRY) !== 0 ? 1 : 0;
+            
+            // Get the bit that will be shifted out
+            const newCarry = (value & 0x80) !== 0;
+            
+            // Rotate left: shift left and add old carry to bit 0
+            const result = ((value << 1) | oldCarry) & 0xFF;
+            writeByte(cpu, addr, result);
+            
+            // Set carry flag based on the bit that was shifted out
+            if (newCarry) {
+                cpu.p |= CARRY;
+            } else {
+                cpu.p &= ~CARRY;
+            }
+            
+            updateZeroAndNegativeFlags(cpu, result);
+            cycles = 6;
+            break;
+        }
+        case 0x2E: { // ROL Absolute
+            const addr = getAbsoluteAddress(cpu);
+            const value = readByte(cpu, addr);
+            
+            // Get the current state of the carry flag
+            const oldCarry = (cpu.p & CARRY) !== 0 ? 1 : 0;
+            
+            // Get the bit that will be shifted out
+            const newCarry = (value & 0x80) !== 0;
+            
+            // Rotate left: shift left and add old carry to bit 0
+            const result = ((value << 1) | oldCarry) & 0xFF;
+            writeByte(cpu, addr, result);
+            
+            // Set carry flag based on the bit that was shifted out
+            if (newCarry) {
+                cpu.p |= CARRY;
+            } else {
+                cpu.p &= ~CARRY;
+            }
+            
+            updateZeroAndNegativeFlags(cpu, result);
+            cycles = 6;
+            break;
+        }
+        case 0x3E: { // ROL Absolute,X
+            const { address } = getAbsoluteXAddress(cpu);
+            const value = readByte(cpu, address);
+            
+            // Get the current state of the carry flag
+            const oldCarry = (cpu.p & CARRY) !== 0 ? 1 : 0;
+            
+            // Get the bit that will be shifted out
+            const newCarry = (value & 0x80) !== 0;
+            
+            // Rotate left: shift left and add old carry to bit 0
+            const result = ((value << 1) | oldCarry) & 0xFF;
+            writeByte(cpu, address, result);
+            
+            // Set carry flag based on the bit that was shifted out
+            if (newCarry) {
+                cpu.p |= CARRY;
+            } else {
+                cpu.p &= ~CARRY;
+            }
+            
+            updateZeroAndNegativeFlags(cpu, result);
+            cycles = 7;
+            break;
+        }
         
         case 0x6A: { // ROR A (Accumulator)
             // Get the current state of the carry flag
@@ -839,6 +1290,106 @@ export function step6502(cpu: CPU, trace = false): number /* cycles */ {
             
             updateZeroAndNegativeFlags(cpu, cpu.a);
             cycles = 2;
+            break;
+        }
+        case 0x66: { // ROR Zero Page
+            const addr = getZeroPageAddress(cpu);
+            const value = readByte(cpu, addr);
+            
+            // Get the current state of the carry flag
+            const oldCarry = (cpu.p & CARRY) !== 0 ? 0x80 : 0;
+            
+            // Get the bit that will be shifted out
+            const newCarry = (value & 0x01) !== 0;
+            
+            // Rotate right: shift right and add old carry to bit 7
+            const result = ((value >> 1) | oldCarry) & 0xFF;
+            writeByte(cpu, addr, result);
+            
+            // Set carry flag based on the bit that was shifted out
+            if (newCarry) {
+                cpu.p |= CARRY;
+            } else {
+                cpu.p &= ~CARRY;
+            }
+            
+            updateZeroAndNegativeFlags(cpu, result);
+            cycles = 5;
+            break;
+        }
+        case 0x76: { // ROR Zero Page,X
+            const addr = getZeroPageXAddress(cpu);
+            const value = readByte(cpu, addr);
+            
+            // Get the current state of the carry flag
+            const oldCarry = (cpu.p & CARRY) !== 0 ? 0x80 : 0;
+            
+            // Get the bit that will be shifted out
+            const newCarry = (value & 0x01) !== 0;
+            
+            // Rotate right: shift right and add old carry to bit 7
+            const result = ((value >> 1) | oldCarry) & 0xFF;
+            writeByte(cpu, addr, result);
+            
+            // Set carry flag based on the bit that was shifted out
+            if (newCarry) {
+                cpu.p |= CARRY;
+            } else {
+                cpu.p &= ~CARRY;
+            }
+            
+            updateZeroAndNegativeFlags(cpu, result);
+            cycles = 6;
+            break;
+        }
+        case 0x6E: { // ROR Absolute
+            const addr = getAbsoluteAddress(cpu);
+            const value = readByte(cpu, addr);
+            
+            // Get the current state of the carry flag
+            const oldCarry = (cpu.p & CARRY) !== 0 ? 0x80 : 0;
+            
+            // Get the bit that will be shifted out
+            const newCarry = (value & 0x01) !== 0;
+            
+            // Rotate right: shift right and add old carry to bit 7
+            const result = ((value >> 1) | oldCarry) & 0xFF;
+            writeByte(cpu, addr, result);
+            
+            // Set carry flag based on the bit that was shifted out
+            if (newCarry) {
+                cpu.p |= CARRY;
+            } else {
+                cpu.p &= ~CARRY;
+            }
+            
+            updateZeroAndNegativeFlags(cpu, result);
+            cycles = 6;
+            break;
+        }
+        case 0x7E: { // ROR Absolute,X
+            const { address } = getAbsoluteXAddress(cpu);
+            const value = readByte(cpu, address);
+            
+            // Get the current state of the carry flag
+            const oldCarry = (cpu.p & CARRY) !== 0 ? 0x80 : 0;
+            
+            // Get the bit that will be shifted out
+            const newCarry = (value & 0x01) !== 0;
+            
+            // Rotate right: shift right and add old carry to bit 7
+            const result = ((value >> 1) | oldCarry) & 0xFF;
+            writeByte(cpu, address, result);
+            
+            // Set carry flag based on the bit that was shifted out
+            if (newCarry) {
+                cpu.p |= CARRY;
+            } else {
+                cpu.p &= ~CARRY;
+            }
+            
+            updateZeroAndNegativeFlags(cpu, result);
+            cycles = 7;
             break;
         }
         

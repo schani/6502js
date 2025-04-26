@@ -33,8 +33,13 @@
   - [x] Fix JSR to push PC-1 onto the stack
   - [x] Fix RTS to add 2 to the value pulled from the stack
 
+- [x] Improve test coverage
+  - [x] Add tests for logical operations in all addressing modes
+  - [x] Add tests for shift and rotate operations in memory
+  - [x] Add tests for compare operations in all addressing modes
+  - [x] Add tests for different edge cases
+
 - [ ] Potential future improvements:
   - [ ] Implement BRK and RTI instructions (system functions)
-  - [ ] Add more tests to increase coverage
   - [ ] Add examples of running simple 6502 programs
   - [ ] Improve debugging with memory dump and trace functionality

@@ -273,6 +273,124 @@ describe("6502 CPU", () => {
       expect(cycles).toBe(3);
     });
     
+    it("should perform STA zero page,X instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up accumulator and X register
+      cpu.a = 0x42;
+      cpu.x = 0x05;
+      
+      // STA $30,X - Store accumulator at zero page address 0x30 + X
+      cpu.mem[0] = 0x95; // STA zero page,X
+      cpu.mem[1] = 0x30; // Zero page address
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.mem[0x35]).toBe(0x42); // Value at address 0x30 + 0x05
+      expect(cpu.pc).toBe(2);
+      expect(cycles).toBe(4);
+    });
+    
+    it("should perform STA absolute instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up accumulator
+      cpu.a = 0x42;
+      
+      // STA $1234 - Store accumulator at absolute address 0x1234
+      cpu.mem[0] = 0x8D; // STA absolute
+      cpu.mem[1] = 0x34; // Low byte of address
+      cpu.mem[2] = 0x12; // High byte of address
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.mem[0x1234]).toBe(0x42);
+      expect(cpu.pc).toBe(3);
+      expect(cycles).toBe(4);
+    });
+    
+    it("should perform STA absolute,X instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up accumulator and X register
+      cpu.a = 0x42;
+      cpu.x = 0x05;
+      
+      // STA $1234,X - Store accumulator at absolute address 0x1234 + X
+      cpu.mem[0] = 0x9D; // STA absolute,X
+      cpu.mem[1] = 0x34; // Low byte of address
+      cpu.mem[2] = 0x12; // High byte of address
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.mem[0x1239]).toBe(0x42); // Value at address 0x1234 + 0x05
+      expect(cpu.pc).toBe(3);
+      expect(cycles).toBe(5); // Always 5 cycles, regardless of page crossing
+    });
+    
+    it("should perform STA absolute,Y instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up accumulator and Y register
+      cpu.a = 0x42;
+      cpu.y = 0x05;
+      
+      // STA $1234,Y - Store accumulator at absolute address 0x1234 + Y
+      cpu.mem[0] = 0x99; // STA absolute,Y
+      cpu.mem[1] = 0x34; // Low byte of address
+      cpu.mem[2] = 0x12; // High byte of address
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.mem[0x1239]).toBe(0x42); // Value at address 0x1234 + 0x05
+      expect(cpu.pc).toBe(3);
+      expect(cycles).toBe(5); // Always 5 cycles, regardless of page crossing
+    });
+    
+    it("should perform STA (indirect,X) instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up accumulator and X register
+      cpu.a = 0x42;
+      cpu.x = 0x04;
+      
+      // Set up memory (pointer in zero page)
+      cpu.mem[0] = 0x81; // STA (indirect,X)
+      cpu.mem[1] = 0x20; // Zero page address
+      
+      // Effective address stored at (zero page + X) in little endian
+      cpu.mem[0x24] = 0x74; // Low byte of effective address
+      cpu.mem[0x25] = 0x20; // High byte of effective address
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.mem[0x2074]).toBe(0x42); // Value at effective address
+      expect(cpu.pc).toBe(2);
+      expect(cycles).toBe(6);
+    });
+    
+    it("should perform STA (indirect),Y instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up accumulator and Y register
+      cpu.a = 0x42;
+      cpu.y = 0x10;
+      
+      // Set up memory
+      cpu.mem[0] = 0x91; // STA (indirect),Y
+      cpu.mem[1] = 0x20; // Zero page address
+      
+      // Effective base address stored at zero page in little endian
+      cpu.mem[0x20] = 0x74; // Low byte of base address
+      cpu.mem[0x21] = 0x20; // High byte of base address
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.mem[0x2084]).toBe(0x42); // Value at (base address + Y)
+      expect(cpu.pc).toBe(2);
+      expect(cycles).toBe(6); // Always 6 cycles, regardless of page crossing
+    });
+    
     it("should perform STX zero page instruction", () => {
       const cpu = createCPU();
       
@@ -290,6 +408,42 @@ describe("6502 CPU", () => {
       expect(cycles).toBe(3);
     });
     
+    it("should perform STX zero page,Y instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up X and Y registers
+      cpu.x = 0x42;
+      cpu.y = 0x05;
+      
+      // STX $30,Y - Store X register at zero page address 0x30 + Y
+      cpu.mem[0] = 0x96; // STX zero page,Y
+      cpu.mem[1] = 0x30; // Zero page address
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.mem[0x35]).toBe(0x42); // Value at address 0x30 + 0x05
+      expect(cpu.pc).toBe(2);
+      expect(cycles).toBe(4);
+    });
+    
+    it("should perform STX absolute instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up X register
+      cpu.x = 0x42;
+      
+      // STX $1234 - Store X register at absolute address 0x1234
+      cpu.mem[0] = 0x8E; // STX absolute
+      cpu.mem[1] = 0x34; // Low byte of address
+      cpu.mem[2] = 0x12; // High byte of address
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.mem[0x1234]).toBe(0x42);
+      expect(cpu.pc).toBe(3);
+      expect(cycles).toBe(4);
+    });
+    
     it("should perform STY zero page instruction", () => {
       const cpu = createCPU();
       
@@ -305,6 +459,42 @@ describe("6502 CPU", () => {
       expect(cpu.mem[0x30]).toBe(0x42);
       expect(cpu.pc).toBe(2);
       expect(cycles).toBe(3);
+    });
+    
+    it("should perform STY zero page,X instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up X and Y registers
+      cpu.y = 0x42;
+      cpu.x = 0x05;
+      
+      // STY $30,X - Store Y register at zero page address 0x30 + X
+      cpu.mem[0] = 0x94; // STY zero page,X
+      cpu.mem[1] = 0x30; // Zero page address
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.mem[0x35]).toBe(0x42); // Value at address 0x30 + 0x05
+      expect(cpu.pc).toBe(2);
+      expect(cycles).toBe(4);
+    });
+    
+    it("should perform STY absolute instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up Y register
+      cpu.y = 0x42;
+      
+      // STY $1234 - Store Y register at absolute address 0x1234
+      cpu.mem[0] = 0x8C; // STY absolute
+      cpu.mem[1] = 0x34; // Low byte of address
+      cpu.mem[2] = 0x12; // High byte of address
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.mem[0x1234]).toBe(0x42);
+      expect(cpu.pc).toBe(3);
+      expect(cycles).toBe(4);
     });
   });
 
@@ -788,6 +978,125 @@ describe("6502 CPU", () => {
       expect(cpu.p & CARRY).toBe(0); // A < M, so carry clear
       expect(cpu.p & NEGATIVE).toBe(NEGATIVE); // Result bit 7 is set
     });
+    
+    it("should perform CMP zero page instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.a = 0x42;
+      
+      // Set up memory
+      cpu.mem[0] = 0xC5; // CMP zero page
+      cpu.mem[1] = 0x30; // Zero page address
+      cpu.mem[0x30] = 0x42; // Value to compare
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.a).toBe(0x42); // Accumulator should not change
+      expect(cpu.p & ZERO).toBe(ZERO); // Equal, so zero flag set
+      expect(cpu.p & CARRY).toBe(CARRY); // A >= M, so carry set
+      expect(cpu.pc).toBe(2);
+      expect(cycles).toBe(3);
+    });
+    
+    it("should perform CMP absolute instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.a = 0x42;
+      
+      // Set up memory
+      cpu.mem[0] = 0xCD; // CMP absolute
+      cpu.mem[1] = 0x34; // Low byte of address
+      cpu.mem[2] = 0x12; // High byte of address
+      cpu.mem[0x1234] = 0x42; // Value to compare
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.a).toBe(0x42); // Accumulator should not change
+      expect(cpu.p & ZERO).toBe(ZERO); // Equal, so zero flag set
+      expect(cpu.p & CARRY).toBe(CARRY); // A >= M, so carry set
+      expect(cpu.pc).toBe(3);
+      expect(cycles).toBe(4);
+    });
+    
+    it("should perform CPX immediate instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.x = 0x42;
+      
+      // Set up memory
+      cpu.mem[0] = 0xE0; // CPX immediate
+      cpu.mem[1] = 0x42; // Value to compare
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.x).toBe(0x42); // X register should not change
+      expect(cpu.p & ZERO).toBe(ZERO); // Equal, so zero flag set
+      expect(cpu.p & CARRY).toBe(CARRY); // X >= M, so carry set
+      expect(cpu.pc).toBe(2);
+      expect(cycles).toBe(2);
+    });
+    
+    it("should perform CPX zero page instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.x = 0x42;
+      
+      // Set up memory
+      cpu.mem[0] = 0xE4; // CPX zero page
+      cpu.mem[1] = 0x30; // Zero page address
+      cpu.mem[0x30] = 0x42; // Value to compare
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.x).toBe(0x42); // X register should not change
+      expect(cpu.p & ZERO).toBe(ZERO); // Equal, so zero flag set
+      expect(cpu.p & CARRY).toBe(CARRY); // X >= M, so carry set
+      expect(cpu.pc).toBe(2);
+      expect(cycles).toBe(3);
+    });
+    
+    it("should perform CPY immediate instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.y = 0x42;
+      
+      // Set up memory
+      cpu.mem[0] = 0xC0; // CPY immediate
+      cpu.mem[1] = 0x42; // Value to compare
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.y).toBe(0x42); // Y register should not change
+      expect(cpu.p & ZERO).toBe(ZERO); // Equal, so zero flag set
+      expect(cpu.p & CARRY).toBe(CARRY); // Y >= M, so carry set
+      expect(cpu.pc).toBe(2);
+      expect(cycles).toBe(2);
+    });
+    
+    it("should perform CPY zero page instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.y = 0x42;
+      
+      // Set up memory
+      cpu.mem[0] = 0xC4; // CPY zero page
+      cpu.mem[1] = 0x30; // Zero page address
+      cpu.mem[0x30] = 0x42; // Value to compare
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.y).toBe(0x42); // Y register should not change
+      expect(cpu.p & ZERO).toBe(ZERO); // Equal, so zero flag set
+      expect(cpu.p & CARRY).toBe(CARRY); // Y >= M, so carry set
+      expect(cpu.pc).toBe(2);
+      expect(cycles).toBe(3);
+    });
   });
   
   // Increment and decrement operations
@@ -947,6 +1256,41 @@ describe("6502 CPU", () => {
       expect(cpu.p & ZERO).toBe(0); // Result is not zero
     });
     
+    it("should perform ASL zero page instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up memory
+      cpu.mem[0] = 0x06; // ASL zero page
+      cpu.mem[1] = 0x42; // Zero page address
+      cpu.mem[0x42] = 0x41; // Value to shift
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.mem[0x42]).toBe(0x82); // 10000010
+      expect(cpu.p & CARRY).toBe(0); // Bit 7 was 0
+      expect(cpu.p & NEGATIVE).toBe(NEGATIVE); // Result has bit 7 set
+      expect(cpu.pc).toBe(2);
+      expect(cycles).toBe(5);
+    });
+    
+    it("should perform ASL absolute instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up memory
+      cpu.mem[0] = 0x0E; // ASL absolute
+      cpu.mem[1] = 0x34; // Low byte of address
+      cpu.mem[2] = 0x12; // High byte of address
+      cpu.mem[0x1234] = 0x41; // Value to shift
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.mem[0x1234]).toBe(0x82); // 10000010
+      expect(cpu.p & CARRY).toBe(0); // Bit 7 was 0
+      expect(cpu.p & NEGATIVE).toBe(NEGATIVE); // Result has bit 7 set
+      expect(cpu.pc).toBe(3);
+      expect(cycles).toBe(6);
+    });
+    
     it("should perform LSR A instruction", () => {
       const cpu = createCPU();
       
@@ -973,6 +1317,41 @@ describe("6502 CPU", () => {
       expect(cpu.a).toBe(0x00); // 00000000
       expect(cpu.p & CARRY).toBe(CARRY); // Bit 0 was 1
       expect(cpu.p & ZERO).toBe(ZERO); // Result is zero
+    });
+    
+    it("should perform LSR zero page instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up memory
+      cpu.mem[0] = 0x46; // LSR zero page
+      cpu.mem[1] = 0x42; // Zero page address
+      cpu.mem[0x42] = 0x41; // Value to shift
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.mem[0x42]).toBe(0x20); // 00100000
+      expect(cpu.p & CARRY).toBe(CARRY); // Bit 0 was 1
+      expect(cpu.p & NEGATIVE).toBe(0); // Bit 7 is always cleared
+      expect(cpu.pc).toBe(2);
+      expect(cycles).toBe(5);
+    });
+    
+    it("should perform LSR absolute instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up memory
+      cpu.mem[0] = 0x4E; // LSR absolute
+      cpu.mem[1] = 0x34; // Low byte of address
+      cpu.mem[2] = 0x12; // High byte of address
+      cpu.mem[0x1234] = 0x41; // Value to shift
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.mem[0x1234]).toBe(0x20); // 00100000
+      expect(cpu.p & CARRY).toBe(CARRY); // Bit 0 was 1
+      expect(cpu.p & NEGATIVE).toBe(0); // Bit 7 is always cleared
+      expect(cpu.pc).toBe(3);
+      expect(cycles).toBe(6);
     });
     
     it("should perform ROL A instruction", () => {
@@ -1005,6 +1384,47 @@ describe("6502 CPU", () => {
       expect(cpu.p & ZERO).toBe(0); // Result is not zero
     });
     
+    it("should perform ROL zero page instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.p &= ~CARRY; // Clear carry flag
+      
+      // Set up memory
+      cpu.mem[0] = 0x26; // ROL zero page
+      cpu.mem[1] = 0x42; // Zero page address
+      cpu.mem[0x42] = 0x41; // Value to rotate
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.mem[0x42]).toBe(0x82); // 10000010
+      expect(cpu.p & CARRY).toBe(0); // Old bit 7 was 0
+      expect(cpu.p & NEGATIVE).toBe(NEGATIVE); // Result has bit 7 set
+      expect(cpu.pc).toBe(2);
+      expect(cycles).toBe(5);
+    });
+    
+    it("should perform ROL absolute instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.p &= ~CARRY; // Clear carry flag
+      
+      // Set up memory
+      cpu.mem[0] = 0x2E; // ROL absolute
+      cpu.mem[1] = 0x34; // Low byte of address
+      cpu.mem[2] = 0x12; // High byte of address
+      cpu.mem[0x1234] = 0x41; // Value to rotate
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.mem[0x1234]).toBe(0x82); // 10000010
+      expect(cpu.p & CARRY).toBe(0); // Old bit 7 was 0
+      expect(cpu.p & NEGATIVE).toBe(NEGATIVE); // Result has bit 7 set
+      expect(cpu.pc).toBe(3);
+      expect(cycles).toBe(6);
+    });
+    
     it("should perform ROR A instruction", () => {
       const cpu = createCPU();
       
@@ -1033,6 +1453,66 @@ describe("6502 CPU", () => {
       expect(cpu.a).toBe(0x80); // 10000000 (carry in becomes bit 7)
       expect(cpu.p & CARRY).toBe(CARRY); // Old bit 0 was 1
       expect(cpu.p & NEGATIVE).toBe(NEGATIVE); // Result has bit 7 set
+    });
+    
+    it("should perform ROR zero page instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.p &= ~CARRY; // Clear carry flag
+      
+      // Set up memory
+      cpu.mem[0] = 0x66; // ROR zero page
+      cpu.mem[1] = 0x42; // Zero page address
+      cpu.mem[0x42] = 0x41; // Value to rotate
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.mem[0x42]).toBe(0x20); // 00100000
+      expect(cpu.p & CARRY).toBe(CARRY); // Old bit 0 was 1
+      expect(cpu.p & NEGATIVE).toBe(0); // Result has bit 7 clear
+      expect(cpu.pc).toBe(2);
+      expect(cycles).toBe(5);
+    });
+    
+    it("should perform ROR absolute instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.p &= ~CARRY; // Clear carry flag
+      
+      // Set up memory
+      cpu.mem[0] = 0x6E; // ROR absolute
+      cpu.mem[1] = 0x34; // Low byte of address
+      cpu.mem[2] = 0x12; // High byte of address
+      cpu.mem[0x1234] = 0x41; // Value to rotate
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.mem[0x1234]).toBe(0x20); // 00100000
+      expect(cpu.p & CARRY).toBe(CARRY); // Old bit 0 was 1
+      expect(cpu.p & NEGATIVE).toBe(0); // Result has bit 7 clear
+      expect(cpu.pc).toBe(3);
+      expect(cycles).toBe(6);
+    });
+    
+    it("should handle ASL with zero result", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.a = 0x80; // 10000000
+      
+      // Set up memory
+      cpu.mem[0] = 0x0A; // ASL A
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.a).toBe(0x00); // 00000000
+      expect(cpu.p & CARRY).toBe(CARRY); // Bit 7 was 1
+      expect(cpu.p & ZERO).toBe(ZERO); // Result is zero
+      expect(cpu.p & NEGATIVE).toBe(0); // Result is not negative
+      expect(cpu.pc).toBe(1);
+      expect(cycles).toBe(2);
     });
   });
 
@@ -1369,6 +1849,65 @@ describe("6502 CPU", () => {
       expect(cpu.p & ZERO).toBe(ZERO); // Zero flag should be set
     });
     
+    it("should perform AND zero page instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.a = 0xF0;
+      
+      // Set up memory
+      cpu.mem[0] = 0x25; // AND zero page
+      cpu.mem[1] = 0x42; // Zero page address
+      cpu.mem[0x42] = 0x0F; // Value to AND with accumulator
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.a).toBe(0x00); // 0xF0 & 0x0F = 0x00
+      expect(cpu.pc).toBe(2);
+      expect(cycles).toBe(3);
+      expect(cpu.p & ZERO).toBe(ZERO); // Zero flag should be set
+    });
+
+    it("should perform AND zero page,X instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.a = 0xF0;
+      cpu.x = 0x05;
+      
+      // Set up memory
+      cpu.mem[0] = 0x35; // AND zero page,X
+      cpu.mem[1] = 0x42; // Zero page address
+      cpu.mem[0x47] = 0x0F; // Value at (zero page address + X)
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.a).toBe(0x00); // 0xF0 & 0x0F = 0x00
+      expect(cpu.pc).toBe(2);
+      expect(cycles).toBe(4);
+      expect(cpu.p & ZERO).toBe(ZERO); // Zero flag should be set
+    });
+
+    it("should perform AND absolute instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.a = 0xF0;
+      
+      // Set up memory
+      cpu.mem[0] = 0x2D; // AND absolute
+      cpu.mem[1] = 0x34; // Low byte of address
+      cpu.mem[2] = 0x12; // High byte of address
+      cpu.mem[0x1234] = 0x0F; // Value at absolute address
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.a).toBe(0x00); // 0xF0 & 0x0F = 0x00
+      expect(cpu.pc).toBe(3);
+      expect(cycles).toBe(4);
+      expect(cpu.p & ZERO).toBe(ZERO); // Zero flag should be set
+    });
+    
     it("should perform ORA immediate instruction", () => {
       const cpu = createCPU();
       
@@ -1387,6 +1926,45 @@ describe("6502 CPU", () => {
       expect(cpu.p & NEGATIVE).toBe(NEGATIVE); // Negative flag should be set
     });
     
+    it("should perform ORA zero page instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.a = 0xF0;
+      
+      // Set up memory
+      cpu.mem[0] = 0x05; // ORA zero page
+      cpu.mem[1] = 0x42; // Zero page address
+      cpu.mem[0x42] = 0x0F; // Value to OR with accumulator
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.a).toBe(0xFF); // 0xF0 | 0x0F = 0xFF
+      expect(cpu.pc).toBe(2);
+      expect(cycles).toBe(3);
+      expect(cpu.p & NEGATIVE).toBe(NEGATIVE); // Negative flag should be set
+    });
+    
+    it("should perform ORA absolute instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.a = 0xF0;
+      
+      // Set up memory
+      cpu.mem[0] = 0x0D; // ORA absolute
+      cpu.mem[1] = 0x34; // Low byte of address
+      cpu.mem[2] = 0x12; // High byte of address
+      cpu.mem[0x1234] = 0x0F; // Value at absolute address
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.a).toBe(0xFF); // 0xF0 | 0x0F = 0xFF
+      expect(cpu.pc).toBe(3);
+      expect(cycles).toBe(4);
+      expect(cpu.p & NEGATIVE).toBe(NEGATIVE); // Negative flag should be set
+    });
+    
     it("should perform EOR immediate instruction", () => {
       const cpu = createCPU();
       
@@ -1402,6 +1980,43 @@ describe("6502 CPU", () => {
       expect(cpu.a).toBe(0x0F); // 0xFF ^ 0xF0 = 0x0F
       expect(cpu.pc).toBe(2);
       expect(cycles).toBe(2);
+    });
+    
+    it("should perform EOR zero page instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.a = 0xFF;
+      
+      // Set up memory
+      cpu.mem[0] = 0x45; // EOR zero page
+      cpu.mem[1] = 0x42; // Zero page address
+      cpu.mem[0x42] = 0xF0; // Value to XOR with accumulator
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.a).toBe(0x0F); // 0xFF ^ 0xF0 = 0x0F
+      expect(cpu.pc).toBe(2);
+      expect(cycles).toBe(3);
+    });
+    
+    it("should perform EOR absolute instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.a = 0xFF;
+      
+      // Set up memory
+      cpu.mem[0] = 0x4D; // EOR absolute
+      cpu.mem[1] = 0x34; // Low byte of address
+      cpu.mem[2] = 0x12; // High byte of address
+      cpu.mem[0x1234] = 0xF0; // Value at absolute address
+      
+      const cycles = step6502(cpu);
+      
+      expect(cpu.a).toBe(0x0F); // 0xFF ^ 0xF0 = 0x0F
+      expect(cpu.pc).toBe(3);
+      expect(cycles).toBe(4);
     });
     
     it("should perform BIT zero page instruction", () => {
@@ -1427,6 +2042,61 @@ describe("6502 CPU", () => {
       
       // Accumulator should not be modified
       expect(cpu.a).toBe(0x0F);
+      expect(cpu.pc).toBe(2);
+      expect(cycles).toBe(3);
+    });
+    
+    it("should perform BIT absolute instruction", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.a = 0x0F;
+      cpu.p = 0; // Clear all flags
+      
+      // Set up memory
+      cpu.mem[0] = 0x2C; // BIT absolute
+      cpu.mem[1] = 0x34; // Low byte of address
+      cpu.mem[2] = 0x12; // High byte of address
+      cpu.mem[0x1234] = 0xC0; // Test value (bits 7 and 6 are set)
+      
+      const cycles = step6502(cpu);
+      
+      // BIT sets N and V from bits 7 and 6 of memory
+      expect(cpu.p & NEGATIVE).toBe(NEGATIVE); // Bit 7 of memory -> N flag
+      expect(cpu.p & OVERFLOW).toBe(OVERFLOW); // Bit 6 of memory -> V flag
+      
+      // BIT sets Z based on AND result
+      expect(cpu.p & ZERO).toBe(ZERO); // 0x0F & 0xC0 = 0, so Z flag is set
+      
+      // Accumulator should not be modified
+      expect(cpu.a).toBe(0x0F);
+      expect(cpu.pc).toBe(3);
+      expect(cycles).toBe(4);
+    });
+    
+    it("should correctly handle BIT with matching bits", () => {
+      const cpu = createCPU();
+      
+      // Set up CPU state
+      cpu.a = 0xC0; // Matches the test value
+      cpu.p = 0; // Clear all flags
+      
+      // Set up memory
+      cpu.mem[0] = 0x24; // BIT zero page
+      cpu.mem[1] = 0x20; // Zero page address
+      cpu.mem[0x20] = 0xC0; // Test value (bits 7 and 6 are set)
+      
+      const cycles = step6502(cpu);
+      
+      // BIT sets N and V from bits 7 and 6 of memory
+      expect(cpu.p & NEGATIVE).toBe(NEGATIVE); // Bit 7 of memory -> N flag
+      expect(cpu.p & OVERFLOW).toBe(OVERFLOW); // Bit 6 of memory -> V flag
+      
+      // BIT sets Z based on AND result
+      expect(cpu.p & ZERO).toBe(0); // 0xC0 & 0xC0 = 0xC0, so Z flag should be clear
+      
+      // Accumulator should not be modified
+      expect(cpu.a).toBe(0xC0);
       expect(cpu.pc).toBe(2);
       expect(cycles).toBe(3);
     });
