@@ -10,5 +10,8 @@
     },
     "peerDependencies": {
         "typescript": "^5"
+    },
+    "dependencies": {
+        "@glideapps/ts-necessities": "^2.4.0"
     }
 }
