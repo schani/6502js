@@ -6,21 +6,21 @@ describe("Arithmetic operations", () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.a = 0x42;
-    cpu.p &= ~CARRY; // Clear carry flag
+    cpu.setAccumulator(0x42);
+    cpu.clearStatusFlag(CARRY); // Clear carry flag
     
     // Set up memory
-    cpu.mem[0] = 0x69; // ADC immediate
-    cpu.mem[1] = 0x37; // Value to add
+    cpu.loadByte(0, 0x69); // ADC immediate
+    cpu.loadByte(1, 0x37); // Value to add
     
     const cycles = step6502(cpu);
     
-    expect(cpu.a).toBe(0x79); // 0x42 + 0x37 = 0x79
-    expect(cpu.p & CARRY).toBe(0); // No carry out
-    expect(cpu.p & ZERO).toBe(0); // Result is not zero
-    expect(cpu.p & NEGATIVE).toBe(0); // Result is not negative
-    expect(cpu.p & OVERFLOW).toBe(0); // No overflow (both inputs and result have same sign bit)
-    expect(cpu.pc).toBe(2);
+    expect(cpu.getAccumulator()).toBe(0x79); // 0x42 + 0x37 = 0x79
+    expect(cpu.getStatusRegister() & CARRY).toBe(0); // No carry out
+    expect(cpu.getStatusRegister() & ZERO).toBe(0); // Result is not zero
+    expect(cpu.getStatusRegister() & NEGATIVE).toBe(0); // Result is not negative
+    expect(cpu.getStatusRegister() & OVERFLOW).toBe(0); // No overflow (both inputs and result have same sign bit)
+    expect(cpu.getProgramCounter()).toBe(2);
     expect(cycles).toBe(2);
   });
   
@@ -28,17 +28,17 @@ describe("Arithmetic operations", () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.a = 0x42;
-    cpu.p |= CARRY; // Set carry flag
+    cpu.setAccumulator(0x42);
+    cpu.setStatusFlag(CARRY); // Set carry flag
     
     // Set up memory
-    cpu.mem[0] = 0x69; // ADC immediate
-    cpu.mem[1] = 0x37; // Value to add
+    cpu.loadByte(0, 0x69); // ADC immediate
+    cpu.loadByte(1, 0x37); // Value to add
     
     const cycles = step6502(cpu);
     
-    expect(cpu.a).toBe(0x7A); // 0x42 + 0x37 + 1 = 0x7A
-    expect(cpu.pc).toBe(2);
+    expect(cpu.getAccumulator()).toBe(0x7A); // 0x42 + 0x37 + 1 = 0x7A
+    expect(cpu.getProgramCounter()).toBe(2);
     expect(cycles).toBe(2);
   });
   
@@ -46,18 +46,18 @@ describe("Arithmetic operations", () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.a = 0xD0;
-    cpu.p &= ~CARRY; // Clear carry flag
+    cpu.setAccumulator(0xD0);
+    cpu.clearStatusFlag(CARRY); // Clear carry flag
     
     // Set up memory
-    cpu.mem[0] = 0x69; // ADC immediate
-    cpu.mem[1] = 0x90; // Value to add
+    cpu.loadByte(0, 0x69); // ADC immediate
+    cpu.loadByte(1, 0x90); // Value to add
     
     const cycles = step6502(cpu);
     
-    expect(cpu.a).toBe(0x60); // 0xD0 + 0x90 = 0x160, truncated to 0x60
-    expect(cpu.p & CARRY).toBe(CARRY); // Carry flag should be set
-    expect(cpu.pc).toBe(2);
+    expect(cpu.getAccumulator()).toBe(0x60); // 0xD0 + 0x90 = 0x160, truncated to 0x60
+    expect(cpu.getStatusRegister() & CARRY).toBe(CARRY); // Carry flag should be set
+    expect(cpu.getProgramCounter()).toBe(2);
     expect(cycles).toBe(2);
   });
   
@@ -65,21 +65,21 @@ describe("Arithmetic operations", () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.a = 0x50; // +80 in signed
-    cpu.p &= ~CARRY; // Clear carry flag
+    cpu.setAccumulator(0x50); // +80 in signed
+    cpu.clearStatusFlag(CARRY); // Clear carry flag
     
     // Set up memory
-    cpu.mem[0] = 0x69; // ADC immediate
-    cpu.mem[1] = 0x50; // +80 in signed
+    cpu.loadByte(0, 0x69); // ADC immediate
+    cpu.loadByte(1, 0x50); // +80 in signed
     
     const cycles = step6502(cpu);
     
     // 80 + 80 = 160, which is -96 when interpreted as signed 8-bit
     // (sign bit flipped from positive to negative)
-    expect(cpu.a).toBe(0xA0);
-    expect(cpu.p & OVERFLOW).toBe(OVERFLOW); // Overflow flag should be set
-    expect(cpu.p & NEGATIVE).toBe(NEGATIVE); // Result is negative
-    expect(cpu.pc).toBe(2);
+    expect(cpu.getAccumulator()).toBe(0xA0);
+    expect(cpu.getStatusRegister() & OVERFLOW).toBe(OVERFLOW); // Overflow flag should be set
+    expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Result is negative
+    expect(cpu.getProgramCounter()).toBe(2);
     expect(cycles).toBe(2);
   });
 
@@ -87,20 +87,20 @@ describe("Arithmetic operations", () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.a = 0x42;
-    cpu.p |= CARRY; // Set carry flag (means no borrow)
+    cpu.setAccumulator(0x42);
+    cpu.setStatusFlag(CARRY); // Set carry flag (means no borrow)
     
     // Set up memory
-    cpu.mem[0] = 0xE9; // SBC immediate
-    cpu.mem[1] = 0x20; // Value to subtract
+    cpu.loadByte(0, 0xE9); // SBC immediate
+    cpu.loadByte(1, 0x20); // Value to subtract
     
     const cycles = step6502(cpu);
     
-    expect(cpu.a).toBe(0x22); // 0x42 - 0x20 = 0x22
-    expect(cpu.p & CARRY).toBe(CARRY); // No borrow needed
-    expect(cpu.p & ZERO).toBe(0); // Result is not zero
-    expect(cpu.p & NEGATIVE).toBe(0); // Result is not negative
-    expect(cpu.pc).toBe(2);
+    expect(cpu.getAccumulator()).toBe(0x22); // 0x42 - 0x20 = 0x22
+    expect(cpu.getStatusRegister() & CARRY).toBe(CARRY); // No borrow needed
+    expect(cpu.getStatusRegister() & ZERO).toBe(0); // Result is not zero
+    expect(cpu.getStatusRegister() & NEGATIVE).toBe(0); // Result is not negative
+    expect(cpu.getProgramCounter()).toBe(2);
     expect(cycles).toBe(2);
   });
   
@@ -108,17 +108,17 @@ describe("Arithmetic operations", () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.a = 0x42;
-    cpu.p &= ~CARRY; // Clear carry flag (means borrow)
+    cpu.setAccumulator(0x42);
+    cpu.clearStatusFlag(CARRY); // Clear carry flag (means borrow)
     
     // Set up memory
-    cpu.mem[0] = 0xE9; // SBC immediate
-    cpu.mem[1] = 0x20; // Value to subtract
+    cpu.loadByte(0, 0xE9); // SBC immediate
+    cpu.loadByte(1, 0x20); // Value to subtract
     
     const cycles = step6502(cpu);
     
-    expect(cpu.a).toBe(0x21); // 0x42 - 0x20 - 1 = 0x21
-    expect(cpu.pc).toBe(2);
+    expect(cpu.getAccumulator()).toBe(0x21); // 0x42 - 0x20 - 1 = 0x21
+    expect(cpu.getProgramCounter()).toBe(2);
     expect(cycles).toBe(2);
   });
   
@@ -126,19 +126,19 @@ describe("Arithmetic operations", () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.a = 0x20;
-    cpu.p |= CARRY; // Set carry flag (no borrow)
+    cpu.setAccumulator(0x20);
+    cpu.setStatusFlag(CARRY); // Set carry flag (no borrow)
     
     // Set up memory
-    cpu.mem[0] = 0xE9; // SBC immediate
-    cpu.mem[1] = 0x30; // Value to subtract
+    cpu.loadByte(0, 0xE9); // SBC immediate
+    cpu.loadByte(1, 0x30); // Value to subtract
     
     const cycles = step6502(cpu);
     
-    expect(cpu.a).toBe(0xF0); // 0x20 - 0x30 = 0xF0 (with borrow)
-    expect(cpu.p & CARRY).toBe(0); // Borrow needed
-    expect(cpu.p & NEGATIVE).toBe(NEGATIVE); // Result is negative
-    expect(cpu.pc).toBe(2);
+    expect(cpu.getAccumulator()).toBe(0xF0); // 0x20 - 0x30 = 0xF0 (with borrow)
+    expect(cpu.getStatusRegister() & CARRY).toBe(0); // Borrow needed
+    expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Result is negative
+    expect(cpu.getProgramCounter()).toBe(2);
     expect(cycles).toBe(2);
   });
   
@@ -146,58 +146,58 @@ describe("Arithmetic operations", () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.a = 0x42;
+    cpu.setAccumulator(0x42);
     
     // Set up memory for A == M
-    cpu.mem[0] = 0xC9; // CMP immediate
-    cpu.mem[1] = 0x42; // Value to compare
+    cpu.loadByte(0, 0xC9); // CMP immediate
+    cpu.loadByte(1, 0x42); // Value to compare
     
     let cycles = step6502(cpu);
     
-    expect(cpu.a).toBe(0x42); // Accumulator should not change
-    expect(cpu.p & ZERO).toBe(ZERO); // Equal, so zero flag set
-    expect(cpu.p & CARRY).toBe(CARRY); // A >= M, so carry set
-    expect(cpu.p & NEGATIVE).toBe(0); // Result bit 7 is clear
-    expect(cpu.pc).toBe(2);
+    expect(cpu.getAccumulator()).toBe(0x42); // Accumulator should not change
+    expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // Equal, so zero flag set
+    expect(cpu.getStatusRegister() & CARRY).toBe(CARRY); // A >= M, so carry set
+    expect(cpu.getStatusRegister() & NEGATIVE).toBe(0); // Result bit 7 is clear
+    expect(cpu.getProgramCounter()).toBe(2);
     expect(cycles).toBe(2);
     
     // Set up memory for A > M
-    cpu.pc = 0;
-    cpu.mem[1] = 0x10;
+    cpu.setProgramCounter(0);
+    cpu.loadByte(1, 0x10);
     
     cycles = step6502(cpu);
     
-    expect(cpu.p & ZERO).toBe(0); // Not equal, so zero flag clear
-    expect(cpu.p & CARRY).toBe(CARRY); // A >= M, so carry set
+    expect(cpu.getStatusRegister() & ZERO).toBe(0); // Not equal, so zero flag clear
+    expect(cpu.getStatusRegister() & CARRY).toBe(CARRY); // A >= M, so carry set
     
     // Set up memory for A < M
-    cpu.pc = 0;
-    cpu.mem[1] = 0x50;
+    cpu.setProgramCounter(0);
+    cpu.loadByte(1, 0x50);
     
     cycles = step6502(cpu);
     
-    expect(cpu.p & ZERO).toBe(0); // Not equal, so zero flag clear
-    expect(cpu.p & CARRY).toBe(0); // A < M, so carry clear
-    expect(cpu.p & NEGATIVE).toBe(NEGATIVE); // Result bit 7 is set
+    expect(cpu.getStatusRegister() & ZERO).toBe(0); // Not equal, so zero flag clear
+    expect(cpu.getStatusRegister() & CARRY).toBe(0); // A < M, so carry clear
+    expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Result bit 7 is set
   });
   
   it("should perform CMP zero page instruction", () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.a = 0x42;
+    cpu.setAccumulator(0x42);
     
     // Set up memory
-    cpu.mem[0] = 0xC5; // CMP zero page
-    cpu.mem[1] = 0x30; // Zero page address
-    cpu.mem[0x30] = 0x42; // Value to compare
+    cpu.loadByte(0, 0xC5); // CMP zero page
+    cpu.loadByte(1, 0x30); // Zero page address
+    cpu.loadByte(0x30, 0x42); // Value to compare
     
     const cycles = step6502(cpu);
     
-    expect(cpu.a).toBe(0x42); // Accumulator should not change
-    expect(cpu.p & ZERO).toBe(ZERO); // Equal, so zero flag set
-    expect(cpu.p & CARRY).toBe(CARRY); // A >= M, so carry set
-    expect(cpu.pc).toBe(2);
+    expect(cpu.getAccumulator()).toBe(0x42); // Accumulator should not change
+    expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // Equal, so zero flag set
+    expect(cpu.getStatusRegister() & CARRY).toBe(CARRY); // A >= M, so carry set
+    expect(cpu.getProgramCounter()).toBe(2);
     expect(cycles).toBe(3);
   });
   
@@ -205,18 +205,18 @@ describe("Arithmetic operations", () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.x = 0x42;
+    cpu.setXRegister(0x42);
     
     // Set up memory
-    cpu.mem[0] = 0xE0; // CPX immediate
-    cpu.mem[1] = 0x42; // Value to compare
+    cpu.loadByte(0, 0xE0); // CPX immediate
+    cpu.loadByte(1, 0x42); // Value to compare
     
     const cycles = step6502(cpu);
     
-    expect(cpu.x).toBe(0x42); // X register should not change
-    expect(cpu.p & ZERO).toBe(ZERO); // Equal, so zero flag set
-    expect(cpu.p & CARRY).toBe(CARRY); // X >= M, so carry set
-    expect(cpu.pc).toBe(2);
+    expect(cpu.getXRegister()).toBe(0x42); // X register should not change
+    expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // Equal, so zero flag set
+    expect(cpu.getStatusRegister() & CARRY).toBe(CARRY); // X >= M, so carry set
+    expect(cpu.getProgramCounter()).toBe(2);
     expect(cycles).toBe(2);
   });
   
@@ -224,18 +224,18 @@ describe("Arithmetic operations", () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.y = 0x42;
+    cpu.setYRegister(0x42);
     
     // Set up memory
-    cpu.mem[0] = 0xC0; // CPY immediate
-    cpu.mem[1] = 0x42; // Value to compare
+    cpu.loadByte(0, 0xC0); // CPY immediate
+    cpu.loadByte(1, 0x42); // Value to compare
     
     const cycles = step6502(cpu);
     
-    expect(cpu.y).toBe(0x42); // Y register should not change
-    expect(cpu.p & ZERO).toBe(ZERO); // Equal, so zero flag set
-    expect(cpu.p & CARRY).toBe(CARRY); // Y >= M, so carry set
-    expect(cpu.pc).toBe(2);
+    expect(cpu.getYRegister()).toBe(0x42); // Y register should not change
+    expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // Equal, so zero flag set
+    expect(cpu.getStatusRegister() & CARRY).toBe(CARRY); // Y >= M, so carry set
+    expect(cpu.getProgramCounter()).toBe(2);
     expect(cycles).toBe(2);
   });
 });

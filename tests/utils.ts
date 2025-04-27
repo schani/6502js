@@ -1,4 +1,3 @@
-import { createCompatWrapper } from "./compat";
 import {
     type CPU,
     CARRY,
@@ -14,19 +13,17 @@ import {
 
 /**
  * Create a CPU instance with default values for testing.
- * This returns a CPU that implements the CPU interface but also
- * allows direct access to registers and memory for backwards compatibility.
+ * This returns a CPU that implements the CPU interface.
  */
-export function createCPU(): any {
-    const cpu = new CPU1();
-    return createCompatWrapper(cpu);
+export function createCPU(): CPU {
+    return new CPU1();
 }
 
 /**
  * @deprecated Use CPU.step() directly from the CPU interface
  * For backward compatibility, will be removed after refactoring
  */
-export function step6502(cpu: any, trace = false): number {
+export function step6502(cpu: CPU, trace = false): number {
     return cpu.step(trace);
 }
 

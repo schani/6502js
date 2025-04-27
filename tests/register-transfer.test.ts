@@ -6,47 +6,47 @@ describe("Register transfer instructions", () => {
     const cpu = createCPU();
     
     // Set up accumulator
-    cpu.a = 0x42;
+    cpu.setAccumulator(0x42);
     
     // TAX - Transfer accumulator to X
-    cpu.mem[0] = 0xAA; // TAX
+    cpu.loadByte(0, 0xAA); // TAX
     
     const cycles = step6502(cpu);
     
-    expect(cpu.x).toBe(0x42);
-    expect(cpu.pc).toBe(1);
+    expect(cpu.getXRegister()).toBe(0x42);
+    expect(cpu.getProgramCounter()).toBe(1);
     expect(cycles).toBe(2);
-    expect(cpu.p & ZERO).toBe(0);
-    expect(cpu.p & NEGATIVE).toBe(0);
+    expect(cpu.getStatusRegister() & ZERO).toBe(0);
+    expect(cpu.getStatusRegister() & NEGATIVE).toBe(0);
     
     // Test zero flag
-    cpu.pc = 0;
-    cpu.a = 0;
+    cpu.setProgramCounter(0);
+    cpu.setAccumulator(0);
     step6502(cpu);
-    expect(cpu.x).toBe(0);
-    expect(cpu.p & ZERO).toBe(ZERO);
+    expect(cpu.getXRegister()).toBe(0);
+    expect(cpu.getStatusRegister() & ZERO).toBe(ZERO);
     
     // Test negative flag
-    cpu.pc = 0;
-    cpu.a = 0x80;
+    cpu.setProgramCounter(0);
+    cpu.setAccumulator(0x80);
     step6502(cpu);
-    expect(cpu.x).toBe(0x80);
-    expect(cpu.p & NEGATIVE).toBe(NEGATIVE);
+    expect(cpu.getXRegister()).toBe(0x80);
+    expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE);
   });
   
   it("should perform TAY instruction", () => {
     const cpu = createCPU();
     
     // Set up accumulator
-    cpu.a = 0x42;
+    cpu.setAccumulator(0x42);
     
     // TAY - Transfer accumulator to Y
-    cpu.mem[0] = 0xA8; // TAY
+    cpu.loadByte(0, 0xA8); // TAY
     
     const cycles = step6502(cpu);
     
-    expect(cpu.y).toBe(0x42);
-    expect(cpu.pc).toBe(1);
+    expect(cpu.getYRegister()).toBe(0x42);
+    expect(cpu.getProgramCounter()).toBe(1);
     expect(cycles).toBe(2);
   });
   
@@ -54,15 +54,15 @@ describe("Register transfer instructions", () => {
     const cpu = createCPU();
     
     // Set up X register
-    cpu.x = 0x42;
+    cpu.setXRegister(0x42);
     
     // TXA - Transfer X to accumulator
-    cpu.mem[0] = 0x8A; // TXA
+    cpu.loadByte(0, 0x8A); // TXA
     
     const cycles = step6502(cpu);
     
-    expect(cpu.a).toBe(0x42);
-    expect(cpu.pc).toBe(1);
+    expect(cpu.getAccumulator()).toBe(0x42);
+    expect(cpu.getProgramCounter()).toBe(1);
     expect(cycles).toBe(2);
   });
   
@@ -70,15 +70,15 @@ describe("Register transfer instructions", () => {
     const cpu = createCPU();
     
     // Set up Y register
-    cpu.y = 0x42;
+    cpu.setYRegister(0x42);
     
     // TYA - Transfer Y to accumulator
-    cpu.mem[0] = 0x98; // TYA
+    cpu.loadByte(0, 0x98); // TYA
     
     const cycles = step6502(cpu);
     
-    expect(cpu.a).toBe(0x42);
-    expect(cpu.pc).toBe(1);
+    expect(cpu.getAccumulator()).toBe(0x42);
+    expect(cpu.getProgramCounter()).toBe(1);
     expect(cycles).toBe(2);
   });
   
@@ -86,35 +86,35 @@ describe("Register transfer instructions", () => {
     const cpu = createCPU();
     
     // Set up stack pointer
-    cpu.sp = 0x42;
+    cpu.setStackPointer(0x42);
     
     // TSX - Transfer Stack Pointer to X
-    cpu.mem[0] = 0xBA; // TSX
+    cpu.loadByte(0, 0xBA); // TSX
     
     const cycles = step6502(cpu);
     
-    expect(cpu.x).toBe(0x42);
-    expect(cpu.pc).toBe(1);
+    expect(cpu.getXRegister()).toBe(0x42);
+    expect(cpu.getProgramCounter()).toBe(1);
     expect(cycles).toBe(2);
-    expect(cpu.p & ZERO).toBe(0); // Result is not zero
-    expect(cpu.p & NEGATIVE).toBe(0); // Result is not negative
+    expect(cpu.getStatusRegister() & ZERO).toBe(0); // Result is not zero
+    expect(cpu.getStatusRegister() & NEGATIVE).toBe(0); // Result is not negative
   });
   
   it("should perform TXS instruction", () => {
     const cpu = createCPU();
     
     // Set up X register
-    cpu.x = 0x42;
+    cpu.setXRegister(0x42);
     
     // TXS - Transfer X to Stack Pointer
-    cpu.mem[0] = 0x9A; // TXS
+    cpu.loadByte(0, 0x9A); // TXS
     
     const cycles = step6502(cpu);
     
-    expect(cpu.sp).toBe(0x42);
-    expect(cpu.pc).toBe(1);
+    expect(cpu.getStackPointer()).toBe(0x42);
+    expect(cpu.getProgramCounter()).toBe(1);
     expect(cycles).toBe(2);
     // TXS does not affect any flags
-    expect(cpu.p).toBe(INTERRUPT | UNUSED); // Original status
+    expect(cpu.getStatusRegister()).toBe(INTERRUPT | UNUSED); // Original status
   });
 });
