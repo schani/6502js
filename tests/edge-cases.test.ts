@@ -1,31 +1,20 @@
 import { describe, expect, it } from "bun:test";
-import { type CPU, createCPU, step6502, CARRY, ZERO, INTERRUPT, DECIMAL, BREAK, UNUSED, OVERFLOW, NEGATIVE, defined } from "./utils";
+import { CARRY, ZERO, INTERRUPT, DECIMAL, BREAK, UNUSED, OVERFLOW, NEGATIVE, defined } from "../6502";
+import { type CPU, createCPU } from "./utils";
 
 describe("Edge cases and boundary conditions", () => {
   it("should test writeWord at memory boundaries", () => {
-    // We need to access the CPU's internal functions directly
-    function readWord(cpu: CPU, address: number): number {
-      const lo = defined(cpu.mem[address & 0xFFFF]);
-      const hi = defined(cpu.mem[(address + 1) & 0xFFFF]);
-      return (hi << 8) | lo;
-    }
-    
-    function writeWord(cpu: CPU, address: number, value: number): void {
-      cpu.mem[address & 0xFFFF] = value & 0xFF;
-      cpu.mem[(address + 1) & 0xFFFF] = (value >> 8) & 0xFF;
-    }
-    
     const cpu = createCPU();
     
     // Test writing at the exact memory boundary
-    writeWord(cpu, 0xFFFF, 0xABCD);
+    cpu.loadWord(0xFFFF, 0xABCD);
     
     // Verify that the low byte is at 0xFFFF and high byte wraps to 0x0000
-    expect(cpu.mem[0xFFFF]).toBe(0xCD);
-    expect(cpu.mem[0x0000]).toBe(0xAB);
+    expect(cpu.readByte(0xFFFF)).toBe(0xCD);
+    expect(cpu.readByte(0x0000)).toBe(0xAB);
     
     // Try reading from the same address
-    const value = readWord(cpu, 0xFFFF);
+    const value = cpu.readWord(0xFFFF);
     expect(value).toBe(0xABCD);
   });
   
@@ -34,38 +23,38 @@ describe("Edge cases and boundary conditions", () => {
     const cpu = createCPU();
     
     // Case 1: Zero Page with zero result
-    cpu.mem[0x1000] = 0xA4; // LDY Zero Page
-    cpu.mem[0x1001] = 0x80; // Zero page address
-    cpu.mem[0x0080] = 0x00; // Value (zero)
+    cpu.loadByte(0x1000, 0xA4); // LDY Zero Page
+    cpu.loadByte(0x1001, 0x80); // Zero page address
+    cpu.loadByte(0x0080, 0x00); // Value (zero)
     
-    cpu.y = 0xFF; // Non-zero value
-    cpu.p &= ~ZERO; // Clear zero flag
-    cpu.p |= NEGATIVE; // Set negative flag
-    cpu.pc = 0x1000;
+    cpu.setYRegister(0xFF); // Non-zero value
+    cpu.clearStatusFlag(ZERO); // Clear zero flag
+    cpu.setStatusFlag(NEGATIVE); // Set negative flag
+    cpu.setProgramCounter(0x1000);
     
-    let cycles = step6502(cpu);
+    let cycles = cpu.step();
     
     expect(cycles).toBe(3);
-    expect(cpu.y).toBe(0x00);
-    expect(cpu.p & ZERO).toBe(ZERO); // Zero flag should be set
-    expect(cpu.p & NEGATIVE).toBe(0); // Negative flag should be clear
+    expect(cpu.getYRegister()).toBe(0x00);
+    expect(cpu.isStatusFlagSet(ZERO)).toBe(true); // Zero flag should be set
+    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(false); // Negative flag should be clear
     
     // Case 2: LDY Absolute with negative result
-    cpu.mem[0x1002] = 0xAC; // LDY Absolute
-    cpu.mem[0x1003] = 0x00; // Low byte of address
-    cpu.mem[0x1004] = 0x20; // High byte of address (0x2000)
-    cpu.mem[0x2000] = 0x80; // Value (negative)
+    cpu.loadByte(0x1002, 0xAC); // LDY Absolute
+    cpu.loadByte(0x1003, 0x00); // Low byte of address
+    cpu.loadByte(0x1004, 0x20); // High byte of address (0x2000)
+    cpu.loadByte(0x2000, 0x80); // Value (negative)
     
-    cpu.y = 0x00; // Non-negative value
-    cpu.p |= ZERO; // Set zero flag
-    cpu.p &= ~NEGATIVE; // Clear negative flag
-    cpu.pc = 0x1002;
+    cpu.setYRegister(0x00); // Non-negative value
+    cpu.setStatusFlag(ZERO); // Set zero flag
+    cpu.clearStatusFlag(NEGATIVE); // Clear negative flag
+    cpu.setProgramCounter(0x1002);
     
-    cycles = step6502(cpu);
+    cycles = cpu.step();
     
     expect(cycles).toBe(4);
-    expect(cpu.y).toBe(0x80);
-    expect(cpu.p & ZERO).toBe(0); // Zero flag should be clear
-    expect(cpu.p & NEGATIVE).toBe(NEGATIVE); // Negative flag should be set
+    expect(cpu.getYRegister()).toBe(0x80);
+    expect(cpu.isStatusFlagSet(ZERO)).toBe(false); // Zero flag should be clear
+    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true); // Negative flag should be set
   });
 });

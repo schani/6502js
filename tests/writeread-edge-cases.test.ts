@@ -6,13 +6,13 @@ describe("Memory helpers edge cases", () => {
     const cpu = createCPU();
     
     // Direct test of writeWord by creating a simplified version
-    function writeWord(cpu: CPU, address: number, value: number): void {
+    function writeWord(cpu: any, address: number, value: number): void {
       cpu.mem[address & 0xFFFF] = value & 0xFF;
       cpu.mem[(address + 1) & 0xFFFF] = (value >> 8) & 0xFF;
     }
     
     // Direct test of readWord by creating a simplified version
-    function readWord(cpu: CPU, address: number): number {
+    function readWord(cpu: any, address: number): number {
       const lo = cpu.mem[address & 0xFFFF] || 0;
       const hi = cpu.mem[(address + 1) & 0xFFFF] || 0;
       return (hi << 8) | lo;

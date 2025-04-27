@@ -24,7 +24,7 @@ describe("Full coverage tests", () => {
   
   it("should test writeWord functionality directly", () => {
     // Need to access internal function, so we recreate it
-    function writeWord(cpu: CPU, address: number, value: number): void {
+    function writeWord(cpu: any, address: number, value: number): void {
         cpu.mem[address & 0xFFFF] = value & 0xFF;
         cpu.mem[(address + 1) & 0xFFFF] = (value >> 8) & 0xFF;
     }

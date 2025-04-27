@@ -1,19 +1,19 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU, step6502 } from "./utils";
-import { CARRY, ZERO, NEGATIVE, OVERFLOW, DECIMAL, INTERRUPT } from "../cpu";
+import { CARRY, ZERO, NEGATIVE, OVERFLOW, DECIMAL, INTERRUPT } from "../6502";
+import { CPU1 } from "../6502";
 
 describe("Remaining branch and flag operations", () => {
   it("should test BCS with page crossing", () => {
-    const cpu = createCPU();
+    const cpu = new CPU1();
     
     // Setup for BCS with page crossing - need PC at a location where PC+2+offset crosses a page
-    cpu.pc = 0x10F0;
-    cpu.mem[0x10F0] = 0xB0; // BCS
-    cpu.mem[0x10F1] = 0x10; // Offset 16 (crossing from 0x10F2 to 0x1102)
-    cpu.p = CARRY;          // Set carry flag for branch to be taken
+    cpu.setProgramCounter(0x10F0);
+    cpu.loadByte(0x10F0, 0xB0); // BCS
+    cpu.loadByte(0x10F1, 0x10); // Offset 16 (crossing from 0x10F2 to 0x1102)
+    cpu.setStatusFlag(CARRY);   // Set carry flag for branch to be taken
     
     // Execute BCS
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     // Branch calculation: PC (after fetching instruction) + offset
     // PC after fetching: 0x10F0 + 2 = 0x10F2
@@ -23,20 +23,20 @@ describe("Remaining branch and flag operations", () => {
     expect(cycles).toBe(4);
     
     // Check if PC was set correctly
-    expect(cpu.pc).toBe(0x1102);
+    expect(cpu.getProgramCounter()).toBe(0x1102);
   });
   
   it("should test BEQ with page crossing", () => {
-    const cpu = createCPU();
+    const cpu = new CPU1();
     
     // Setup for BEQ with page crossing
-    cpu.pc = 0x10F0;
-    cpu.mem[0x10F0] = 0xF0; // BEQ
-    cpu.mem[0x10F1] = 0x10; // Offset 16 (crossing from 0x10F2 to 0x1102)
-    cpu.p = ZERO;           // Set zero flag for branch to be taken
+    cpu.setProgramCounter(0x10F0);
+    cpu.loadByte(0x10F0, 0xF0); // BEQ
+    cpu.loadByte(0x10F1, 0x10); // Offset 16 (crossing from 0x10F2 to 0x1102)
+    cpu.setStatusFlag(ZERO);    // Set zero flag for branch to be taken
     
     // Execute BEQ
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     // Branch calculation: PC (after fetching instruction) + offset
     // PC after fetching: 0x10F0 + 2 = 0x10F2
@@ -46,20 +46,20 @@ describe("Remaining branch and flag operations", () => {
     expect(cycles).toBe(4);
     
     // Check if PC was set correctly
-    expect(cpu.pc).toBe(0x1102);
+    expect(cpu.getProgramCounter()).toBe(0x1102);
   });
   
   it("should test BMI with page crossing", () => {
-    const cpu = createCPU();
+    const cpu = new CPU1();
     
     // Setup for BMI with page crossing
-    cpu.pc = 0x10F0;
-    cpu.mem[0x10F0] = 0x30; // BMI
-    cpu.mem[0x10F1] = 0x10; // Offset 16 (crossing from 0x10F2 to 0x1102)
-    cpu.p = NEGATIVE;       // Set negative flag for branch to be taken
+    cpu.setProgramCounter(0x10F0);
+    cpu.loadByte(0x10F0, 0x30); // BMI
+    cpu.loadByte(0x10F1, 0x10); // Offset 16 (crossing from 0x10F2 to 0x1102)
+    cpu.setStatusFlag(NEGATIVE);  // Set negative flag for branch to be taken
     
     // Execute BMI
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     // Branch calculation: PC (after fetching instruction) + offset
     // PC after fetching: 0x10F0 + 2 = 0x10F2
@@ -69,20 +69,20 @@ describe("Remaining branch and flag operations", () => {
     expect(cycles).toBe(4);
     
     // Check if PC was set correctly
-    expect(cpu.pc).toBe(0x1102);
+    expect(cpu.getProgramCounter()).toBe(0x1102);
   });
   
   it("should test BVS with page crossing", () => {
-    const cpu = createCPU();
+    const cpu = new CPU1();
     
     // Setup for BVS with page crossing
-    cpu.pc = 0x10F0;
-    cpu.mem[0x10F0] = 0x70; // BVS
-    cpu.mem[0x10F1] = 0x10; // Offset 16 (crossing from 0x10F2 to 0x1102)
-    cpu.p = OVERFLOW;       // Set overflow flag for branch to be taken
+    cpu.setProgramCounter(0x10F0);
+    cpu.loadByte(0x10F0, 0x70); // BVS
+    cpu.loadByte(0x10F1, 0x10); // Offset 16 (crossing from 0x10F2 to 0x1102)
+    cpu.setStatusFlag(OVERFLOW);  // Set overflow flag for branch to be taken
     
     // Execute BVS
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     // Branch calculation: PC (after fetching instruction) + offset
     // PC after fetching: 0x10F0 + 2 = 0x10F2
@@ -92,100 +92,100 @@ describe("Remaining branch and flag operations", () => {
     expect(cycles).toBe(4);
     
     // Check if PC was set correctly
-    expect(cpu.pc).toBe(0x1102);
+    expect(cpu.getProgramCounter()).toBe(0x1102);
   });
   
   it("should test all flag setting and clearing instructions", () => {
-    const cpu = createCPU();
+    const cpu = new CPU1();
     
     // Test CLC (Clear Carry)
-    cpu.pc = 0;
-    cpu.mem[0] = 0x18; // CLC
-    cpu.p = CARRY;     // Set carry flag
+    cpu.setProgramCounter(0);
+    cpu.loadByte(0, 0x18); // CLC
+    cpu.setStatusFlag(CARRY);  // Set carry flag
     
-    step6502(cpu);
-    expect(cpu.p & CARRY).toBe(0); // Carry flag should be cleared
+    cpu.step();
+    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // Carry flag should be cleared
     
     // Test SEC (Set Carry)
-    cpu.pc = 0;
-    cpu.mem[0] = 0x38; // SEC
-    cpu.p = 0;         // Clear carry flag
+    cpu.setProgramCounter(0);
+    cpu.loadByte(0, 0x38); // SEC
+    cpu.clearStatusFlag(CARRY);  // Clear carry flag
     
-    step6502(cpu);
-    expect(cpu.p & CARRY).toBe(CARRY); // Carry flag should be set
+    cpu.step();
+    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry flag should be set
     
     // Test CLI (Clear Interrupt)
-    cpu.pc = 0;
-    cpu.mem[0] = 0x58; // CLI
-    cpu.p = INTERRUPT; // Set interrupt flag
+    cpu.setProgramCounter(0);
+    cpu.loadByte(0, 0x58); // CLI
+    cpu.setStatusFlag(INTERRUPT); // Set interrupt flag
     
-    step6502(cpu);
-    expect(cpu.p & INTERRUPT).toBe(0); // Interrupt flag should be cleared
+    cpu.step();
+    expect(cpu.isStatusFlagSet(INTERRUPT)).toBe(false); // Interrupt flag should be cleared
     
     // Test SEI (Set Interrupt)
-    cpu.pc = 0;
-    cpu.mem[0] = 0x78; // SEI
-    cpu.p = 0;         // Clear interrupt flag
+    cpu.setProgramCounter(0);
+    cpu.loadByte(0, 0x78); // SEI
+    cpu.clearStatusFlag(INTERRUPT); // Clear interrupt flag
     
-    step6502(cpu);
-    expect(cpu.p & INTERRUPT).toBe(INTERRUPT); // Interrupt flag should be set
+    cpu.step();
+    expect(cpu.isStatusFlagSet(INTERRUPT)).toBe(true); // Interrupt flag should be set
     
     // Test CLV (Clear Overflow)
-    cpu.pc = 0;
-    cpu.mem[0] = 0xB8; // CLV
-    cpu.p = OVERFLOW;  // Set overflow flag
+    cpu.setProgramCounter(0);
+    cpu.loadByte(0, 0xB8); // CLV
+    cpu.setStatusFlag(OVERFLOW);  // Set overflow flag
     
-    step6502(cpu);
-    expect(cpu.p & OVERFLOW).toBe(0); // Overflow flag should be cleared
+    cpu.step();
+    expect(cpu.isStatusFlagSet(OVERFLOW)).toBe(false); // Overflow flag should be cleared
     
     // Test CLD (Clear Decimal)
-    cpu.pc = 0;
-    cpu.mem[0] = 0xD8; // CLD
-    cpu.p = DECIMAL;   // Set decimal flag
+    cpu.setProgramCounter(0);
+    cpu.loadByte(0, 0xD8); // CLD
+    cpu.setStatusFlag(DECIMAL);   // Set decimal flag
     
-    step6502(cpu);
-    expect(cpu.p & DECIMAL).toBe(0); // Decimal flag should be cleared
+    cpu.step();
+    expect(cpu.isStatusFlagSet(DECIMAL)).toBe(false); // Decimal flag should be cleared
     
     // Test SED (Set Decimal)
-    cpu.pc = 0;
-    cpu.mem[0] = 0xF8; // SED
-    cpu.p = 0;         // Clear decimal flag
+    cpu.setProgramCounter(0);
+    cpu.loadByte(0, 0xF8); // SED
+    cpu.clearStatusFlag(DECIMAL); // Clear decimal flag
     
-    step6502(cpu);
-    expect(cpu.p & DECIMAL).toBe(DECIMAL); // Decimal flag should be set
+    cpu.step();
+    expect(cpu.isStatusFlagSet(DECIMAL)).toBe(true); // Decimal flag should be set
   });
   
   it("should test compare operations with various results", () => {
-    const cpu = createCPU();
+    const cpu = new CPU1();
     
     // Test CMP with equal values (sets Z flag, sets C flag)
-    cpu.pc = 0;
-    cpu.mem[0] = 0xC9; // CMP Immediate
-    cpu.mem[1] = 0x42; // Compare with value 0x42
-    cpu.a = 0x42;      // Accumulator value
+    cpu.setProgramCounter(0);
+    cpu.loadByte(0, 0xC9); // CMP Immediate
+    cpu.loadByte(1, 0x42); // Compare with value 0x42
+    cpu.setAccumulator(0x42);  // Accumulator value
     
-    step6502(cpu);
-    expect(cpu.p & ZERO).toBe(ZERO);   // Zero flag should be set
-    expect(cpu.p & CARRY).toBe(CARRY); // Carry flag should be set (A >= M)
+    cpu.step();
+    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);   // Zero flag should be set
+    expect(cpu.isStatusFlagSet(CARRY)).toBe(true);  // Carry flag should be set (A >= M)
     
     // Test CMP with accumulator greater (clears Z flag, sets C flag)
-    cpu.pc = 0;
-    cpu.mem[0] = 0xC9; // CMP Immediate
-    cpu.mem[1] = 0x40; // Compare with value 0x40
-    cpu.a = 0x42;      // Accumulator value
+    cpu.setProgramCounter(0);
+    cpu.loadByte(0, 0xC9); // CMP Immediate
+    cpu.loadByte(1, 0x40); // Compare with value 0x40
+    cpu.setAccumulator(0x42);  // Accumulator value
     
-    step6502(cpu);
-    expect(cpu.p & ZERO).toBe(0);      // Zero flag should be cleared
-    expect(cpu.p & CARRY).toBe(CARRY); // Carry flag should be set (A >= M)
+    cpu.step();
+    expect(cpu.isStatusFlagSet(ZERO)).toBe(false);   // Zero flag should be cleared
+    expect(cpu.isStatusFlagSet(CARRY)).toBe(true);   // Carry flag should be set (A >= M)
     
     // Test CMP with accumulator less (clears Z flag, clears C flag)
-    cpu.pc = 0;
-    cpu.mem[0] = 0xC9; // CMP Immediate
-    cpu.mem[1] = 0x50; // Compare with value 0x50
-    cpu.a = 0x42;      // Accumulator value
+    cpu.setProgramCounter(0);
+    cpu.loadByte(0, 0xC9); // CMP Immediate
+    cpu.loadByte(1, 0x50); // Compare with value 0x50
+    cpu.setAccumulator(0x42);  // Accumulator value
     
-    step6502(cpu);
-    expect(cpu.p & ZERO).toBe(0);  // Zero flag should be cleared
-    expect(cpu.p & CARRY).toBe(0); // Carry flag should be cleared (A < M)
+    cpu.step();
+    expect(cpu.isStatusFlagSet(ZERO)).toBe(false);   // Zero flag should be cleared
+    expect(cpu.isStatusFlagSet(CARRY)).toBe(false);  // Carry flag should be cleared (A < M)
   });
 });

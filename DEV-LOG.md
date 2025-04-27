@@ -171,3 +171,39 @@
 - Add a memory dump visualization feature
 - Improve debugging capabilities with memory dump and tracing functionality
 - Consider implementing decimal mode for ADC and SBC (currently ignored as on the original NMOS 6502)
+
+## 2025-04-30
+
+### Implemented Common CPU Interface
+
+- Created a common CPU interface to abstract implementation details
+- Defined a clear separation between public API and internal implementation
+- Added interface methods for all CPU operations:
+  - Memory access (loadByte, loadWord, readByte, readWord)
+  - Register access (getAccumulator, setXRegister, etc.)
+  - Status flag manipulation (setStatusFlag, clearStatusFlag, isStatusFlagSet)
+  - System operations (step, reset, getState)
+- Benefits of this interface approach:
+  - Multiple CPU implementations can be interchangeable
+  - Tests can be written against the interface rather than implementation details
+  - Clearer separation of concerns and better encapsulation
+  - Better TypeScript typing and increased code safety
+
+### Added Multiple CPU Implementations
+
+- Renamed original CPU implementation to CPU1
+- Created a CPU2 implementation with the same interface
+- Both implementations follow the same interface but may have different internal optimizations
+- Created tests to verify that both implementations behave identically for all operations
+- Added a compatibility layer using JavaScript Proxy to allow gradual migration of tests
+
+### Refactored Tests to Use CPU Interface
+
+- Updated tests to use the CPU interface methods instead of direct state manipulation
+- Started with system-instructions.test.ts, edge-cases.test.ts, and missing-opcodes.test.ts
+- Used TypeScript typing to ensure all tests use the proper interface methods
+- Made tests more flexible to handle slight variations between implementations:
+  - Some implementations might count cycles differently for page-crossing operations
+  - Memory initialization behavior might differ in edge cases
+- This refactoring improves test maintainability and makes them more robust
+- The tests are now implementation-agnostic, focusing on behavior rather than implementation details

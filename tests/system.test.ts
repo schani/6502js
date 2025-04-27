@@ -1,16 +1,16 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU, step6502 } from "./utils";
+import { createCPU } from "./utils";
 
 describe("System functions", () => {
   it("should perform NOP instruction", () => {
     const cpu = createCPU();
     
     // Set up memory
-    cpu.mem[0] = 0xEA; // NOP
+    cpu.loadByte(0, 0xEA); // NOP
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
-    expect(cpu.pc).toBe(1);
+    expect(cpu.getProgramCounter()).toBe(1);
     expect(cycles).toBe(2);
     // NOP should not affect any registers or flags
   });
@@ -19,12 +19,12 @@ describe("System functions", () => {
     const cpu = createCPU();
     
     // Set up memory
-    cpu.mem[0] = 0xEA; // NOP
+    cpu.loadByte(0, 0xEA); // NOP
     
     // With trace logging enabled
-    const cycles = step6502(cpu, true);
+    const cycles = cpu.step(true);
     
-    expect(cpu.pc).toBe(1);
+    expect(cpu.getProgramCounter()).toBe(1);
     expect(cycles).toBe(2);
   });
 
@@ -33,15 +33,15 @@ describe("System functions", () => {
     const cpu = createCPU();
     
     // Set up invalid opcode
-    cpu.mem[0] = 0xFF; // Invalid opcode
+    cpu.loadByte(0, 0xFF); // Invalid opcode
     
     // Should throw an error
-    expect(() => step6502(cpu)).toThrow("Unknown opcode");
+    expect(() => cpu.step()).toThrow("Unknown opcode");
     
     // Reset PC for second test
-    cpu.pc = 0;
+    cpu.setProgramCounter(0);
     
     // Should also throw an error with trace enabled
-    expect(() => step6502(cpu, true)).toThrow("Unknown opcode");
+    expect(() => cpu.step(true)).toThrow("Unknown opcode");
   });
 });

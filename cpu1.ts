@@ -34,6 +34,163 @@ export class CPU1 implements CPU {
     step(trace = false): number {
         return step6502(this.state, trace);
     }
+    
+    /**
+     * Load a byte into memory
+     * @param address Memory address
+     * @param value Byte value to load
+     */
+    loadByte(address: number, value: number): void {
+        writeByte(this.state, address, value);
+    }
+    
+    /**
+     * Load a word (16-bit value) into memory
+     * @param address Memory address for low byte
+     * @param value 16-bit value to load
+     */
+    loadWord(address: number, value: number): void {
+        writeWord(this.state, address, value);
+    }
+    
+    /**
+     * Read a byte from memory
+     * @param address Memory address
+     * @returns Byte value at address
+     */
+    readByte(address: number): number {
+        return readByte(this.state, address);
+    }
+    
+    /**
+     * Read a word (16-bit value) from memory
+     * @param address Memory address of low byte
+     * @returns 16-bit value
+     */
+    readWord(address: number): number {
+        return readWord(this.state, address);
+    }
+    
+    /**
+     * Set the program counter
+     * @param address New program counter value
+     */
+    setProgramCounter(address: number): void {
+        this.state.pc = address & 0xffff;
+    }
+    
+    /**
+     * Set the accumulator register
+     * @param value Value to set
+     */
+    setAccumulator(value: number): void {
+        this.state.a = value & 0xff;
+    }
+    
+    /**
+     * Set the X index register
+     * @param value Value to set
+     */
+    setXRegister(value: number): void {
+        this.state.x = value & 0xff;
+    }
+    
+    /**
+     * Set the Y index register
+     * @param value Value to set
+     */
+    setYRegister(value: number): void {
+        this.state.y = value & 0xff;
+    }
+    
+    /**
+     * Set the stack pointer
+     * @param value Value to set
+     */
+    setStackPointer(value: number): void {
+        this.state.sp = value & 0xff;
+    }
+    
+    /**
+     * Set the status register
+     * @param value Value to set
+     */
+    setStatusRegister(value: number): void {
+        this.state.p = value & 0xff;
+    }
+    
+    /**
+     * Set status flag bits
+     * @param mask Bit mask of flags to set
+     */
+    setStatusFlag(mask: number): void {
+        this.state.p |= mask & 0xff;
+    }
+    
+    /**
+     * Clear status flag bits
+     * @param mask Bit mask of flags to clear
+     */
+    clearStatusFlag(mask: number): void {
+        this.state.p &= ~(mask & 0xff);
+    }
+    
+    /**
+     * Get the program counter value
+     * @returns Current program counter
+     */
+    getProgramCounter(): number {
+        return this.state.pc;
+    }
+    
+    /**
+     * Get the accumulator value
+     * @returns Current accumulator value
+     */
+    getAccumulator(): number {
+        return this.state.a;
+    }
+    
+    /**
+     * Get the X register value
+     * @returns Current X register value
+     */
+    getXRegister(): number {
+        return this.state.x;
+    }
+    
+    /**
+     * Get the Y register value
+     * @returns Current Y register value
+     */
+    getYRegister(): number {
+        return this.state.y;
+    }
+    
+    /**
+     * Get the stack pointer value
+     * @returns Current stack pointer value
+     */
+    getStackPointer(): number {
+        return this.state.sp;
+    }
+    
+    /**
+     * Get the status register value
+     * @returns Current status register value
+     */
+    getStatusRegister(): number {
+        return this.state.p;
+    }
+    
+    /**
+     * Check if a status flag is set
+     * @param mask Bit mask to check
+     * @returns True if any specified flag is set
+     */
+    isStatusFlagSet(mask: number): boolean {
+        return (this.state.p & mask) !== 0;
+    }
 }
 
 // Helper function to update zero and negative flags based on a value

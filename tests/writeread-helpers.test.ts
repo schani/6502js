@@ -4,16 +4,16 @@ import { type CPU, createCPU } from "./utils";
 describe("More memory helper tests", () => {
   it("should test writeWord at exact memory boundary", () => {
     // Need direct access to internal functions
-    function writeByte(cpu: CPU, address: number, value: number): void {
+    function writeByte(cpu: any, address: number, value: number): void {
       cpu.mem[address & 0xFFFF] = value & 0xFF;
     }
     
-    function writeWord(cpu: CPU, address: number, value: number): void {
+    function writeWord(cpu: any, address: number, value: number): void {
       writeByte(cpu, address, value & 0xFF);
       writeByte(cpu, address + 1, (value >> 8) & 0xFF);
     }
     
-    function readByte(cpu: CPU, address: number): number {
+    function readByte(cpu: any, address: number): number {
       return cpu.mem[address & 0xFFFF] || 0;
     }
     

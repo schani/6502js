@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU, step6502, ZERO, NEGATIVE, CARRY } from "../cpu";
+import { ZERO, NEGATIVE, CARRY } from "../6502";
+import { createCPU } from "./utils";
 
 // This test targets specific edge cases for shift and rotate operations
 describe("Shift and rotate edge cases for 100% coverage", () => {
@@ -8,26 +9,26 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
     const cpu = createCPU();
     
     // Test ASL Zero Page with zero value (no carry, result zero)
-    cpu.pc = 0;
-    cpu.mem[0] = 0x06; // ASL Zero Page
-    cpu.mem[1] = 0x80; // Zero page address
-    cpu.mem[0x80] = 0x00; // Value to shift
+    cpu.setProgramCounter(0);
+    cpu.loadByte(0, 0x06); // ASL Zero Page
+    cpu.loadByte(1, 0x80); // Zero page address
+    cpu.loadByte(0x80, 0x00); // Value to shift
     
-    step6502(cpu);
-    expect(cpu.mem[0x80]).toBe(0x00);
-    expect(cpu.p & CARRY).toBe(0);     // Carry should be clear
-    expect(cpu.p & ZERO).toBe(ZERO);   // Zero flag should be set
+    cpu.step();
+    expect(cpu.readByte(0x80)).toBe(0x00);
+    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // Carry should be clear
+    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);   // Zero flag should be set
     
     // Test ASL Zero Page with 0x80 value (sets carry, result zero)
-    cpu.pc = 0;
-    cpu.mem[0] = 0x06; // ASL Zero Page
-    cpu.mem[1] = 0x80; // Zero page address
-    cpu.mem[0x80] = 0x80; // Value to shift
+    cpu.setProgramCounter(0);
+    cpu.loadByte(0, 0x06); // ASL Zero Page
+    cpu.loadByte(1, 0x80); // Zero page address
+    cpu.loadByte(0x80, 0x80); // Value to shift
     
-    step6502(cpu);
-    expect(cpu.mem[0x80]).toBe(0x00);
-    expect(cpu.p & CARRY).toBe(CARRY); // Carry should be set
-    expect(cpu.p & ZERO).toBe(ZERO);   // Zero flag should be set
+    cpu.step();
+    expect(cpu.readByte(0x80)).toBe(0x00);
+    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry should be set
+    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);  // Zero flag should be set
   });
   
   // Test ASL with edge cases - Absolute
@@ -35,16 +36,16 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
     const cpu = createCPU();
     
     // Test ASL Absolute with 0x80 value (sets carry, result zero)
-    cpu.pc = 0;
-    cpu.mem[0] = 0x0E; // ASL Absolute
-    cpu.mem[1] = 0x00; // Low byte of address
-    cpu.mem[2] = 0x10; // High byte of address
-    cpu.mem[0x1000] = 0x80; // Value to shift
+    cpu.setProgramCounter(0);
+    cpu.loadByte(0, 0x0E); // ASL Absolute
+    cpu.loadByte(1, 0x00); // Low byte of address
+    cpu.loadByte(2, 0x10); // High byte of address
+    cpu.loadByte(0x1000, 0x80); // Value to shift
     
-    step6502(cpu);
-    expect(cpu.mem[0x1000]).toBe(0x00);
-    expect(cpu.p & CARRY).toBe(CARRY); // Carry should be set
-    expect(cpu.p & ZERO).toBe(ZERO);   // Zero flag should be set
+    cpu.step();
+    expect(cpu.readByte(0x1000)).toBe(0x00);
+    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry should be set
+    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);  // Zero flag should be set
   });
   
   // Test ASL with edge cases - Absolute,X
@@ -52,17 +53,17 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
     const cpu = createCPU();
     
     // Test ASL Absolute,X with 0x80 value (sets carry, result zero)
-    cpu.pc = 0;
-    cpu.mem[0] = 0x1E; // ASL Absolute,X
-    cpu.mem[1] = 0x00; // Low byte of address
-    cpu.mem[2] = 0x10; // High byte of address
-    cpu.x = 0x05;      // X register = 5
-    cpu.mem[0x1005] = 0x80; // Value to shift
+    cpu.setProgramCounter(0);
+    cpu.loadByte(0, 0x1E); // ASL Absolute,X
+    cpu.loadByte(1, 0x00); // Low byte of address
+    cpu.loadByte(2, 0x10); // High byte of address
+    cpu.setXRegister(0x05);      // X register = 5
+    cpu.loadByte(0x1005, 0x80); // Value to shift
     
-    step6502(cpu);
-    expect(cpu.mem[0x1005]).toBe(0x00);
-    expect(cpu.p & CARRY).toBe(CARRY); // Carry should be set
-    expect(cpu.p & ZERO).toBe(ZERO);   // Zero flag should be set
+    cpu.step();
+    expect(cpu.readByte(0x1005)).toBe(0x00);
+    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry should be set
+    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);  // Zero flag should be set
   });
   
   // Test LSR with edge cases - Zero Page
@@ -70,15 +71,15 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
     const cpu = createCPU();
     
     // Test LSR Zero Page with 0x01 value (sets carry, result zero)
-    cpu.pc = 0;
-    cpu.mem[0] = 0x46; // LSR Zero Page
-    cpu.mem[1] = 0x80; // Zero page address
-    cpu.mem[0x80] = 0x01; // Value to shift
+    cpu.setProgramCounter(0);
+    cpu.loadByte(0, 0x46); // LSR Zero Page
+    cpu.loadByte(1, 0x80); // Zero page address
+    cpu.loadByte(0x80, 0x01); // Value to shift
     
-    step6502(cpu);
-    expect(cpu.mem[0x80]).toBe(0x00);
-    expect(cpu.p & CARRY).toBe(CARRY); // Carry should be set
-    expect(cpu.p & ZERO).toBe(ZERO);   // Zero flag should be set
+    cpu.step();
+    expect(cpu.readByte(0x80)).toBe(0x00);
+    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry should be set
+    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);  // Zero flag should be set
   });
   
   // Test LSR with edge cases - Absolute
@@ -86,16 +87,16 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
     const cpu = createCPU();
     
     // Test LSR Absolute with 0x01 value (sets carry, result zero)
-    cpu.pc = 0;
-    cpu.mem[0] = 0x4E; // LSR Absolute
-    cpu.mem[1] = 0x00; // Low byte of address
-    cpu.mem[2] = 0x10; // High byte of address
-    cpu.mem[0x1000] = 0x01; // Value to shift
+    cpu.setProgramCounter(0);
+    cpu.loadByte(0, 0x4E); // LSR Absolute
+    cpu.loadByte(1, 0x00); // Low byte of address
+    cpu.loadByte(2, 0x10); // High byte of address
+    cpu.loadByte(0x1000, 0x01); // Value to shift
     
-    step6502(cpu);
-    expect(cpu.mem[0x1000]).toBe(0x00);
-    expect(cpu.p & CARRY).toBe(CARRY); // Carry should be set
-    expect(cpu.p & ZERO).toBe(ZERO);   // Zero flag should be set
+    cpu.step();
+    expect(cpu.readByte(0x1000)).toBe(0x00);
+    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry should be set
+    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);  // Zero flag should be set
   });
   
   // Test ROL with edge cases - Zero Page
@@ -103,28 +104,28 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
     const cpu = createCPU();
     
     // Test ROL Zero Page with zero value and carry set
-    cpu.pc = 0;
-    cpu.mem[0] = 0x26; // ROL Zero Page
-    cpu.mem[1] = 0x80; // Zero page address
-    cpu.mem[0x80] = 0x00; // Value to rotate
-    cpu.p = CARRY;     // Set carry flag
+    cpu.setProgramCounter(0);
+    cpu.loadByte(0, 0x26); // ROL Zero Page
+    cpu.loadByte(1, 0x80); // Zero page address
+    cpu.loadByte(0x80, 0x00); // Value to rotate
+    cpu.setStatusFlag(CARRY);     // Set carry flag
     
-    step6502(cpu);
-    expect(cpu.mem[0x80]).toBe(0x01); // Rotated carry in
-    expect(cpu.p & CARRY).toBe(0);    // No carry out
-    expect(cpu.p & ZERO).toBe(0);     // Not zero
+    cpu.step();
+    expect(cpu.readByte(0x80)).toBe(0x01); // Rotated carry in
+    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // No carry out
+    expect(cpu.isStatusFlagSet(ZERO)).toBe(false);  // Not zero
     
     // Test ROL Zero Page with 0x80 value and carry set
-    cpu.pc = 0;
-    cpu.mem[0] = 0x26; // ROL Zero Page
-    cpu.mem[1] = 0x80; // Zero page address
-    cpu.mem[0x80] = 0x80; // Value to rotate
-    cpu.p = CARRY;     // Set carry flag
+    cpu.setProgramCounter(0);
+    cpu.loadByte(0, 0x26); // ROL Zero Page
+    cpu.loadByte(1, 0x80); // Zero page address
+    cpu.loadByte(0x80, 0x80); // Value to rotate
+    cpu.setStatusFlag(CARRY);     // Set carry flag
     
-    step6502(cpu);
-    expect(cpu.mem[0x80]).toBe(0x01); // Rotated with carry set
-    expect(cpu.p & CARRY).toBe(CARRY); // Carry should be set from bit 7
-    expect(cpu.p & ZERO).toBe(0);      // Not zero
+    cpu.step();
+    expect(cpu.readByte(0x80)).toBe(0x01); // Rotated with carry set
+    expect(cpu.isStatusFlagSet(CARRY)).toBe(true);  // Carry should be set from bit 7
+    expect(cpu.isStatusFlagSet(ZERO)).toBe(false);  // Not zero
   });
   
   // Test ROR with edge cases - Zero Page
@@ -132,27 +133,27 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
     const cpu = createCPU();
     
     // Test ROR Zero Page with zero value and carry set
-    cpu.pc = 0;
-    cpu.mem[0] = 0x66; // ROR Zero Page
-    cpu.mem[1] = 0x80; // Zero page address
-    cpu.mem[0x80] = 0x00; // Value to rotate
-    cpu.p = CARRY;     // Set carry flag
+    cpu.setProgramCounter(0);
+    cpu.loadByte(0, 0x66); // ROR Zero Page
+    cpu.loadByte(1, 0x80); // Zero page address
+    cpu.loadByte(0x80, 0x00); // Value to rotate
+    cpu.setStatusFlag(CARRY);     // Set carry flag
     
-    step6502(cpu);
-    expect(cpu.mem[0x80]).toBe(0x80); // Rotated carry to bit 7
-    expect(cpu.p & CARRY).toBe(0);    // No carry out
-    expect(cpu.p & NEGATIVE).toBe(NEGATIVE); // Negative flag set
+    cpu.step();
+    expect(cpu.readByte(0x80)).toBe(0x80); // Rotated carry to bit 7
+    expect(cpu.isStatusFlagSet(CARRY)).toBe(false);     // No carry out
+    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true);   // Negative flag set
     
     // Test ROR Zero Page with 0x01 value and carry set
-    cpu.pc = 0;
-    cpu.mem[0] = 0x66; // ROR Zero Page
-    cpu.mem[1] = 0x80; // Zero page address
-    cpu.mem[0x80] = 0x01; // Value to rotate
-    cpu.p = CARRY;     // Set carry flag
+    cpu.setProgramCounter(0);
+    cpu.loadByte(0, 0x66); // ROR Zero Page
+    cpu.loadByte(1, 0x80); // Zero page address
+    cpu.loadByte(0x80, 0x01); // Value to rotate
+    cpu.setStatusFlag(CARRY);     // Set carry flag
     
-    step6502(cpu);
-    expect(cpu.mem[0x80]).toBe(0x80); // Rotated with carry in
-    expect(cpu.p & CARRY).toBe(CARRY); // Carry should be set from bit 0
-    expect(cpu.p & NEGATIVE).toBe(NEGATIVE); // Negative flag set
+    cpu.step();
+    expect(cpu.readByte(0x80)).toBe(0x80); // Rotated with carry in
+    expect(cpu.isStatusFlagSet(CARRY)).toBe(true);      // Carry should be set from bit 0
+    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true);   // Negative flag set
   });
 });

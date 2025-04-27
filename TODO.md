@@ -63,6 +63,57 @@
   - [x] Ensure all branch tests correctly verify CPU behavior
   - [x] Achieve high test coverage (98.61% functions, 99.19% lines)
 
+- [ ] Refactor to use CPU interface
+  - [x] Make CPU implementations (cpu1.ts, cpu2.ts) implement the interface
+  - [x] Update ldy-completion.test.ts to use CPU interface
+  - [ ] Migrate test files using direct state access to use CPU interface
+    - [x] Update utils.ts to support the CPU interface
+    - [ ] Convert tests using step6502 to use CPU interface methods
+      - [x] system-instructions.test.ts
+      - [x] edge-cases.test.ts
+      - [x] missing-opcodes.test.ts
+      - [x] final-extreme-edge-cases.test.ts
+      - [x] final-ror-test.test.ts
+      - [x] all-shift-ops.test.ts
+      - [x] shift-edge-cases.test.ts
+      - [x] extreme-edge-cases.test.ts
+      - [x] absolute-indexed-instructions.test.ts
+      - [x] final-coverage.test.ts
+      - [x] achieve-100-percent.test.ts
+      - [x] final-100-percent.test.ts
+      - [x] ldx-absolute-y.test.ts
+      - [x] remaining-coverage-branches.test.ts
+      - [x] zero-page-wrap.test.ts
+      - [x] memory-helpers-100-percent.test.ts
+      - [x] trace-functionality.test.ts
+      - [x] ldy-maximum-coverage.test.ts
+      - [x] ldy-immediate.test.ts
+      - [x] ldy-complete.test.ts
+      - [x] instruction-cycle-coverage.test.ts
+      - [x] branch-ultimate.test.ts
+      - [x] branch-max-coverage.test.ts
+      - [x] bit-instruction.test.ts
+      - [x] store-instructions.test.ts
+      - [x] status-flags.test.ts
+      - [x] stack-operations.test.ts
+      - [ ] shift-rotate.test.ts
+      - [ ] register-transfer.test.ts
+      - [ ] memory-helpers.test.ts
+      - [ ] logical.test.ts
+      - [ ] load-instructions.test.ts
+      - [x] ldy-addressing.test.ts
+      - [ ] jump-subroutine.test.ts
+      - [ ] internal-helpers.test.ts
+      - [ ] indirect-addressing.test.ts
+      - [ ] inc-dec.test.ts
+      - [ ] inc-dec-all-modes.test.ts
+      - [ ] full-coverage.test.ts
+      - [ ] branch.test.ts
+      - [ ] branch-comprehensive.test.ts
+      - [ ] arithmetic.test.ts
+      - [x] addressing-modes.test.ts
+      - [x] adc-sbc-addressing.test.ts
+
 - [ ] Potential future improvements:
   - [ ] Add more examples of running simple 6502 programs
   - [x] Improve debugging with memory dump and trace functionality

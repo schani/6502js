@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { type CPU, createCPU } from "./utils";
 
 // Need to access private function, so we'll have to recreate it here
-function writeWord(cpu: CPU, address: number, value: number): void {
+function writeWord(cpu: any, address: number, value: number): void {
     cpu.mem[address & 0xFFFF] = value & 0xFF;
     cpu.mem[(address + 1) & 0xFFFF] = (value >> 8) & 0xFF;
 }

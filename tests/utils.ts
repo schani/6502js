@@ -1,33 +1,37 @@
-// Export everything from the 6502.ts file for test purposes
-import type { CPUState } from "../6502";
-import { 
-    createCPU, 
-    step6502, 
-    CARRY, 
-    ZERO, 
-    INTERRUPT, 
-    DECIMAL, 
-    BREAK, 
-    UNUSED, 
-    OVERFLOW, 
+import { createCompatWrapper } from "./compat";
+import {
+    type CPU,
+    CARRY,
+    ZERO,
+    INTERRUPT,
+    DECIMAL,
+    BREAK,
+    UNUSED,
+    OVERFLOW,
     NEGATIVE,
-    defined
+    CPU1,
 } from "../6502";
 
-// Export everything needed for tests
-export { 
-    CARRY, 
-    ZERO, 
-    INTERRUPT, 
-    DECIMAL, 
-    BREAK, 
-    UNUSED, 
-    OVERFLOW, 
-    NEGATIVE,
-    step6502,
-    createCPU,
-    defined
-};
+/**
+ * Create a CPU instance with default values for testing.
+ * This returns a CPU that implements the CPU interface but also
+ * allows direct access to registers and memory for backwards compatibility.
+ */
+export function createCPU(): any {
+    const cpu = new CPU1();
+    return createCompatWrapper(cpu);
+}
 
-// Export CPU type for tests (backwards compatibility - tests expect "CPU" type)
-export type CPU = CPUState;
+/**
+ * @deprecated Use CPU.step() directly from the CPU interface
+ * For backward compatibility, will be removed after refactoring
+ */
+export function step6502(cpu: any, trace = false): number {
+    return cpu.step(trace);
+}
+
+// Export everything needed for tests
+export { CARRY, ZERO, INTERRUPT, DECIMAL, BREAK, UNUSED, OVERFLOW, NEGATIVE };
+
+// Export CPU type for tests
+export type { CPU };
