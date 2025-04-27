@@ -1,6 +1,7 @@
 import { disassemble } from "./disasm";
-import type { CPU, CPUState } from "./6502";
-import { createCPUState, CARRY, ZERO, INTERRUPT, DECIMAL, BREAK, UNUSED, OVERFLOW, NEGATIVE } from "./6502";
+import type { CPU, CPUState } from "./cpu-interface";
+import { createCPUState } from "./cpu-interface";
+import { CARRY, ZERO, INTERRUPT, DECIMAL, BREAK, UNUSED, OVERFLOW, NEGATIVE } from "./6502";
 
 /**
  * Full-featured implementation of the 6502 CPU
@@ -50,7 +51,7 @@ export class CPU1 implements CPU {
      * @param value 16-bit value to load
      */
     loadWord(address: number, value: number): void {
-        writeWord(this.state, address, value);
+        writeWord(this.state, address & 0xffff, value);
     }
     
     /**
@@ -226,7 +227,7 @@ function writeByte(cpu: CPUState, address: number, value: number): void {
 
 function writeWord(cpu: CPUState, address: number, value: number): void {
     writeByte(cpu, address, value & 0xff);
-    writeByte(cpu, address + 1, (value >> 8) & 0xff);
+    writeByte(cpu, (address + 1) & 0xffff, (value >> 8) & 0xff); // Ensure wrap-around at memory boundary
 }
 
 // Export helper functions for testing

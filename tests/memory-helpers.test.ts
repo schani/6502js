@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { type CPU, createCPU } from "./utils";
+import { createCPU } from "./utils";
 
 describe("Memory helper functions", () => {
   it("should handle edge cases in readByte and writeByte", () => {
@@ -61,8 +61,9 @@ describe("Memory helper functions", () => {
     // Execute RTS to pull address from stack and jump back
     const cycles2 = cpu.step();
     
-    // RTS pulls address from stack, adds 2, and sets PC
+    // RTS pulls address from stack, adds 1, and sets PC
     expect(cycles2).toBe(6);
-    expect(cpu.getProgramCounter()).toBe(2); // Since 0 + 2 = 2 for the return address
+    expect(cpu.getProgramCounter()).toBe(2); // Since JSR saves PC+2-1=1, RTS adds 1 to get 2
   });
+  
 });

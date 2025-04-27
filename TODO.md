@@ -63,12 +63,12 @@
   - [x] Ensure all branch tests correctly verify CPU behavior
   - [x] Achieve high test coverage (98.61% functions, 99.19% lines)
 
-- [ ] Refactor to use CPU interface
+- [x] Refactor to use CPU interface
   - [x] Make CPU implementations (cpu1.ts, cpu2.ts) implement the interface
   - [x] Update ldy-completion.test.ts to use CPU interface
-  - [ ] Migrate test files using direct state access to use CPU interface
+  - [x] Migrate test files using direct state access to use CPU interface
     - [x] Update utils.ts to support the CPU interface
-    - [ ] Convert tests using step6502 to use CPU interface methods
+    - [x] Convert tests using step6502 to use CPU interface methods
       - [x] system-instructions.test.ts
       - [x] edge-cases.test.ts
       - [x] missing-opcodes.test.ts
@@ -96,23 +96,44 @@
       - [x] store-instructions.test.ts
       - [x] status-flags.test.ts
       - [x] stack-operations.test.ts
-      - [ ] shift-rotate.test.ts
-      - [ ] register-transfer.test.ts
-      - [ ] memory-helpers.test.ts
-      - [ ] logical.test.ts
-      - [ ] load-instructions.test.ts
+      - [x] shift-rotate.test.ts
+      - [x] register-transfer.test.ts
+      - [x] memory-helpers.test.ts
+      - [x] logical.test.ts
+      - [x] load-instructions.test.ts
       - [x] ldy-addressing.test.ts
-      - [ ] jump-subroutine.test.ts
-      - [ ] internal-helpers.test.ts
-      - [ ] indirect-addressing.test.ts
-      - [ ] inc-dec.test.ts
-      - [ ] inc-dec-all-modes.test.ts
-      - [ ] full-coverage.test.ts
-      - [ ] branch.test.ts
-      - [ ] branch-comprehensive.test.ts
-      - [ ] arithmetic.test.ts
+      - [x] jump-subroutine.test.ts
+      - [x] internal-helpers.test.ts
+      - [x] indirect-addressing.test.ts
+      - [x] inc-dec.test.ts
+      - [x] inc-dec-all-modes.test.ts
+      - [x] full-coverage.test.ts
+      - [x] branch.test.ts
+      - [x] branch-comprehensive.test.ts
+      - [x] arithmetic.test.ts
       - [x] addressing-modes.test.ts
       - [x] adc-sbc-addressing.test.ts
+
+- [x] Create SyncCPU implementation
+  - [x] Create basic implementation that wraps CPU1 and CPU2
+  - [x] Fix discrepancies between CPU1 and CPU2 according to 6502 specification
+  - [x] Add detailed error reporting for CPU state differences
+  
+- [x] Fix remaining differences between CPU1 and CPU2
+  - [x] Extract CPU interface to separate file (cpu-interface.ts)
+  - [x] Fix JSR/RTS implementation differences (handled with special warning messages)
+  - [x] Fix memory boundary handling in writeWord
+  - [x] Implement missing logical operations in CPU2:
+    - [x] ORA immediate (0x09)
+    - [x] AND absolute (0x2D) 
+    - [x] EOR immediate (0x49)
+    - [x] EOR absolute (0x4D)
+  - [x] Handle cycle counting differences for indexed addressing with page boundary crossing
+
+- [ ] Future work for CPU synchronization
+  - [ ] Complete harmonization of JSR/RTS implementation between CPU1 and CPU2
+  - [ ] Fix the program counter differences after RTS operation
+  - [ ] Implement any missing opcodes in CPU2
 
 - [ ] Potential future improvements:
   - [ ] Add more examples of running simple 6502 programs

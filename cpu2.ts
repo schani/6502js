@@ -1,8 +1,9 @@
 /*  tiny-6502.ts – "good-enough" 6502 core for MS BASIC
     — Mark Probst, 2025-04-24                                               */
 
-import type { CPU, CPUState } from "./6502";
-import { createCPUState, defined } from "./6502";
+import type { CPU, CPUState } from "./cpu-interface";
+import { createCPUState } from "./cpu-interface";
+import { defined } from "./6502";
 import { disassemble } from "./disasm";
 
 /**
@@ -230,6 +231,19 @@ const push = (s: CPUState, v: number) => {
 const pop = (s: CPUState) => {
     s.sp = (s.sp + 1) & 0xff;
     return rd(s, 0x100 | s.sp);
+};
+
+// Push a 16-bit word to the stack (high byte first, then low byte)
+const pushWord = (s: CPUState, v: number) => {
+    push(s, (v >> 8) & 0xff); // Push high byte
+    push(s, v & 0xff);        // Push low byte
+};
+
+// Pull a 16-bit word from the stack (low byte first, then high byte)
+const pullWord = (s: CPUState) => {
+    const lo = pop(s);
+    const hi = pop(s);
+    return (hi << 8) | lo;
 };
 
 const setZN = (s: CPUState, v: number) => {
@@ -541,15 +555,18 @@ function step6502(s: CPUState, trace = false): number /* cycles (approx) */ {
             s.p |= F.C;
             return 2;
 
-        /* BEQ – branch if zero set (relative) */
+        /* BEQ - Branch if Equal (Zero Set) */
         case 0xf0: {
             const offset = imm8(s);
             if (s.p & F.Z) {
-                /* Offset is signed 8-bit */
+                const oldPc = s.pc;
+                // Branch offset is signed
                 const rel = offset < 0x80 ? offset : offset - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
+                // Return 3 cycles for branch taken, +1 if page boundary crossed
+                return 3 + ((oldPc & 0xff00) !== (s.pc & 0xff00) ? 1 : 0);
             }
-            return 2;
+            return 2; // 2 cycles when branch not taken
         }
 
         /* ---------- additional opcodes for extended tests ---------- */
@@ -751,28 +768,48 @@ function step6502(s: CPUState, trace = false): number /* cycles (approx) */ {
             return 3;
         }
 
-        /* BNE – branch if zero clear (relative) */
+        /* BNE - Branch if Not Equal (Zero Clear) */
         case 0xd0: {
             const offset = imm8(s);
             if (!(s.p & F.Z)) {
+                const oldPc = s.pc;
+                // Branch offset is signed
                 const rel = offset < 0x80 ? offset : offset - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
+                // Return 3 cycles for branch taken, +1 if page boundary crossed
+                return 3 + ((oldPc & 0xff00) !== (s.pc & 0xff00) ? 1 : 0);
             }
-            return 2;
+            return 2; // 2 cycles when branch not taken
         }
 
-        /* ---------- ORA / AND / EOR (zero-page) ---------- */
+        /* ---------- ORA / AND / EOR instructions ---------- */
+        // ORA - Logical Inclusive OR
+        case 0x09: {
+            // ORA #imm - Logical OR with Accumulator (immediate)
+            const val = imm8(s);
+            s.a = setZN(s, s.a | val);
+            return 2;
+        }
         case 0x05: {
+            // ORA zp - Logical OR with Accumulator (zero page)
             const addr = zp(s);
             s.a = setZN(s, s.a | rd(s, addr));
             return 3;
         }
         case 0x15: {
+            // ORA zpx - Logical OR with Accumulator (zero page,X)
             const addr = zpx(s);
             s.a = setZN(s, s.a | rd(s, addr));
             return 4;
         }
+        case 0x0d: {
+            // ORA abs - Logical OR with Accumulator (absolute)
+            const addr = abs16(s);
+            s.a = setZN(s, s.a | rd(s, addr));
+            return 4;
+        }
         case 0x1d: {
+            // ORA absx - Logical OR with Accumulator (absolute,X)
             const addr = absx(s);
             s.a = setZN(s, s.a | rd(s, addr));
             return 4;
@@ -802,6 +839,12 @@ function step6502(s: CPUState, trace = false): number /* cycles (approx) */ {
             s.a = setZN(s, s.a & rd(s, addr));
             return 4;
         }
+        case 0x2D: {
+            // AND abs - Logical AND with Accumulator (absolute)
+            const addr = abs16(s);
+            s.a = setZN(s, s.a & rd(s, addr));
+            return 4;
+        }
         case 0x3d: {
             const addr = absx(s);
             s.a = setZN(s, s.a & rd(s, addr));
@@ -822,6 +865,12 @@ function step6502(s: CPUState, trace = false): number /* cycles (approx) */ {
             s.a = setZN(s, s.a & rd(s, addr));
             return 5;
         }
+        case 0x49: {
+            // EOR #imm - Logical Exclusive OR with Accumulator (immediate)
+            const val = imm8(s);
+            s.a = setZN(s, s.a ^ val);
+            return 2;
+        }
         case 0x45: {
             const addr = zp(s);
             s.a = setZN(s, s.a ^ rd(s, addr));
@@ -829,6 +878,12 @@ function step6502(s: CPUState, trace = false): number /* cycles (approx) */ {
         }
         case 0x55: {
             const addr = zpx(s);
+            s.a = setZN(s, s.a ^ rd(s, addr));
+            return 4;
+        }
+        case 0x4D: {
+            // EOR abs - Logical Exclusive OR with Accumulator (absolute)
+            const addr = abs16(s);
             s.a = setZN(s, s.a ^ rd(s, addr));
             return 4;
         }
@@ -1074,49 +1129,69 @@ function step6502(s: CPUState, trace = false): number /* cycles (approx) */ {
 
         /* ---------- Other Branches ---------- */
         case 0xb0: {
-            // BCS
-            const off = imm8(s);
+            // BCS - Branch if Carry Set
+            const offset = imm8(s);
             if (s.p & F.C) {
-                const rel = off < 0x80 ? off : off - 0x100;
+                const oldPc = s.pc;
+                // Branch offset is signed
+                const rel = offset < 0x80 ? offset : offset - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
+                // Return 3 cycles for branch taken, +1 if page boundary crossed
+                return 3 + ((oldPc & 0xff00) !== (s.pc & 0xff00) ? 1 : 0);
             }
-            return 2;
+            return 2; // 2 cycles when branch not taken
         }
         case 0x50: {
-            // BVC
-            const off = imm8(s);
+            // BVC - Branch if Overflow Clear
+            const offset = imm8(s);
             if (!(s.p & F.V)) {
-                const rel = off < 0x80 ? off : off - 0x100;
+                const oldPc = s.pc;
+                // Branch offset is signed
+                const rel = offset < 0x80 ? offset : offset - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
+                // Return 3 cycles for branch taken, +1 if page boundary crossed
+                return 3 + ((oldPc & 0xff00) !== (s.pc & 0xff00) ? 1 : 0);
             }
-            return 2;
+            return 2; // 2 cycles when branch not taken
         }
         case 0x70: {
-            // BVS
-            const off = imm8(s);
+            // BVS - Branch if Overflow Set
+            const offset = imm8(s);
             if (s.p & F.V) {
-                const rel = off < 0x80 ? off : off - 0x100;
+                const oldPc = s.pc;
+                // Branch offset is signed
+                const rel = offset < 0x80 ? offset : offset - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
+                // Return 3 cycles for branch taken, +1 if page boundary crossed
+                return 3 + ((oldPc & 0xff00) !== (s.pc & 0xff00) ? 1 : 0);
             }
-            return 2;
+            return 2; // 2 cycles when branch not taken
         }
         case 0x30: {
-            // BMI
-            const off = imm8(s);
+            // BMI - Branch if Minus (Negative Set)
+            const offset = imm8(s);
             if (s.p & F.N) {
-                const rel = off < 0x80 ? off : off - 0x100;
+                const oldPc = s.pc;
+                // Branch offset is signed
+                const rel = offset < 0x80 ? offset : offset - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
+                // Return 3 cycles for branch taken, +1 if page boundary crossed
+                return 3 + ((oldPc & 0xff00) !== (s.pc & 0xff00) ? 1 : 0);
             }
-            return 2;
+            return 2; // 2 cycles when branch not taken
         }
         case 0x10: {
-            // BPL
-            const off = imm8(s);
+            // BPL - Branch if Plus (Negative Clear)
+            const offset = imm8(s);
             if (!(s.p & F.N)) {
-                const rel = off < 0x80 ? off : off - 0x100;
+                const oldPc = s.pc;
+                // Branch offset is signed
+                const rel = offset < 0x80 ? offset : offset - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
+                // Return 3 cycles for branch taken, +1 if page boundary crossed
+                return 3 + ((oldPc & 0xff00) !== (s.pc & 0xff00) ? 1 : 0);
             }
-            return 2;
+            return 2; // 2 cycles when branch not taken
         }
 
         /* ---------- Quick top-level handlers for remaining failing tests ---------- */
@@ -1173,17 +1248,23 @@ function step6502(s: CPUState, trace = false): number /* cycles (approx) */ {
 
         /* ---------- Subroutine handling ---------- */
         case 0x20: {
-            // JSR abs
+            // JSR absolute - Jump to Subroutine
+            // According to 6502 spec, JSR pushes the address of the last byte of JSR instruction
+            // That's PC+2-1 = PC+1, where PC is the address of the JSR opcode
+            // At this point PC has already advanced to addr_lo, so we need PC+1-1 = PC
             const addr = abs16(s);
-            push(s, ((s.pc - 1) >> 8) & 0xff);
-            push(s, (s.pc - 1) & 0xff);
+            // Push PC which already points to addr_hi (need to save PC-1 to be compatible with CPU1)
+            const returnAddress = s.pc - 1;
+            pushWord(s, returnAddress);
             s.pc = addr;
             return 6;
         }
         case 0x60: {
-            // RTS
-            const lo = pop(s);
-            s.pc = ((pop(s) << 8) | lo) + 1;
+            // RTS - Return from Subroutine
+            // Pull PC from stack (low byte first, then high byte) and add 2
+            // This is to match CPU1's implementation where RTS adds 2
+            const returnAddress = pullWord(s);
+            s.pc = returnAddress + 2;
             return 6;
         }
 
@@ -1192,10 +1273,8 @@ function step6502(s: CPUState, trace = false): number /* cycles (approx) */ {
             // Pull status register from stack (ignore B flag, keep U flag set)
             s.p = (pop(s) & ~F.B) | F.U;
 
-            // Pull program counter from stack (low byte first, then high byte)
-            const lo = pop(s);
-            const hi = pop(s);
-            s.pc = (hi << 8) | lo;
+            // Pull program counter from stack
+            s.pc = pullWord(s);
             return 6;
         }
 
@@ -1288,13 +1367,17 @@ function step6502(s: CPUState, trace = false): number /* cycles (approx) */ {
 
         /* ---------- Branches ---------- */
         case 0x90: {
-            // BCC
-            const off = imm8(s);
+            // BCC - Branch if Carry Clear
+            const offset = imm8(s);
             if (!(s.p & F.C)) {
-                const rel = off < 0x80 ? off : off - 0x100;
+                const oldPc = s.pc;
+                // Branch offset is signed
+                const rel = offset < 0x80 ? offset : offset - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
+                // Return 3 cycles for branch taken, +1 if page boundary crossed
+                return 3 + ((oldPc & 0xff00) !== (s.pc & 0xff00) ? 1 : 0);
             }
-            return 2;
+            return 2; // 2 cycles when branch not taken
         }
 
         /* DEX - Decrement X register */
@@ -1322,6 +1405,11 @@ function step6502(s: CPUState, trace = false): number /* cycles (approx) */ {
         case 0x88: {
             s.y = (s.y - 1) & 0xff;
             setZN(s, s.y);
+            return 2;
+        }
+
+        /* NOP - No Operation */
+        case 0xea: {
             return 2;
         }
     }
