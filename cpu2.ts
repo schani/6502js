@@ -1245,7 +1245,7 @@ export function step6502(
             return 3;
         case 0x28:
             s.p = (pop(s) & ~F.B) | F.U;
-            setZN(s, s.a);
+            // Removed setZN call - the PLP instruction doesn't affect Z/N based on A
             return 4;
 
         /* ---------- INC / DEC memory (zero-page) ---------- */
@@ -1327,6 +1327,11 @@ export function step6502(
             setZN(s, s.y);
             return 2;
         }
+    }
+
+    // NOP - No Operation
+    if (op === 0xea) {
+        return 2;
     }
 
     throw new Error(

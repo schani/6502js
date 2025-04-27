@@ -32,14 +32,14 @@ describe("Jump and subroutine instructions", () => {
     
     expect(cpu.getProgramCounter()).toBe(0x1234);
     expect(cpu.getStackPointer()).toBe(0xFB); // SP decremented by 2 (for 16-bit return address)
-    expect(cpu.readByte(0x01FC)).toBe(0x00); // Low byte of return address - 1
-    expect(cpu.readByte(0x01FD)).toBe(0x00); // High byte of return address - 1
+    expect(cpu.readByte(0x01FC)).toBe(0x02); // Low byte of return address (PC+2-1)
+    expect(cpu.readByte(0x01FD)).toBe(0x00); // High byte of return address (PC+2-1)
     expect(cycles).toBe(6);
     
     // Execute RTS
     cycles = cpu.step();
     
-    expect(cpu.getProgramCounter()).toBe(0x0002); // Return address + 2
+    expect(cpu.getProgramCounter()).toBe(0x0003); // Return address (0x0002) + 1
     expect(cpu.getStackPointer()).toBe(0xFD); // SP incremented by 2
     expect(cycles).toBe(6);
   });

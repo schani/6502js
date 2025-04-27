@@ -51,18 +51,34 @@ const ISCNTC = 0xffb7;
 const LOAD = 0xffb9;
 const SAVE = 0xffbc;
 
-function pop16(cpu: CPUState): number {
-    const lo = defined(cpu.mem[0x100 | ((cpu.sp + 1) & 0xff)]);
-    const hi = defined(cpu.mem[0x100 | ((cpu.sp + 2) & 0xff)]);
-    cpu.sp = (cpu.sp + 2) & 0xff;
+// Fixed stack operations to use the CPU interface
+function pop16(cpu: CPU): number {
+    // Save current SP
+    const sp = cpu.getStackPointer();
+    
+    // Increment SP and read low byte
+    cpu.setStackPointer((sp + 1) & 0xff);
+    const lo = cpu.readByte(0x0100 + cpu.getStackPointer());
+    
+    // Increment SP and read high byte
+    cpu.setStackPointer((cpu.getStackPointer() + 1) & 0xff);
+    const hi = cpu.readByte(0x0100 + cpu.getStackPointer());
+    
     return (hi << 8) | lo;
 }
 
-function push16(cpu: CPUState, val: number) {
-    cpu.mem[0x100 | cpu.sp] = (val >> 8) & 0xff;
-    cpu.sp = (cpu.sp - 1) & 0xff;
-    cpu.mem[0x100 | cpu.sp] = val & 0xff;
-    cpu.sp = (cpu.sp - 1) & 0xff;
+function push16(cpu: CPU, val: number) {
+    // Push high byte first
+    const hi = (val >> 8) & 0xff;
+    const lo = val & 0xff;
+    
+    // Push high byte
+    cpu.loadByte(0x0100 + cpu.getStackPointer(), hi);
+    cpu.setStackPointer((cpu.getStackPointer() - 1) & 0xff);
+    
+    // Push low byte
+    cpu.loadByte(0x0100 + cpu.getStackPointer(), lo);
+    cpu.setStackPointer((cpu.getStackPointer() - 1) & 0xff);
 }
 
 // ---------------------------------------------------------------------------
@@ -305,7 +321,7 @@ async function main() {
         // Intercept before executing the opcode at PC
         if (trapSet.has(state.pc)) {
             const addr = state.pc;
-            const ret = pop16(state) + 1; // emulate RTS
+            const ret = pop16(cpu) + 1; // emulate RTS using CPU interface
 
             switch (addr) {
                 case MONRDKEY: {

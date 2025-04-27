@@ -1903,14 +1903,20 @@ export function step6502(cpu: CPUState, trace = false): number /* cycles */ {
 
         case 0x20: {
             // JSR Absolute
-            // PC is already pointing to the second byte of instruction
-            // We need to push PC+1 (which will point to the next instruction)
-            // BUT the 6502 actually pushes the address BEFORE the next instruction
-            const returnAddress = cpu.pc + 1 - 2;
-            pushWord(cpu, returnAddress);
-
-            // Jump to the target address
-            cpu.pc = getAbsoluteAddress(cpu);
+            // PC is pointing to the low byte of the target address
+            // According to 6502 spec, JSR should push PC+2-1 (next instruction - 1)
+            
+            // Save current PC before it's modified by getAbsoluteAddress
+            const pc = cpu.pc;
+            
+            // Calculate the jump target (this advances PC by 2)
+            const targetAddress = getAbsoluteAddress(cpu);
+            
+            // Push PC+2-1 as the return address (PC now points to the next instruction)
+            pushWord(cpu, pc + 2 - 1);
+            
+            // Jump to target
+            cpu.pc = targetAddress;
             cycles = 6;
             break;
         }
@@ -1918,9 +1924,8 @@ export function step6502(cpu: CPUState, trace = false): number /* cycles */ {
         case 0x60: {
             // RTS
             // Pull return address from stack and add 1
-            // The address on the stack is actually PC-1, so we need to add 2
-            // to get to the instruction after the JSR
-            cpu.pc = pullWord(cpu) + 2;
+            // The address on the stack is PC-1, so adding 1 gives us the next instruction
+            cpu.pc = pullWord(cpu) + 1;  // Fixed: should add 1, not 2
             cycles = 6;
             break;
         }
