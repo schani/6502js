@@ -18,8 +18,8 @@ bun run basic-runner.ts --sync
 # Run with SyncCPU in debug mode (logs divergences)
 bun run basic-runner.ts --debug
 
-# Run with SyncCPU and exit on first divergence
-bun run basic-runner.ts --sync --exit-on-divergence
+# Run with SyncCPU (will exit on any divergence)
+bun run basic-runner.ts --sync
 
 # Run with tracing enabled (shows each instruction)
 bun run basic-runner.ts --trace
@@ -31,23 +31,24 @@ bun run basic-runner.ts --trace
 - `--cpu2`: Use CPU2 implementation
 - `--sync`: Use SyncCPU implementation (runs both CPU1 and CPU2 in lockstep)
 - `--debug`: Enable debug mode with detailed logging (implies --sync)
-- `--exit-on-divergence`: Exit immediately when a divergence is detected between CPU implementations
 - `--trace`: Enable instruction tracing (shows each instruction as it executes)
 
 ## Description
 
 The BASIC runner loads kb9.bin at memory address $2000 and provides minimal host services via emulated monitor vectors. The KIM-1 version of MS-BASIC expects the host to provide routines for character input/output and other system functions.
 
-## Debug Mode
+## Debug and SyncCPU Modes
 
-The debug mode (`--debug` flag) is designed to help identify differences between CPU1 and CPU2 implementations by:
+The `--sync` flag runs both CPU1 and CPU2 in parallel to ensure they behave identically. When a divergence is detected, the program immediately exits with an error message, as divergences indicate bugs that must be fixed.
+
+The debug mode (`--debug` flag) enhances this by:
 
 1. Using SyncCPU to run both implementations in parallel
-2. Logging divergences to `cpu-divergence.log` 
-3. Continuing execution using CPU1's state when divergences are detected
-4. Periodically reporting statistics on the most common divergences
+2. Logging all divergences to `cpu-divergence.log` 
+3. Exiting immediately with detailed error information
+4. Periodically outputting statistics on divergences (if the program is allowed to continue)
 
-This helps detect implementation differences that might not be caught by the standard test suite, as BASIC exercises the CPU in different ways.
+This helps identify implementation differences that might not be caught by the standard test suite, as BASIC exercises the CPU in different ways than our unit tests.
 
 ## Known Issues
 

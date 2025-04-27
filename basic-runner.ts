@@ -30,7 +30,6 @@ import { defined } from "@glideapps/ts-necessities";
 // Command line flags
 const TRACE = process.argv.includes("--trace");
 const DEBUG = process.argv.includes("--debug");
-const EXIT_ON_DIVERGENCE = process.argv.includes("--exit-on-divergence");
 const USE_CPU1 = process.argv.includes("--cpu1");
 const USE_CPU2 = process.argv.includes("--cpu2");
 const USE_SYNC = process.argv.includes("--sync") || DEBUG; // --debug implies --sync
@@ -245,11 +244,7 @@ async function main() {
             console.log("CPU divergences will be logged to:", DIVERGENCE_LOG);
             console.log("Check this log to identify issues that need to be fixed in the CPU implementations.");
         }
-        if (EXIT_ON_DIVERGENCE) {
-            console.log("Will exit immediately on CPU divergence");
-        } else {
-            console.log("Will continue on CPU divergence using CPU1's state");
-        }
+        console.log("Will exit immediately on any CPU implementation divergence");
         console.log("");
     } else if (USE_CPU2) {
         console.log("Running MS-BASIC with CPU2");
@@ -263,7 +258,6 @@ async function main() {
         console.log("  --cpu2            Use CPU2 implementation");
         console.log("  --sync            Use SyncCPU (runs both CPU1 and CPU2 in parallel)");
         console.log("  --debug           Enable debug mode with detailed logging");
-        console.log("  --exit-on-divergence Exit immediately when CPU implementations diverge");
         console.log("  --trace           Enable instruction tracing");
         console.log("");
     }
@@ -348,16 +342,10 @@ async function main() {
                 }
                 
                 console.error(`CPU divergence detected with opcode 0x${opcode.toString(16).padStart(2, "0")}`);
-                
-                if (EXIT_ON_DIVERGENCE) {
-                    console.error("Full error details:");
-                    console.error(errorMessage);
-                    console.error("\nExiting due to CPU divergence (--exit-on-divergence flag is set)");
-                    exit(1);
-                }
-                
-                // Don't crash the program, just continue with CPU1's state
-                console.error("Continuing with CPU1's state...");
+                console.error("Full error details:");
+                console.error(errorMessage);
+                console.error("\nExiting due to CPU implementation divergence");
+                exit(1);
             } else {
                 throw error; // In non-SyncCPU mode, let errors crash the program
             }
