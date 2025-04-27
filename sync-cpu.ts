@@ -45,57 +45,10 @@ export class SyncCPU implements CPU {
         const cycles1 = this.cpu1.step(trace);
         const cycles2 = this.cpu2.step(trace);
 
-        // Known opcodes that may return different cycle counts due to implementation differences
-        const cycleCountDifferentOpcodes = [
-            // Indexed addressing modes with page crossing different handling
-            0xbd,
-            0xb9,
-            0xbc,
-            0xbe, // LDA/LDY/LDX Absolute,X/Y
-            0x9d,
-            0x99, // STA Absolute,X/Y
-            0x91, // STA (Indirect),Y
-            0xb1, // LDA (Indirect),Y
-
-            // Logical operations that are failing
-            0x29,
-            0x25,
-            0x35,
-            0x2d,
-            0x3d,
-            0x39,
-            0x21,
-            0x31, // AND all addressing modes
-            0x09,
-            0x05,
-            0x15,
-            0x0d,
-            0x1d,
-            0x19,
-            0x01,
-            0x11, // ORA all addressing modes
-            0x49,
-            0x45,
-            0x55,
-            0x4d,
-            0x5d,
-            0x59,
-            0x41,
-            0x51, // EOR all addressing modes
-
-            // JSR/RTS instructions have different stack handling
-            0x20,
-            0x60, // JSR/RTS
-        ];
-
-        // Check if the opcode is known to have cycle count differences
-        const isKnownDifferentCycleOpcode =
-            cycleCountDifferentOpcodes.includes(opcode);
-
         // Compare cycles
         // if (cycles1 !== cycles2 && !isKnownDifferentCycleOpcode) {
         //     console.warn(
-        //         `CPUs returned different cycle counts after opcode 0x${opcode.toString(16)}: CPU1=${cycles1}, CPU2=${cycles2}`,
+        //         `CPUs returned different cycle counts: CPU1=${cycles1}, CPU2=${cycles2}`,
         //     );
         // }
 
@@ -280,42 +233,41 @@ export class SyncCPU implements CPU {
     private compareStates(): void {
         const state1 = this.cpu1.getState();
         const state2 = this.cpu2.getState();
-        const opcode = this.readByte(this.getProgramCounter() - 1); // Rough approximation of last executed opcode
 
         // Compare register values
         if (state1.a !== state2.a) {
             throw new Error(
-                `CPU state divergence after opcode 0x${opcode.toString(16)}: Accumulator (CPU1=0x${state1.a.toString(16)}, CPU2=0x${state2.a.toString(16)})`,
+                `CPU state divergence: Accumulator (CPU1=0x${state1.a.toString(16)}, CPU2=0x${state2.a.toString(16)})`,
             );
         }
 
         if (state1.x !== state2.x) {
             throw new Error(
-                `CPU state divergence after opcode 0x${opcode.toString(16)}: X register (CPU1=0x${state1.x.toString(16)}, CPU2=0x${state2.x.toString(16)})`,
+                `CPU state divergence: X register (CPU1=0x${state1.x.toString(16)}, CPU2=0x${state2.x.toString(16)})`,
             );
         }
 
         if (state1.y !== state2.y) {
             throw new Error(
-                `CPU state divergence after opcode 0x${opcode.toString(16)}: Y register (CPU1=0x${state1.y.toString(16)}, CPU2=0x${state2.y.toString(16)})`,
+                `CPU state divergence: Y register (CPU1=0x${state1.y.toString(16)}, CPU2=0x${state2.y.toString(16)})`,
             );
         }
 
         if (state1.sp !== state2.sp) {
             throw new Error(
-                `CPU state divergence after opcode 0x${opcode.toString(16)}: Stack pointer (CPU1=0x${state1.sp.toString(16)}, CPU2=0x${state2.sp.toString(16)})`,
+                `CPU state divergence: Stack pointer (CPU1=0x${state1.sp.toString(16)}, CPU2=0x${state2.sp.toString(16)})`,
             );
         }
 
         if (state1.p !== state2.p) {
             throw new Error(
-                `CPU state divergence after opcode 0x${opcode.toString(16)}: Status register (CPU1=0x${state1.p.toString(16)}, CPU2=0x${state2.p.toString(16)})`,
+                `CPU state divergence: Status register (CPU1=0x${state1.p.toString(16)}, CPU2=0x${state2.p.toString(16)})`,
             );
         }
 
         if (state1.pc !== state2.pc) {
             throw new Error(
-                `CPU state divergence after opcode 0x${opcode.toString(16)}: Program counter (CPU1=0x${state1.pc.toString(16)}, CPU2=0x${state2.pc.toString(16)})`,
+                `CPU state divergence: Program counter (CPU1=0x${state1.pc.toString(16)}, CPU2=0x${state2.pc.toString(16)})`,
             );
         }
 
@@ -384,7 +336,7 @@ export class SyncCPU implements CPU {
                 .join("\n  ");
 
             throw new Error(
-                `CPU state divergence after opcode 0x${opcode.toString(16)}: Memory differences found:\n  ${diffDetails}\n\nCheck 6502 specification for correct behavior.`,
+                `CPU state divergence: Memory differences found:\n  ${diffDetails}\n\nCheck 6502 specification for correct behavior.`,
             );
         }
     }
