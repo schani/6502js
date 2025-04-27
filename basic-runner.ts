@@ -4,33 +4,39 @@
  *
  * Usage:
  *   bun run basic-runner.ts            # interactive prompt
+ *   bun run basic-runner.ts --debug    # run with CPU state divergence detection
  *
  * Prerequisites:
  *   – Place kb9.bin (8 KiB image built with CONFIG_KIM) in repo root.
  *
  * Implementation details
- *   • Loads kb9.bin at $A000.
+ *   • Loads kb9.bin at $2000.
  *   • Writes tiny stubs (RTS or CLC; RTS) into the five monitor
  *     vectors BASIC expects.
- *   • Runs step6502() until the PC reaches a stub address, at which point
+ *   • Runs step() until the PC reaches a stub address, at which point
  *     the runner performs the corresponding host I/O and emulates RTS by
  *     popping the return address from the 6502 stack.
  */
 
-import { readFileSync } from "fs";
+import { readFileSync, appendFileSync } from "fs";
 import { exit } from "process";
 import { setTimeout } from "timers/promises";
-import { CPU1, type CPUState } from "./6502";
+import type { CPU, CPUState } from "./cpu-interface";
+import { CPU1 } from "./cpu1";
+import { CPU2 } from "./cpu2";
+import { SyncCPU } from "./sync-cpu";
 import { defined } from "@glideapps/ts-necessities";
 
-// rudimentary CLI flag
+// rudimentary CLI flags
 const TRACE = process.argv.includes("--trace");
+const DEBUG = process.argv.includes("--debug");
 
 // ---------------------------------------------------------------------------
 // Constants / helpers
 // ---------------------------------------------------------------------------
 
 const KB9_PATH = "./kb9.bin";
+const DIVERGENCE_LOG = "./cpu-divergence.log";
 
 // KB9 build (KIM-1 v1.1)
 // I/O vectors are *inside* the binary, not in the 6502 reset page.
@@ -60,10 +66,11 @@ function push16(cpu: CPUState, val: number) {
 // CPU / memory initialisation
 // ---------------------------------------------------------------------------
 
-function buildCPU(): CPU1 {
-    const cpu = new CPU1();
+function buildCPU(): CPU {
+    // Use either CPU1 or SyncCPU depending on debug mode
+    const cpu = DEBUG ? new SyncCPU() : new CPU1();
     const state = cpu.getState();
-    
+
     // Load BASIC ROM image
     let bin: Buffer;
     try {
@@ -82,23 +89,27 @@ function buildCPU(): CPU1 {
     }
     // KIM-1 kb9.bin layout: single contiguous blob expected to be loaded at $2000
     const maxLen = Math.min(bin.length, 0x10000 - 0x2000);
-    state.mem.set(bin.subarray(0, maxLen), 0x2000);
+
+    // Use CPU interface methods instead of directly manipulating memory
+    for (let i = 0; i < maxLen; i++) {
+        cpu.loadByte(0x2000 + i, bin[i]);
+    }
 
     // Write monitor stubs that are *not* inside the BASIC image (high ROM)
-    state.mem[LOAD] = 0x60;
-    state.mem[SAVE] = 0x60;
+    cpu.loadByte(LOAD, 0x60);
+    cpu.loadByte(SAVE, 0x60);
     // ISCNTC: CLC ; RTS
-    state.mem[ISCNTC] = 0x18; // CLC
-    state.mem[ISCNTC + 1] = 0x60; // RTS
+    cpu.loadByte(ISCNTC, 0x18); // CLC
+    cpu.loadByte(ISCNTC + 1, 0x60); // RTS
 
-    // Initial state
-    state.a = 0;
-    state.x = 0;
-    state.y = 0;
-    state.sp = 0xfd;
-    state.p = 0x24;
-    state.pc = 0x4065;
-    
+    // Initial state using CPU interface methods
+    cpu.setAccumulator(0);
+    cpu.setXRegister(0);
+    cpu.setYRegister(0);
+    cpu.setStackPointer(0xfd);
+    cpu.setStatusRegister(0x24);
+    cpu.setProgramCounter(0x4065);
+
     return cpu;
 }
 
@@ -111,21 +122,31 @@ const inputBuffer: number[] = [];
 let inputPromiseResolve: ((value: number) => void) | null = null;
 
 // Set up input handling
-process.stdin.setRawMode(true);
-process.stdin.on("data", (data: Buffer) => {
-    // Add each byte to the buffer
-    for (let i = 0; i < data.length; i++) {
-        inputBuffer.push(defined(data[i]));
+try {
+    if (process.stdin.isTTY) {
+        process.stdin.setRawMode(true);
     }
 
-    // If there's a pending promise, resolve it with the next character
-    if (inputPromiseResolve && inputBuffer.length > 0) {
-        const nextChar = inputBuffer.shift()!;
-        const resolveFunc = inputPromiseResolve;
-        inputPromiseResolve = null;
-        resolveFunc(nextChar);
-    }
-});
+    process.stdin.on("data", (data: Buffer) => {
+        // Add each byte to the buffer
+        for (let i = 0; i < data.length; i++) {
+            inputBuffer.push(defined(data[i]));
+        }
+
+        // If there's a pending promise, resolve it with the next character
+        if (inputPromiseResolve && inputBuffer.length > 0) {
+            const nextChar = inputBuffer.shift()!;
+            const resolveFunc = inputPromiseResolve;
+            inputPromiseResolve = null;
+            resolveFunc(nextChar);
+        }
+    });
+} catch (e) {
+    console.warn(
+        "Terminal input setup failed. Using fallback input method.",
+        e,
+    );
+}
 
 async function readChar(): Promise<number> {
     // If we have buffered input, use it
@@ -157,6 +178,38 @@ function writeChar(c: number) {
 }
 
 // ---------------------------------------------------------------------------
+// Divergence tracking
+// ---------------------------------------------------------------------------
+
+// Map to track which opcodes have divergences
+const divergenceMap = new Map<number, { count: number; lastError: string }>();
+
+// Function to log divergence information
+function logDivergence(opcode: number, error: string) {
+    const opcodeKey = opcode;
+
+    if (!divergenceMap.has(opcodeKey)) {
+        divergenceMap.set(opcodeKey, { count: 1, lastError: error });
+    } else {
+        const info = divergenceMap.get(opcodeKey)!;
+        info.count++;
+        info.lastError = error;
+        divergenceMap.set(opcodeKey, info);
+    }
+
+    // Log to file if in debug mode
+    if (DEBUG) {
+        const timestamp = new Date().toISOString();
+        const errorMessage = `[${timestamp}] Opcode 0x${opcode.toString(16).padStart(2, "0")}: ${error}\n`;
+        try {
+            appendFileSync(DIVERGENCE_LOG, errorMessage);
+        } catch (e) {
+            console.error("Failed to write to divergence log:", e);
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Main run loop
 // ---------------------------------------------------------------------------
 
@@ -165,6 +218,49 @@ async function main() {
     const state = cpu.getState();
 
     const trapSet = new Set([MONRDKEY, MONCOUT, ISCNTC, LOAD, SAVE]);
+
+    // Console message explaining CPU usage
+    if (DEBUG) {
+        console.log("Running MS-BASIC with SyncCPU (debug mode enabled)\n");
+        console.log("CPU divergences will be logged to:", DIVERGENCE_LOG);
+        console.log(
+            "Check this log to identify issues that need to be fixed in the CPU implementations.\n",
+        );
+    } else {
+        console.log("Running MS-BASIC with CPU1\n");
+        console.log(
+            "Use --debug flag to run with SyncCPU and detect implementation divergences.\n",
+        );
+    }
+
+    // Track instruction count for periodic status reporting
+    let instructionCount = 0;
+    const REPORT_INTERVAL = 10000; // Report every 10,000 instructions
+
+    // Process to dump divergence summary every N instructions
+    const dumpDivergenceSummary = () => {
+        if (DEBUG && divergenceMap.size > 0) {
+            console.log("\n--- CPU Divergence Summary ---");
+            console.log(
+                `Total unique opcodes with divergences: ${divergenceMap.size}`,
+            );
+
+            // Sort by frequency
+            const sortedDivergences = [...divergenceMap.entries()]
+                .sort((a, b) => b[1].count - a[1].count)
+                .slice(0, 10); // Show top 10
+
+            console.log("Top divergent opcodes:");
+            sortedDivergences.forEach(([opcode, info]) => {
+                console.log(
+                    `  0x${opcode.toString(16).padStart(2, "0")}: ${info.count} occurrences`,
+                );
+                console.log(`    Last error: ${info.lastError}`);
+            });
+
+            console.log("----------------------------\n");
+        }
+    };
 
     while (true) {
         // Intercept before executing the opcode at PC
@@ -175,11 +271,11 @@ async function main() {
             switch (addr) {
                 case MONRDKEY: {
                     const c = await readChar();
-                    state.a = c & 0xff;
+                    cpu.setAccumulator(c & 0xff);
                     break;
                 }
                 case MONCOUT: {
-                    writeChar(state.a);
+                    writeChar(cpu.getAccumulator());
                     break;
                 }
                 case ISCNTC: {
@@ -192,11 +288,36 @@ async function main() {
                     break;
             }
 
-            state.pc = ret;
+            cpu.setProgramCounter(ret);
             continue;
         }
 
-        cpu.step(TRACE);
+        // Execute CPU step and catch any divergences
+        try {
+            const opcode = cpu.readByte(cpu.getProgramCounter());
+            cpu.step(TRACE);
+
+            // Count instructions for reporting
+            instructionCount++;
+            if (instructionCount % REPORT_INTERVAL === 0) {
+                dumpDivergenceSummary();
+            }
+        } catch (error) {
+            if (DEBUG) {
+                const errorMessage = String(error);
+                const opcode = cpu.readByte(cpu.getProgramCounter() - 1); // Rough approximation of last executed opcode
+
+                // Log the divergence
+                logDivergence(opcode, errorMessage);
+
+                // Don't crash the program, just log and continue with CPU1's state
+                console.error(
+                    `CPU divergence detected with opcode 0x${opcode.toString(16).padStart(2, "0")}`,
+                );
+            } else {
+                throw error; // In non-debug mode, let errors crash the program
+            }
+        }
     }
 }
 

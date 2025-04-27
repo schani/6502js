@@ -133,7 +133,11 @@
 - [ ] Future work for CPU synchronization
   - [ ] Complete harmonization of JSR/RTS implementation between CPU1 and CPU2
   - [ ] Fix the program counter differences after RTS operation
-  - [ ] Implement any missing opcodes in CPU2
+  - [ ] Implement any missing opcodes in CPU implementations
+    - [ ] Implement opcode 0x63 (currently missing in both CPUs)
+    - [ ] Fix cycle count differences for ROL Accumulator (0x2A)
+    - [ ] Fix cycle count differences for PHA (0x48) and PLA (0x68)
+    - [ ] Fix accumulator value differences for multiple opcodes
 
 - [ ] Potential future improvements:
   - [ ] Add more examples of running simple 6502 programs

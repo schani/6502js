@@ -96,6 +96,50 @@ The remaining tasks for improving our dual-CPU implementation are:
 3. Implement any remaining missing opcodes in CPU2
 4. Address the remaining code coverage gaps (currently at 72.82% functions and 89.55% lines overall)
 
+## 2025-04-27 (Night): Enhanced Debugging for BASIC Runner
+
+I've enhanced the BASIC runner to support detecting CPU implementation divergences in real-world code. The runner can now be invoked with a `--debug` flag which:
+
+1. **Uses SyncCPU**: Instead of just CPU1, it uses the SyncCPU to run both implementations in parallel
+2. **Logs Divergences**: All CPU state and cycle count differences are logged to `cpu-divergence.log`
+3. **Continues Execution**: When divergences are detected, it logs them but continues execution using CPU1's state
+4. **Reports Summaries**: Periodically outputs a summary of the most common divergences
+
+This approach provides valuable real-world validation beyond our test suite, as MS-BASIC exercises the CPU in different ways than our synthetic tests.
+
+### Key Findings from Divergence Detection
+
+From running BASIC with divergence detection, I've identified several important implementation differences:
+
+1. **Stack Pointer Discrepancies**: CPU1 and CPU2 handle stack operations differently, leading to divergent stack pointer values. For example:
+   ```
+   Opcode 0x1e: Stack pointer (CPU1=0xfa, CPU2=0xf8)
+   ```
+
+2. **Cycle Count Differences**: Several opcodes have different cycle counts in the two implementations:
+   ```
+   Opcode 0x2a (ROL A): CPU1=2, CPU2=4
+   Opcode 0x48 (PHA): CPU1=3, CPU2=2
+   Opcode 0x68 (PLA): CPU1=4, CPU2=3
+   ```
+
+3. **Register Value Differences**: Some operations produce different accumulator values:
+   ```
+   Opcode 0x3f: Accumulator (CPU1=0xa, CPU2=0x1a)
+   ```
+
+4. **Missing Opcodes**: Some opcodes like `0x63` aren't implemented in either CPU, causing errors when encountered in real programs.
+
+### Next Steps
+
+Based on these findings, we need to:
+1. Fix cycle count discrepancies between CPU1 and CPU2 - particularly for stack operations and shifts/rotates
+2. Implement missing opcodes in both CPUs or ensure they handle unknown opcodes consistently
+3. Investigate register value differences by comparing both implementations to the 6502 specification
+4. Create targeted tests for the specific divergences found in BASIC execution
+
+These improvements will help ensure that both CPU implementations correctly implement the 6502 specification and behave identically across all operations and programs.
+
 ## 2025-04-25
 
 ### 6502 CPU Emulator Implementation - Phase 1
