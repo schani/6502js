@@ -1,6 +1,11 @@
 # CLAUDE.md
 
-Your task is to implement a 6502 CPU emulator.  Please refer to the `README.md` for more information.
+We've implemented two 6502 emulators, and we're trying to run MS-BASIC on them.
+Both of them seem to be somewhat buggy.  We have a `SyncCPU` abstraction that runs
+both of them, and reports any difference between them, which is how we're hoping
+to find the issue.  Whenever there is a divergence, we must consult the spec in
+`6502.md` and carefully determine which of the two (if any) implementations are
+correct.
 
 ## Guidelines
 
