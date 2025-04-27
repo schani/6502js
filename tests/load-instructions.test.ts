@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU, step6502, ZERO, NEGATIVE } from "./utils";
+import { createCPU, ZERO, NEGATIVE } from "./utils";
 
 describe("Load instructions", () => {
   it("should perform LDA immediate instruction", () => {
@@ -9,7 +9,7 @@ describe("Load instructions", () => {
     cpu.loadByte(0, 0xA9); // LDA immediate
     cpu.loadByte(1, 0x42); // Value to load
 
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x42);
     expect(cpu.getProgramCounter()).toBe(2);  // PC should advance by 2 bytes
@@ -20,14 +20,14 @@ describe("Load instructions", () => {
     // Test zero flag
     cpu.setProgramCounter(0);
     cpu.loadByte(1, 0x00);
-    step6502(cpu);
+    cpu.step();
     expect(cpu.getAccumulator()).toBe(0);
     expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // Zero flag should be set
     
     // Test negative flag
     cpu.setProgramCounter(0);
     cpu.loadByte(1, 0x80);
-    step6502(cpu);
+    cpu.step();
     expect(cpu.getAccumulator()).toBe(0x80);
     expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Negative flag should be set
   });
@@ -39,7 +39,7 @@ describe("Load instructions", () => {
     cpu.loadByte(0, 0xA2); // LDX immediate
     cpu.loadByte(1, 0x42); // Value to load
 
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getXRegister()).toBe(0x42);
     expect(cpu.getProgramCounter()).toBe(2);
@@ -55,7 +55,7 @@ describe("Load instructions", () => {
     cpu.loadByte(0, 0xA0); // LDY immediate
     cpu.loadByte(1, 0x42); // Value to load
 
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getYRegister()).toBe(0x42);
     expect(cpu.getProgramCounter()).toBe(2);
@@ -72,7 +72,7 @@ describe("Load instructions", () => {
     cpu.loadByte(1, 0x42); // Zero page address
     cpu.loadByte(0x42, 0x37); // Value at zero page address
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x37);
     expect(cpu.getProgramCounter()).toBe(2);
@@ -87,7 +87,7 @@ describe("Load instructions", () => {
     cpu.loadByte(1, 0x42); // Zero page address
     cpu.loadByte(0x42, 0x37); // Value at zero page address
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getXRegister()).toBe(0x37);
     expect(cpu.getProgramCounter()).toBe(2);
@@ -106,7 +106,7 @@ describe("Load instructions", () => {
     cpu.loadByte(1, 0x20); // Zero page address
     cpu.loadByte(0x25, 0x42); // Value at (zero page address + X)
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x42);
     expect(cpu.getProgramCounter()).toBe(2);
@@ -124,7 +124,7 @@ describe("Load instructions", () => {
     cpu.loadByte(1, 0x80); // Zero page address
     cpu.loadByte(0x7F, 0x42); // Value at (0x80 + 0xFF) & 0xFF = 0x7F (wrap around)
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x42);
     expect(cpu.getProgramCounter()).toBe(2);
@@ -142,7 +142,7 @@ describe("Load instructions", () => {
     cpu.loadByte(1, 0x20); // Zero page address
     cpu.loadByte(0x25, 0x42); // Value at (zero page address + Y)
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getXRegister()).toBe(0x42);
     expect(cpu.getProgramCounter()).toBe(2);
@@ -159,7 +159,7 @@ describe("Load instructions", () => {
     cpu.loadByte(2, 0x12); // High byte of address
     cpu.loadByte(0x1234, 0x42); // Value at absolute address
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x42);
     expect(cpu.getProgramCounter()).toBe(3);
@@ -178,7 +178,7 @@ describe("Load instructions", () => {
     cpu.loadByte(2, 0x12); // High byte of address
     cpu.loadByte(0x1239, 0x42); // Value at (absolute address + X)
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x42);
     expect(cpu.getProgramCounter()).toBe(3);
@@ -197,7 +197,7 @@ describe("Load instructions", () => {
     cpu.loadByte(2, 0x12); // High byte of address
     cpu.loadByte(0x1300, 0x42); // Value at (0x1201 + 0xFF) = 0x1300 (page boundary crossed)
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x42);
     expect(cpu.getProgramCounter()).toBe(3);
@@ -216,7 +216,7 @@ describe("Load instructions", () => {
     cpu.loadByte(2, 0x12); // High byte of address
     cpu.loadByte(0x1239, 0x42); // Value at (absolute address + Y)
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x42);
     expect(cpu.getProgramCounter()).toBe(3);

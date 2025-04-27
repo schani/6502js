@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU, step6502, ZERO, NEGATIVE, INTERRUPT, UNUSED } from "./utils";
+import { createCPU, ZERO, NEGATIVE, INTERRUPT, UNUSED } from "./utils";
 
 describe("Register transfer instructions", () => {
   it("should perform TAX instruction", () => {
@@ -11,7 +11,7 @@ describe("Register transfer instructions", () => {
     // TAX - Transfer accumulator to X
     cpu.loadByte(0, 0xAA); // TAX
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getXRegister()).toBe(0x42);
     expect(cpu.getProgramCounter()).toBe(1);
@@ -22,14 +22,14 @@ describe("Register transfer instructions", () => {
     // Test zero flag
     cpu.setProgramCounter(0);
     cpu.setAccumulator(0);
-    step6502(cpu);
+    cpu.step();
     expect(cpu.getXRegister()).toBe(0);
     expect(cpu.getStatusRegister() & ZERO).toBe(ZERO);
     
     // Test negative flag
     cpu.setProgramCounter(0);
     cpu.setAccumulator(0x80);
-    step6502(cpu);
+    cpu.step();
     expect(cpu.getXRegister()).toBe(0x80);
     expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE);
   });
@@ -43,7 +43,7 @@ describe("Register transfer instructions", () => {
     // TAY - Transfer accumulator to Y
     cpu.loadByte(0, 0xA8); // TAY
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getYRegister()).toBe(0x42);
     expect(cpu.getProgramCounter()).toBe(1);
@@ -59,7 +59,7 @@ describe("Register transfer instructions", () => {
     // TXA - Transfer X to accumulator
     cpu.loadByte(0, 0x8A); // TXA
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x42);
     expect(cpu.getProgramCounter()).toBe(1);
@@ -75,7 +75,7 @@ describe("Register transfer instructions", () => {
     // TYA - Transfer Y to accumulator
     cpu.loadByte(0, 0x98); // TYA
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x42);
     expect(cpu.getProgramCounter()).toBe(1);
@@ -91,7 +91,7 @@ describe("Register transfer instructions", () => {
     // TSX - Transfer Stack Pointer to X
     cpu.loadByte(0, 0xBA); // TSX
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getXRegister()).toBe(0x42);
     expect(cpu.getProgramCounter()).toBe(1);
@@ -109,7 +109,7 @@ describe("Register transfer instructions", () => {
     // TXS - Transfer X to Stack Pointer
     cpu.loadByte(0, 0x9A); // TXS
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getStackPointer()).toBe(0x42);
     expect(cpu.getProgramCounter()).toBe(1);

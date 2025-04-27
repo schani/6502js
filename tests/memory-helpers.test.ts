@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { type CPU, createCPU, step6502 } from "./utils";
+import { type CPU, createCPU } from "./utils";
 
 describe("Memory helper functions", () => {
   it("should handle edge cases in readByte and writeByte", () => {
@@ -16,7 +16,7 @@ describe("Memory helper functions", () => {
     cpu.setProgramCounter(0);
     
     // Execute LDA Absolute to read from 0xFFFF
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     // Verify the result
     expect(cycles).toBe(4);
@@ -31,7 +31,7 @@ describe("Memory helper functions", () => {
     cpu.setProgramCounter(3);
     
     // Execute STA Absolute to write to 0xFFFF
-    const cycles2 = step6502(cpu);
+    const cycles2 = cpu.step();
     
     // Verify the result
     expect(cycles2).toBe(4);
@@ -49,7 +49,7 @@ describe("Memory helper functions", () => {
     cpu.setProgramCounter(0);
     
     // Execute JSR instruction which will write return address (PC+2-1) to stack
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     // JSR pushes return address (PC+2-1) to stack and jumps to target address
     expect(cycles).toBe(6);
@@ -59,7 +59,7 @@ describe("Memory helper functions", () => {
     cpu.loadByte(0xFFFF, 0x60); // RTS
     
     // Execute RTS to pull address from stack and jump back
-    const cycles2 = step6502(cpu);
+    const cycles2 = cpu.step();
     
     // RTS pulls address from stack, adds 2, and sets PC
     expect(cycles2).toBe(6);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { type CPU, createCPU, step6502, ZERO, NEGATIVE } from "./utils";
+import { type CPU, createCPU, ZERO, NEGATIVE } from "./utils";
 
 describe("LDY immediate mode comprehensive tests", () => {
   it("should load immediate value into Y register from uninitialized memory", () => {
@@ -12,7 +12,7 @@ describe("LDY immediate mode comprehensive tests", () => {
     cpu.setProgramCounter(0x1000);
     
     // Execute
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     // Verify
     expect(cycles).toBe(2);
@@ -35,7 +35,7 @@ describe("LDY immediate mode comprehensive tests", () => {
     cpu.setProgramCounter(0x1000);
     
     // Execute
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     // Verify
     expect(cycles).toBe(2);
@@ -58,7 +58,7 @@ describe("LDY immediate mode comprehensive tests", () => {
     cpu.setProgramCounter(0x1000);
     
     // Execute
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     // Verify
     expect(cycles).toBe(2);

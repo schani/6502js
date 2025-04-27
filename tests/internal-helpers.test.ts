@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU, step6502 } from "./utils";
+import { createCPU } from "./utils";
 
 describe("Internal helper functions", () => {
   it("should correctly read and write words", () => {
@@ -14,7 +14,7 @@ describe("Internal helper functions", () => {
     cpu.loadByte(1, 0x34); // Low byte of target address
     cpu.loadByte(2, 0x12); // High byte of target address
     
-    step6502(cpu); // This calls pushWord internally
+    cpu.step(); // This calls pushWord internally
     
     // Verify the return address was written correctly
     // pc-1 should be written to the stack (0x0001)
@@ -32,7 +32,7 @@ describe("Internal helper functions", () => {
     cpu.loadByte(1, 0x00); // Low byte of pointer
     cpu.loadByte(2, 0x20); // High byte of pointer
     
-    step6502(cpu); // This calls readWord internally
+    cpu.step(); // This calls readWord internally
     
     // Verify PC was set to the address read from memory
     expect(cpu.getProgramCounter()).toBe(0x3742);

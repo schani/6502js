@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { type CPU, createCPU, step6502, CARRY, ZERO, OVERFLOW, NEGATIVE } from "./utils";
+import { type CPU, createCPU, CARRY, ZERO, OVERFLOW, NEGATIVE } from "./utils";
 
 describe("Comprehensive branch instruction tests", () => {
   it("should test all branch instructions in various scenarios", () => {
@@ -13,7 +13,7 @@ describe("Comprehensive branch instruction tests", () => {
     cpu.clearStatusFlag(CARRY); // Clear carry flag
     cpu.setProgramCounter(0);
     
-    let cycles = step6502(cpu);
+    let cycles = cpu.step();
     
     expect(cycles).toBe(2); // No branch taken
     expect(cpu.getProgramCounter()).toBe(2); // PC only advances past the instruction
@@ -22,7 +22,7 @@ describe("Comprehensive branch instruction tests", () => {
     cpu.setStatusFlag(CARRY); // Set carry flag
     cpu.setProgramCounter(0);
     
-    cycles = step6502(cpu);
+    cycles = cpu.step();
     
     expect(cycles).toBe(3); // Branch taken
     expect(cpu.getProgramCounter()).toBe(0x12); // PC = 2 + 0x10 (branch offset)
@@ -34,7 +34,7 @@ describe("Comprehensive branch instruction tests", () => {
     // First with zero clear (should not branch)
     cpu.clearStatusFlag(ZERO); // Clear zero flag
     
-    cycles = step6502(cpu);
+    cycles = cpu.step();
     
     expect(cycles).toBe(2); // No branch taken
     expect(cpu.getProgramCounter()).toBe(0x14); // PC only advances past the instruction
@@ -43,7 +43,7 @@ describe("Comprehensive branch instruction tests", () => {
     cpu.setStatusFlag(ZERO); // Set zero flag
     cpu.setProgramCounter(0x12);
     
-    cycles = step6502(cpu);
+    cycles = cpu.step();
     
     expect(cycles).toBe(3); // Branch taken
     expect(cpu.getProgramCounter()).toBe(0x24); // PC = 0x14 + 0x10 (branch offset)
@@ -55,7 +55,7 @@ describe("Comprehensive branch instruction tests", () => {
     // First with negative clear (should not branch)
     cpu.clearStatusFlag(NEGATIVE); // Clear negative flag
     
-    cycles = step6502(cpu);
+    cycles = cpu.step();
     
     expect(cycles).toBe(2); // No branch taken
     expect(cpu.getProgramCounter()).toBe(0x26); // PC only advances past the instruction
@@ -64,7 +64,7 @@ describe("Comprehensive branch instruction tests", () => {
     cpu.setStatusFlag(NEGATIVE); // Set negative flag
     cpu.setProgramCounter(0x24);
     
-    cycles = step6502(cpu);
+    cycles = cpu.step();
     
     expect(cycles).toBe(3); // Branch taken
     expect(cpu.getProgramCounter()).toBe(0x36); // PC = 0x26 + 0x10 (branch offset)
@@ -76,7 +76,7 @@ describe("Comprehensive branch instruction tests", () => {
     // First with overflow clear (should not branch)
     cpu.clearStatusFlag(OVERFLOW); // Clear overflow flag
     
-    cycles = step6502(cpu);
+    cycles = cpu.step();
     
     expect(cycles).toBe(2); // No branch taken
     expect(cpu.getProgramCounter()).toBe(0x38); // PC only advances past the instruction
@@ -85,7 +85,7 @@ describe("Comprehensive branch instruction tests", () => {
     cpu.setStatusFlag(OVERFLOW); // Set overflow flag
     cpu.setProgramCounter(0x36);
     
-    cycles = step6502(cpu);
+    cycles = cpu.step();
     
     expect(cycles).toBe(3); // Branch taken
     expect(cpu.getProgramCounter()).toBe(0x48); // PC = 0x38 + 0x10 (branch offset)
@@ -99,7 +99,7 @@ describe("Comprehensive branch instruction tests", () => {
     cpu.clearStatusFlag(NEGATIVE); // Clear negative flag (condition true)
     cpu.setProgramCounter(0x0F01);
     
-    cycles = step6502(cpu);
+    cycles = cpu.step();
     
     expect(cycles).toBe(4); // Branch taken with page crossing
     expect(cpu.getProgramCounter()).toBe(0x0E83); // PC = 0x0F03 - 128 (negative branch crosses page boundary)
@@ -111,7 +111,7 @@ describe("Comprehensive branch instruction tests", () => {
     cpu.clearStatusFlag(ZERO); // Clear zero flag (condition true)
     cpu.setProgramCounter(0x2001);
     
-    cycles = step6502(cpu);
+    cycles = cpu.step();
     
     expect(cycles).toBe(3); // Branch taken without page crossing
     expect(cpu.getProgramCounter()).toBe(0x2000); // PC = 0x2003 - 3
@@ -123,7 +123,7 @@ describe("Comprehensive branch instruction tests", () => {
     cpu.clearStatusFlag(OVERFLOW); // Clear overflow flag (condition true)
     cpu.setProgramCounter(0x3001);
     
-    cycles = step6502(cpu);
+    cycles = cpu.step();
     
     expect(cycles).toBe(4); // Branch taken with page crossing
     expect(cpu.getProgramCounter()).toBe(0x2FFF); // PC = 0x3003 - 4 (crosses page boundary)
@@ -135,7 +135,7 @@ describe("Comprehensive branch instruction tests", () => {
     cpu.clearStatusFlag(CARRY); // Clear carry flag (condition true)
     cpu.setProgramCounter(0x4001);
     
-    cycles = step6502(cpu);
+    cycles = cpu.step();
     
     expect(cycles).toBe(4); // Branch taken with page crossing
     expect(cpu.getProgramCounter()).toBe(0x3FFE); // PC = 0x4003 - 5 (crosses page boundary)

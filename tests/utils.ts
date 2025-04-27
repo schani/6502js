@@ -19,14 +19,6 @@ export function createCPU(): CPU {
     return new CPU1();
 }
 
-/**
- * @deprecated Use CPU.step() directly from the CPU interface
- * For backward compatibility, will be removed after refactoring
- */
-export function step6502(cpu: CPU, trace = false): number {
-    return cpu.step(trace);
-}
-
 // Export everything needed for tests
 export { CARRY, ZERO, INTERRUPT, DECIMAL, BREAK, UNUSED, OVERFLOW, NEGATIVE };
 

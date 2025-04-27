@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU, step6502 } from "./utils";
+import { createCPU } from "./utils";
 
 describe("Jump and subroutine instructions", () => {
   it("should perform JMP absolute instruction", () => {
@@ -10,7 +10,7 @@ describe("Jump and subroutine instructions", () => {
     cpu.loadByte(1, 0x34); // Low byte of target
     cpu.loadByte(2, 0x12); // High byte of target
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getProgramCounter()).toBe(0x1234);
     expect(cycles).toBe(3);
@@ -28,7 +28,7 @@ describe("Jump and subroutine instructions", () => {
     cpu.loadByte(0x1234, 0x60); // RTS
     
     // Execute JSR
-    let cycles = step6502(cpu);
+    let cycles = cpu.step();
     
     expect(cpu.getProgramCounter()).toBe(0x1234);
     expect(cpu.getStackPointer()).toBe(0xFB); // SP decremented by 2 (for 16-bit return address)
@@ -37,7 +37,7 @@ describe("Jump and subroutine instructions", () => {
     expect(cycles).toBe(6);
     
     // Execute RTS
-    cycles = step6502(cpu);
+    cycles = cpu.step();
     
     expect(cpu.getProgramCounter()).toBe(0x0002); // Return address + 2
     expect(cpu.getStackPointer()).toBe(0xFD); // SP incremented by 2

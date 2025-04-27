@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU, step6502, ZERO } from "./utils";
+import { createCPU, ZERO } from "./utils";
 
 describe("Indirect addressing modes", () => {
   it("should perform LDA indirect,X instruction", () => {
@@ -19,7 +19,7 @@ describe("Indirect addressing modes", () => {
     // Value at effective address
     cpu.loadByte(0x2074, 0x42);
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x42);
     expect(cpu.getProgramCounter()).toBe(2);
@@ -43,7 +43,7 @@ describe("Indirect addressing modes", () => {
     // Value at (base address + Y)
     cpu.loadByte(0x2084, 0x42); // 0x2074 + 0x10 = 0x2084
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x42);
     expect(cpu.getProgramCounter()).toBe(2);
@@ -67,7 +67,7 @@ describe("Indirect addressing modes", () => {
     // Value at (base address + Y) crossing page boundary
     cpu.loadByte(0x2100, 0x42); // 0x2001 + 0xFF = 0x2100
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x42);
     expect(cpu.getProgramCounter()).toBe(2);
@@ -86,7 +86,7 @@ describe("Indirect addressing modes", () => {
     cpu.loadByte(0x3020, 0x40); // Low byte of target
     cpu.loadByte(0x3021, 0x50); // High byte of target
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getProgramCounter()).toBe(0x5040); // PC should be set to target address
     expect(cycles).toBe(5);
@@ -105,7 +105,7 @@ describe("Indirect addressing modes", () => {
     cpu.loadByte(0x30FF, 0x40); // Low byte of target
     cpu.loadByte(0x3000, 0x50); // High byte at wrap-around address (not 0x3100)
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getProgramCounter()).toBe(0x5040); // PC should be set to target address with bug behavior
     expect(cycles).toBe(5);

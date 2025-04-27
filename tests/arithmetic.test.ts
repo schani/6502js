@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU, step6502, CARRY, ZERO, NEGATIVE, OVERFLOW } from "./utils";
+import { createCPU, CARRY, ZERO, NEGATIVE, OVERFLOW } from "./utils";
 
 describe("Arithmetic operations", () => {
   it("should perform ADC immediate instruction", () => {
@@ -13,7 +13,7 @@ describe("Arithmetic operations", () => {
     cpu.loadByte(0, 0x69); // ADC immediate
     cpu.loadByte(1, 0x37); // Value to add
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x79); // 0x42 + 0x37 = 0x79
     expect(cpu.getStatusRegister() & CARRY).toBe(0); // No carry out
@@ -35,7 +35,7 @@ describe("Arithmetic operations", () => {
     cpu.loadByte(0, 0x69); // ADC immediate
     cpu.loadByte(1, 0x37); // Value to add
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x7A); // 0x42 + 0x37 + 1 = 0x7A
     expect(cpu.getProgramCounter()).toBe(2);
@@ -53,7 +53,7 @@ describe("Arithmetic operations", () => {
     cpu.loadByte(0, 0x69); // ADC immediate
     cpu.loadByte(1, 0x90); // Value to add
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x60); // 0xD0 + 0x90 = 0x160, truncated to 0x60
     expect(cpu.getStatusRegister() & CARRY).toBe(CARRY); // Carry flag should be set
@@ -72,7 +72,7 @@ describe("Arithmetic operations", () => {
     cpu.loadByte(0, 0x69); // ADC immediate
     cpu.loadByte(1, 0x50); // +80 in signed
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     // 80 + 80 = 160, which is -96 when interpreted as signed 8-bit
     // (sign bit flipped from positive to negative)
@@ -94,7 +94,7 @@ describe("Arithmetic operations", () => {
     cpu.loadByte(0, 0xE9); // SBC immediate
     cpu.loadByte(1, 0x20); // Value to subtract
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x22); // 0x42 - 0x20 = 0x22
     expect(cpu.getStatusRegister() & CARRY).toBe(CARRY); // No borrow needed
@@ -115,7 +115,7 @@ describe("Arithmetic operations", () => {
     cpu.loadByte(0, 0xE9); // SBC immediate
     cpu.loadByte(1, 0x20); // Value to subtract
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x21); // 0x42 - 0x20 - 1 = 0x21
     expect(cpu.getProgramCounter()).toBe(2);
@@ -133,7 +133,7 @@ describe("Arithmetic operations", () => {
     cpu.loadByte(0, 0xE9); // SBC immediate
     cpu.loadByte(1, 0x30); // Value to subtract
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0xF0); // 0x20 - 0x30 = 0xF0 (with borrow)
     expect(cpu.getStatusRegister() & CARRY).toBe(0); // Borrow needed
@@ -152,7 +152,7 @@ describe("Arithmetic operations", () => {
     cpu.loadByte(0, 0xC9); // CMP immediate
     cpu.loadByte(1, 0x42); // Value to compare
     
-    let cycles = step6502(cpu);
+    let cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x42); // Accumulator should not change
     expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // Equal, so zero flag set
@@ -165,7 +165,7 @@ describe("Arithmetic operations", () => {
     cpu.setProgramCounter(0);
     cpu.loadByte(1, 0x10);
     
-    cycles = step6502(cpu);
+    cycles = cpu.step();
     
     expect(cpu.getStatusRegister() & ZERO).toBe(0); // Not equal, so zero flag clear
     expect(cpu.getStatusRegister() & CARRY).toBe(CARRY); // A >= M, so carry set
@@ -174,7 +174,7 @@ describe("Arithmetic operations", () => {
     cpu.setProgramCounter(0);
     cpu.loadByte(1, 0x50);
     
-    cycles = step6502(cpu);
+    cycles = cpu.step();
     
     expect(cpu.getStatusRegister() & ZERO).toBe(0); // Not equal, so zero flag clear
     expect(cpu.getStatusRegister() & CARRY).toBe(0); // A < M, so carry clear
@@ -192,7 +192,7 @@ describe("Arithmetic operations", () => {
     cpu.loadByte(1, 0x30); // Zero page address
     cpu.loadByte(0x30, 0x42); // Value to compare
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x42); // Accumulator should not change
     expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // Equal, so zero flag set
@@ -211,7 +211,7 @@ describe("Arithmetic operations", () => {
     cpu.loadByte(0, 0xE0); // CPX immediate
     cpu.loadByte(1, 0x42); // Value to compare
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getXRegister()).toBe(0x42); // X register should not change
     expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // Equal, so zero flag set
@@ -230,7 +230,7 @@ describe("Arithmetic operations", () => {
     cpu.loadByte(0, 0xC0); // CPY immediate
     cpu.loadByte(1, 0x42); // Value to compare
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getYRegister()).toBe(0x42); // Y register should not change
     expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // Equal, so zero flag set

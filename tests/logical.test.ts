@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU, step6502, ZERO, NEGATIVE, OVERFLOW } from "./utils";
+import { createCPU, ZERO, NEGATIVE, OVERFLOW } from "./utils";
 
 describe("Logical operations", () => {
   it("should perform AND immediate instruction", () => {
@@ -12,7 +12,7 @@ describe("Logical operations", () => {
     cpu.loadByte(0, 0x29); // AND immediate
     cpu.loadByte(1, 0x0F); // Value to AND with accumulator
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x00); // 0xF0 & 0x0F = 0x00
     expect(cpu.getProgramCounter()).toBe(2);
@@ -31,7 +31,7 @@ describe("Logical operations", () => {
     cpu.loadByte(1, 0x42); // Zero page address
     cpu.loadByte(0x42, 0x0F); // Value to AND with accumulator
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x00); // 0xF0 & 0x0F = 0x00
     expect(cpu.getProgramCounter()).toBe(2);
@@ -51,7 +51,7 @@ describe("Logical operations", () => {
     cpu.loadByte(1, 0x42); // Zero page address
     cpu.loadByte(0x47, 0x0F); // Value at (zero page address + X)
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x00); // 0xF0 & 0x0F = 0x00
     expect(cpu.getProgramCounter()).toBe(2);
@@ -71,7 +71,7 @@ describe("Logical operations", () => {
     cpu.loadByte(2, 0x12); // High byte of address
     cpu.loadByte(0x1234, 0x0F); // Value at absolute address
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x00); // 0xF0 & 0x0F = 0x00
     expect(cpu.getProgramCounter()).toBe(3);
@@ -89,7 +89,7 @@ describe("Logical operations", () => {
     cpu.loadByte(0, 0x09); // ORA immediate
     cpu.loadByte(1, 0x0F); // Value to OR with accumulator
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0xFF); // 0xF0 | 0x0F = 0xFF
     expect(cpu.getProgramCounter()).toBe(2);
@@ -108,7 +108,7 @@ describe("Logical operations", () => {
     cpu.loadByte(1, 0x42); // Zero page address
     cpu.loadByte(0x42, 0x0F); // Value to OR with accumulator
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0xFF); // 0xF0 | 0x0F = 0xFF
     expect(cpu.getProgramCounter()).toBe(2);
@@ -128,7 +128,7 @@ describe("Logical operations", () => {
     cpu.loadByte(2, 0x12); // High byte of address
     cpu.loadByte(0x1234, 0x0F); // Value at absolute address
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0xFF); // 0xF0 | 0x0F = 0xFF
     expect(cpu.getProgramCounter()).toBe(3);
@@ -146,7 +146,7 @@ describe("Logical operations", () => {
     cpu.loadByte(0, 0x49); // EOR immediate
     cpu.loadByte(1, 0xF0); // Value to XOR with accumulator
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x0F); // 0xFF ^ 0xF0 = 0x0F
     expect(cpu.getProgramCounter()).toBe(2);
@@ -164,7 +164,7 @@ describe("Logical operations", () => {
     cpu.loadByte(1, 0x42); // Zero page address
     cpu.loadByte(0x42, 0xF0); // Value to XOR with accumulator
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x0F); // 0xFF ^ 0xF0 = 0x0F
     expect(cpu.getProgramCounter()).toBe(2);
@@ -183,7 +183,7 @@ describe("Logical operations", () => {
     cpu.loadByte(2, 0x12); // High byte of address
     cpu.loadByte(0x1234, 0xF0); // Value at absolute address
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x0F); // 0xFF ^ 0xF0 = 0x0F
     expect(cpu.getProgramCounter()).toBe(3);
@@ -202,7 +202,7 @@ describe("Logical operations", () => {
     cpu.loadByte(1, 0x20); // Zero page address
     cpu.loadByte(0x20, 0xC0); // Test value (bits 7 and 6 are set)
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     // BIT sets N and V from bits 7 and 6 of memory
     expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Bit 7 of memory -> N flag
@@ -230,7 +230,7 @@ describe("Logical operations", () => {
     cpu.loadByte(2, 0x12); // High byte of address
     cpu.loadByte(0x1234, 0xC0); // Test value (bits 7 and 6 are set)
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     // BIT sets N and V from bits 7 and 6 of memory
     expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Bit 7 of memory -> N flag
@@ -257,7 +257,7 @@ describe("Logical operations", () => {
     cpu.loadByte(1, 0x20); // Zero page address
     cpu.loadByte(0x20, 0xC0); // Test value (bits 7 and 6 are set)
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     // BIT sets N and V from bits 7 and 6 of memory
     expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Bit 7 of memory -> N flag

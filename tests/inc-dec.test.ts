@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU, step6502, ZERO, NEGATIVE } from "./utils";
+import { createCPU, ZERO, NEGATIVE } from "./utils";
 
 describe("Increment and decrement operations", () => {
   it("should perform INX instruction", () => {
@@ -11,7 +11,7 @@ describe("Increment and decrement operations", () => {
     // Set up memory
     cpu.loadByte(0, 0xE8); // INX
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getXRegister()).toBe(0x42);
     expect(cpu.getStatusRegister() & ZERO).toBe(0); // Result is not zero
@@ -23,7 +23,7 @@ describe("Increment and decrement operations", () => {
     cpu.setProgramCounter(0);
     cpu.setXRegister(0xFF);
     
-    step6502(cpu);
+    cpu.step();
     
     expect(cpu.getXRegister()).toBe(0x00);
     expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // Result is zero
@@ -38,7 +38,7 @@ describe("Increment and decrement operations", () => {
     // Set up memory
     cpu.loadByte(0, 0xC8); // INY
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getYRegister()).toBe(0x42);
     expect(cpu.getStatusRegister() & ZERO).toBe(0); // Result is not zero
@@ -56,7 +56,7 @@ describe("Increment and decrement operations", () => {
     // Set up memory
     cpu.loadByte(0, 0xCA); // DEX
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getXRegister()).toBe(0x42);
     expect(cpu.getStatusRegister() & ZERO).toBe(0); // Result is not zero
@@ -68,7 +68,7 @@ describe("Increment and decrement operations", () => {
     cpu.setProgramCounter(0);
     cpu.setXRegister(0x00);
     
-    step6502(cpu);
+    cpu.step();
     
     expect(cpu.getXRegister()).toBe(0xFF);
     expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Result is negative
@@ -83,7 +83,7 @@ describe("Increment and decrement operations", () => {
     // Set up memory
     cpu.loadByte(0, 0x88); // DEY
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.getYRegister()).toBe(0x42);
     expect(cpu.getStatusRegister() & ZERO).toBe(0); // Result is not zero
@@ -100,7 +100,7 @@ describe("Increment and decrement operations", () => {
     cpu.loadByte(1, 0x20); // Zero page address
     cpu.loadByte(0x20, 0x41); // Value to increment
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.readByte(0x20)).toBe(0x42);
     expect(cpu.getStatusRegister() & ZERO).toBe(0); // Result is not zero
@@ -117,7 +117,7 @@ describe("Increment and decrement operations", () => {
     cpu.loadByte(1, 0x20); // Zero page address
     cpu.loadByte(0x20, 0x43); // Value to decrement
     
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     expect(cpu.readByte(0x20)).toBe(0x42);
     expect(cpu.getStatusRegister() & ZERO).toBe(0); // Result is not zero

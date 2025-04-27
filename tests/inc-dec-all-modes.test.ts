@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { type CPU, createCPU, step6502, ZERO, NEGATIVE } from "./utils";
+import { type CPU, createCPU, ZERO, NEGATIVE } from "./utils";
 
 describe("INC and DEC with all addressing modes", () => {
   it("should perform INC with Zero Page,X addressing", () => {
@@ -14,7 +14,7 @@ describe("INC and DEC with all addressing modes", () => {
     cpu.setProgramCounter(0);
     
     // Execute
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     // Verify
     expect(cycles).toBe(6);
@@ -35,7 +35,7 @@ describe("INC and DEC with all addressing modes", () => {
     cpu.setProgramCounter(0);
     
     // Execute
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     // Verify
     expect(cycles).toBe(6);
@@ -57,7 +57,7 @@ describe("INC and DEC with all addressing modes", () => {
     cpu.setProgramCounter(0);
     
     // Execute
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     // Verify
     expect(cycles).toBe(7);
@@ -78,7 +78,7 @@ describe("INC and DEC with all addressing modes", () => {
     cpu.setProgramCounter(0);
     
     // Execute
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     // Verify
     expect(cycles).toBe(6);
@@ -99,7 +99,7 @@ describe("INC and DEC with all addressing modes", () => {
     cpu.setProgramCounter(0);
     
     // Execute
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     // Verify
     expect(cycles).toBe(6);
@@ -121,7 +121,7 @@ describe("INC and DEC with all addressing modes", () => {
     cpu.setProgramCounter(0);
     
     // Execute
-    const cycles = step6502(cpu);
+    const cycles = cpu.step();
     
     // Verify
     expect(cycles).toBe(7);
