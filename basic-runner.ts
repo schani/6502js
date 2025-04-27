@@ -72,7 +72,7 @@ function push16(cpu: CPUState, val: number) {
 function buildCPU(): CPU {
     // Determine which CPU implementation to use based on command line flags
     let cpu: CPU;
-    
+
     if (USE_SYNC) {
         cpu = new SyncCPU();
     } else if (USE_CPU2) {
@@ -81,7 +81,7 @@ function buildCPU(): CPU {
         // Default to CPU1 if no specific implementation is requested
         cpu = new CPU1();
     }
-    
+
     const state = cpu.getState();
 
     // Load BASIC ROM image
@@ -242,13 +242,19 @@ async function main() {
         if (DEBUG) {
             console.log("Debug mode enabled");
             console.log("CPU divergences will be logged to:", DIVERGENCE_LOG);
-            console.log("Check this log to identify issues that need to be fixed in the CPU implementations.");
+            console.log(
+                "Check this log to identify issues that need to be fixed in the CPU implementations.",
+            );
         }
-        console.log("Will exit immediately on any CPU implementation divergence");
+        console.log(
+            "Will exit immediately on any CPU implementation divergence",
+        );
         console.log("");
     } else if (USE_CPU2) {
         console.log("Running MS-BASIC with CPU2");
-        console.log("Use --sync flag to run with SyncCPU and detect implementation divergences.");
+        console.log(
+            "Use --sync flag to run with SyncCPU and detect implementation divergences.",
+        );
         console.log("");
     } else {
         console.log("Running MS-BASIC with CPU1");
@@ -256,8 +262,12 @@ async function main() {
         console.log("Available options:");
         console.log("  --cpu1            Use CPU1 implementation (default)");
         console.log("  --cpu2            Use CPU2 implementation");
-        console.log("  --sync            Use SyncCPU (runs both CPU1 and CPU2 in parallel)");
-        console.log("  --debug           Enable debug mode with detailed logging");
+        console.log(
+            "  --sync            Use SyncCPU (runs both CPU1 and CPU2 in parallel)",
+        );
+        console.log(
+            "  --debug           Enable debug mode with detailed logging",
+        );
         console.log("  --trace           Enable instruction tracing");
         console.log("");
     }
@@ -322,8 +332,9 @@ async function main() {
         }
 
         // Execute CPU step and catch any divergences
+        const pc = cpu.getProgramCounter();
+        const opcode = cpu.readByte(pc);
         try {
-            const opcode = cpu.readByte(cpu.getProgramCounter());
             cpu.step(TRACE);
 
             // Count instructions for reporting
@@ -334,14 +345,15 @@ async function main() {
         } catch (error) {
             if (USE_SYNC) {
                 const errorMessage = String(error);
-                const opcode = cpu.readByte(cpu.getProgramCounter() - 1); // Rough approximation of last executed opcode
 
                 // Log the divergence
                 if (DEBUG) {
                     logDivergence(opcode, errorMessage);
                 }
-                
-                console.error(`CPU divergence detected with opcode 0x${opcode.toString(16).padStart(2, "0")}`);
+
+                console.error(
+                    `CPU divergence detected at 0x${pc.toString(16).padStart(4, "0")} with opcode 0x${opcode.toString(16).padStart(2, "0")}`,
+                );
                 console.error("Full error details:");
                 console.error(errorMessage);
                 console.error("\nExiting due to CPU implementation divergence");

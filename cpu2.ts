@@ -38,7 +38,7 @@ export class CPU2 implements CPU {
     step(trace = false): number {
         return step6502(this.state, trace);
     }
-    
+
     /**
      * Load a byte into memory
      * @param address Memory address
@@ -47,7 +47,7 @@ export class CPU2 implements CPU {
     loadByte(address: number, value: number): void {
         this.state.mem[address & 0xffff] = value & 0xff;
     }
-    
+
     /**
      * Load a word (16-bit value) into memory
      * @param address Memory address for low byte
@@ -57,7 +57,7 @@ export class CPU2 implements CPU {
         this.state.mem[address & 0xffff] = value & 0xff;
         this.state.mem[(address + 1) & 0xffff] = (value >> 8) & 0xff;
     }
-    
+
     /**
      * Read a byte from memory
      * @param address Memory address
@@ -66,7 +66,7 @@ export class CPU2 implements CPU {
     readByte(address: number): number {
         return defined(this.state.mem[address & 0xffff]);
     }
-    
+
     /**
      * Read a word (16-bit value) from memory
      * @param address Memory address of low byte
@@ -77,7 +77,7 @@ export class CPU2 implements CPU {
         const hi = defined(this.state.mem[(address + 1) & 0xffff]);
         return (hi << 8) | lo;
     }
-    
+
     /**
      * Set the program counter
      * @param address New program counter value
@@ -85,7 +85,7 @@ export class CPU2 implements CPU {
     setProgramCounter(address: number): void {
         this.state.pc = address & 0xffff;
     }
-    
+
     /**
      * Set the accumulator register
      * @param value Value to set
@@ -93,7 +93,7 @@ export class CPU2 implements CPU {
     setAccumulator(value: number): void {
         this.state.a = value & 0xff;
     }
-    
+
     /**
      * Set the X index register
      * @param value Value to set
@@ -101,7 +101,7 @@ export class CPU2 implements CPU {
     setXRegister(value: number): void {
         this.state.x = value & 0xff;
     }
-    
+
     /**
      * Set the Y index register
      * @param value Value to set
@@ -109,7 +109,7 @@ export class CPU2 implements CPU {
     setYRegister(value: number): void {
         this.state.y = value & 0xff;
     }
-    
+
     /**
      * Set the stack pointer
      * @param value Value to set
@@ -117,7 +117,7 @@ export class CPU2 implements CPU {
     setStackPointer(value: number): void {
         this.state.sp = value & 0xff;
     }
-    
+
     /**
      * Set the status register
      * @param value Value to set
@@ -125,7 +125,7 @@ export class CPU2 implements CPU {
     setStatusRegister(value: number): void {
         this.state.p = value & 0xff;
     }
-    
+
     /**
      * Set status flag bits
      * @param mask Bit mask of flags to set
@@ -133,7 +133,7 @@ export class CPU2 implements CPU {
     setStatusFlag(mask: number): void {
         this.state.p |= mask & 0xff;
     }
-    
+
     /**
      * Clear status flag bits
      * @param mask Bit mask of flags to clear
@@ -141,7 +141,7 @@ export class CPU2 implements CPU {
     clearStatusFlag(mask: number): void {
         this.state.p &= ~(mask & 0xff);
     }
-    
+
     /**
      * Get the program counter value
      * @returns Current program counter
@@ -149,7 +149,7 @@ export class CPU2 implements CPU {
     getProgramCounter(): number {
         return this.state.pc;
     }
-    
+
     /**
      * Get the accumulator value
      * @returns Current accumulator value
@@ -157,7 +157,7 @@ export class CPU2 implements CPU {
     getAccumulator(): number {
         return this.state.a;
     }
-    
+
     /**
      * Get the X register value
      * @returns Current X register value
@@ -165,7 +165,7 @@ export class CPU2 implements CPU {
     getXRegister(): number {
         return this.state.x;
     }
-    
+
     /**
      * Get the Y register value
      * @returns Current Y register value
@@ -173,7 +173,7 @@ export class CPU2 implements CPU {
     getYRegister(): number {
         return this.state.y;
     }
-    
+
     /**
      * Get the stack pointer value
      * @returns Current stack pointer value
@@ -181,7 +181,7 @@ export class CPU2 implements CPU {
     getStackPointer(): number {
         return this.state.sp;
     }
-    
+
     /**
      * Get the status register value
      * @returns Current status register value
@@ -189,7 +189,7 @@ export class CPU2 implements CPU {
     getStatusRegister(): number {
         return this.state.p;
     }
-    
+
     /**
      * Check if a status flag is set
      * @param mask Bit mask to check
@@ -214,14 +214,14 @@ const enum F {
 
 /* ─────────────────── helpers ─────────────────── */
 
-const rd = (s: CPUState, a: number) => defined(s.mem[(a & 0xffff)]);
+const rd = (s: CPUState, a: number) => defined(s.mem[a & 0xffff]);
 const wr = (s: CPUState, a: number, v: number) => {
-    s.mem[(a & 0xffff)] = v & 0xff;
+    s.mem[a & 0xffff] = v & 0xff;
 };
 const rd16 = (s: CPUState, a: number) => rd(s, a) | (rd(s, a + 1) << 8);
 const rd16bug = (
     s: CPUState,
-    a: number // 6502 JMP-(addr) page-bug
+    a: number, // 6502 JMP-(addr) page-bug
 ) => rd(s, a) | (rd(s, (a & 0xff00) | ((a + 1) & 0xff)) << 8);
 
 const push = (s: CPUState, v: number) => {
@@ -231,19 +231,6 @@ const push = (s: CPUState, v: number) => {
 const pop = (s: CPUState) => {
     s.sp = (s.sp + 1) & 0xff;
     return rd(s, 0x100 | s.sp);
-};
-
-// Push a 16-bit word to the stack (high byte first, then low byte)
-const pushWord = (s: CPUState, v: number) => {
-    push(s, (v >> 8) & 0xff); // Push high byte
-    push(s, v & 0xff);        // Push low byte
-};
-
-// Pull a 16-bit word from the stack (low byte first, then high byte)
-const pullWord = (s: CPUState) => {
-    const lo = pop(s);
-    const hi = pop(s);
-    return (hi << 8) | lo;
 };
 
 const setZN = (s: CPUState, v: number) => {
@@ -310,7 +297,7 @@ const shiftMemOp = (
     s: CPUState,
     addr: number,
     left: boolean,
-    thruCarry: boolean
+    thruCarry: boolean,
 ) => {
     let v = rd(s, addr);
     const inC = s.p & F.C ? 1 : 0;
@@ -351,7 +338,7 @@ const shiftMem2 = (
     opLeft: boolean,
     thruCarry: boolean,
     addr: number,
-    base: number
+    base: number,
 ) => {
     let v = rd(s, addr);
     const inC = s.p & F.C ? 1 : 0;
@@ -367,8 +354,10 @@ const shiftMem2 = (
 
 /* ─────────────────── one-instruction executor ─────────────────── */
 
-// Local implementation of step6502 - not exported to avoid conflicts
-function step6502(s: CPUState, trace = false): number /* cycles (approx) */ {
+export function step6502(
+    s: CPUState,
+    trace = false,
+): number /* cycles (approx) */ {
     const opPC = s.pc;
     const op = rd(s, s.pc++);
 
@@ -384,7 +373,7 @@ function step6502(s: CPUState, trace = false): number /* cycles (approx) */ {
                 .toString(16)
                 .padStart(2, "0")} P=${s.p
                 .toString(16)
-                .padStart(2, "0")} SP=${s.sp.toString(16).padStart(2, "0")}`
+                .padStart(2, "0")} SP=${s.sp.toString(16).padStart(2, "0")}`,
         );
     }
     switch (op) {
@@ -555,18 +544,15 @@ function step6502(s: CPUState, trace = false): number /* cycles (approx) */ {
             s.p |= F.C;
             return 2;
 
-        /* BEQ - Branch if Equal (Zero Set) */
+        /* BEQ – branch if zero set (relative) */
         case 0xf0: {
             const offset = imm8(s);
             if (s.p & F.Z) {
-                const oldPc = s.pc;
-                // Branch offset is signed
+                /* Offset is signed 8-bit */
                 const rel = offset < 0x80 ? offset : offset - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
-                // Return 3 cycles for branch taken, +1 if page boundary crossed
-                return 3 + ((oldPc & 0xff00) !== (s.pc & 0xff00) ? 1 : 0);
             }
-            return 2; // 2 cycles when branch not taken
+            return 2;
         }
 
         /* ---------- additional opcodes for extended tests ---------- */
@@ -768,48 +754,28 @@ function step6502(s: CPUState, trace = false): number /* cycles (approx) */ {
             return 3;
         }
 
-        /* BNE - Branch if Not Equal (Zero Clear) */
+        /* BNE – branch if zero clear (relative) */
         case 0xd0: {
             const offset = imm8(s);
             if (!(s.p & F.Z)) {
-                const oldPc = s.pc;
-                // Branch offset is signed
                 const rel = offset < 0x80 ? offset : offset - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
-                // Return 3 cycles for branch taken, +1 if page boundary crossed
-                return 3 + ((oldPc & 0xff00) !== (s.pc & 0xff00) ? 1 : 0);
             }
-            return 2; // 2 cycles when branch not taken
-        }
-
-        /* ---------- ORA / AND / EOR instructions ---------- */
-        // ORA - Logical Inclusive OR
-        case 0x09: {
-            // ORA #imm - Logical OR with Accumulator (immediate)
-            const val = imm8(s);
-            s.a = setZN(s, s.a | val);
             return 2;
         }
+
+        /* ---------- ORA / AND / EOR (zero-page) ---------- */
         case 0x05: {
-            // ORA zp - Logical OR with Accumulator (zero page)
             const addr = zp(s);
             s.a = setZN(s, s.a | rd(s, addr));
             return 3;
         }
         case 0x15: {
-            // ORA zpx - Logical OR with Accumulator (zero page,X)
             const addr = zpx(s);
             s.a = setZN(s, s.a | rd(s, addr));
             return 4;
         }
-        case 0x0d: {
-            // ORA abs - Logical OR with Accumulator (absolute)
-            const addr = abs16(s);
-            s.a = setZN(s, s.a | rd(s, addr));
-            return 4;
-        }
         case 0x1d: {
-            // ORA absx - Logical OR with Accumulator (absolute,X)
             const addr = absx(s);
             s.a = setZN(s, s.a | rd(s, addr));
             return 4;
@@ -839,12 +805,6 @@ function step6502(s: CPUState, trace = false): number /* cycles (approx) */ {
             s.a = setZN(s, s.a & rd(s, addr));
             return 4;
         }
-        case 0x2D: {
-            // AND abs - Logical AND with Accumulator (absolute)
-            const addr = abs16(s);
-            s.a = setZN(s, s.a & rd(s, addr));
-            return 4;
-        }
         case 0x3d: {
             const addr = absx(s);
             s.a = setZN(s, s.a & rd(s, addr));
@@ -865,12 +825,6 @@ function step6502(s: CPUState, trace = false): number /* cycles (approx) */ {
             s.a = setZN(s, s.a & rd(s, addr));
             return 5;
         }
-        case 0x49: {
-            // EOR #imm - Logical Exclusive OR with Accumulator (immediate)
-            const val = imm8(s);
-            s.a = setZN(s, s.a ^ val);
-            return 2;
-        }
         case 0x45: {
             const addr = zp(s);
             s.a = setZN(s, s.a ^ rd(s, addr));
@@ -878,12 +832,6 @@ function step6502(s: CPUState, trace = false): number /* cycles (approx) */ {
         }
         case 0x55: {
             const addr = zpx(s);
-            s.a = setZN(s, s.a ^ rd(s, addr));
-            return 4;
-        }
-        case 0x4D: {
-            // EOR abs - Logical Exclusive OR with Accumulator (absolute)
-            const addr = abs16(s);
             s.a = setZN(s, s.a ^ rd(s, addr));
             return 4;
         }
@@ -1129,69 +1077,49 @@ function step6502(s: CPUState, trace = false): number /* cycles (approx) */ {
 
         /* ---------- Other Branches ---------- */
         case 0xb0: {
-            // BCS - Branch if Carry Set
-            const offset = imm8(s);
+            // BCS
+            const off = imm8(s);
             if (s.p & F.C) {
-                const oldPc = s.pc;
-                // Branch offset is signed
-                const rel = offset < 0x80 ? offset : offset - 0x100;
+                const rel = off < 0x80 ? off : off - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
-                // Return 3 cycles for branch taken, +1 if page boundary crossed
-                return 3 + ((oldPc & 0xff00) !== (s.pc & 0xff00) ? 1 : 0);
             }
-            return 2; // 2 cycles when branch not taken
+            return 2;
         }
         case 0x50: {
-            // BVC - Branch if Overflow Clear
-            const offset = imm8(s);
+            // BVC
+            const off = imm8(s);
             if (!(s.p & F.V)) {
-                const oldPc = s.pc;
-                // Branch offset is signed
-                const rel = offset < 0x80 ? offset : offset - 0x100;
+                const rel = off < 0x80 ? off : off - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
-                // Return 3 cycles for branch taken, +1 if page boundary crossed
-                return 3 + ((oldPc & 0xff00) !== (s.pc & 0xff00) ? 1 : 0);
             }
-            return 2; // 2 cycles when branch not taken
+            return 2;
         }
         case 0x70: {
-            // BVS - Branch if Overflow Set
-            const offset = imm8(s);
+            // BVS
+            const off = imm8(s);
             if (s.p & F.V) {
-                const oldPc = s.pc;
-                // Branch offset is signed
-                const rel = offset < 0x80 ? offset : offset - 0x100;
+                const rel = off < 0x80 ? off : off - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
-                // Return 3 cycles for branch taken, +1 if page boundary crossed
-                return 3 + ((oldPc & 0xff00) !== (s.pc & 0xff00) ? 1 : 0);
             }
-            return 2; // 2 cycles when branch not taken
+            return 2;
         }
         case 0x30: {
-            // BMI - Branch if Minus (Negative Set)
-            const offset = imm8(s);
+            // BMI
+            const off = imm8(s);
             if (s.p & F.N) {
-                const oldPc = s.pc;
-                // Branch offset is signed
-                const rel = offset < 0x80 ? offset : offset - 0x100;
+                const rel = off < 0x80 ? off : off - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
-                // Return 3 cycles for branch taken, +1 if page boundary crossed
-                return 3 + ((oldPc & 0xff00) !== (s.pc & 0xff00) ? 1 : 0);
             }
-            return 2; // 2 cycles when branch not taken
+            return 2;
         }
         case 0x10: {
-            // BPL - Branch if Plus (Negative Clear)
-            const offset = imm8(s);
+            // BPL
+            const off = imm8(s);
             if (!(s.p & F.N)) {
-                const oldPc = s.pc;
-                // Branch offset is signed
-                const rel = offset < 0x80 ? offset : offset - 0x100;
+                const rel = off < 0x80 ? off : off - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
-                // Return 3 cycles for branch taken, +1 if page boundary crossed
-                return 3 + ((oldPc & 0xff00) !== (s.pc & 0xff00) ? 1 : 0);
             }
-            return 2; // 2 cycles when branch not taken
+            return 2;
         }
 
         /* ---------- Quick top-level handlers for remaining failing tests ---------- */
@@ -1248,23 +1176,17 @@ function step6502(s: CPUState, trace = false): number /* cycles (approx) */ {
 
         /* ---------- Subroutine handling ---------- */
         case 0x20: {
-            // JSR absolute - Jump to Subroutine
-            // According to 6502 spec, JSR pushes the address of the last byte of JSR instruction
-            // That's PC+2-1 = PC+1, where PC is the address of the JSR opcode
-            // At this point PC has already advanced to addr_lo, so we need PC+1-1 = PC
+            // JSR abs
             const addr = abs16(s);
-            // Push PC which already points to addr_hi (need to save PC-1 to be compatible with CPU1)
-            const returnAddress = s.pc - 1;
-            pushWord(s, returnAddress);
+            push(s, ((s.pc - 1) >> 8) & 0xff);
+            push(s, (s.pc - 1) & 0xff);
             s.pc = addr;
             return 6;
         }
         case 0x60: {
-            // RTS - Return from Subroutine
-            // Pull PC from stack (low byte first, then high byte) and add 2
-            // This is to match CPU1's implementation where RTS adds 2
-            const returnAddress = pullWord(s);
-            s.pc = returnAddress + 2;
+            // RTS
+            const lo = pop(s);
+            s.pc = ((pop(s) << 8) | lo) + 1;
             return 6;
         }
 
@@ -1273,8 +1195,10 @@ function step6502(s: CPUState, trace = false): number /* cycles (approx) */ {
             // Pull status register from stack (ignore B flag, keep U flag set)
             s.p = (pop(s) & ~F.B) | F.U;
 
-            // Pull program counter from stack
-            s.pc = pullWord(s);
+            // Pull program counter from stack (low byte first, then high byte)
+            const lo = pop(s);
+            const hi = pop(s);
+            s.pc = (hi << 8) | lo;
             return 6;
         }
 
@@ -1367,17 +1291,13 @@ function step6502(s: CPUState, trace = false): number /* cycles (approx) */ {
 
         /* ---------- Branches ---------- */
         case 0x90: {
-            // BCC - Branch if Carry Clear
-            const offset = imm8(s);
+            // BCC
+            const off = imm8(s);
             if (!(s.p & F.C)) {
-                const oldPc = s.pc;
-                // Branch offset is signed
-                const rel = offset < 0x80 ? offset : offset - 0x100;
+                const rel = off < 0x80 ? off : off - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
-                // Return 3 cycles for branch taken, +1 if page boundary crossed
-                return 3 + ((oldPc & 0xff00) !== (s.pc & 0xff00) ? 1 : 0);
             }
-            return 2; // 2 cycles when branch not taken
+            return 2;
         }
 
         /* DEX - Decrement X register */
@@ -1407,14 +1327,9 @@ function step6502(s: CPUState, trace = false): number /* cycles (approx) */ {
             setZN(s, s.y);
             return 2;
         }
-
-        /* NOP - No Operation */
-        case 0xea: {
-            return 2;
-        }
     }
 
     throw new Error(
-        `Unknown opcode at ${s.pc.toString(16)}: ${op.toString(16)}`
+        `Unknown opcode at ${s.pc.toString(16)}: ${op.toString(16)}`,
     );
 }
