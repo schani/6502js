@@ -7,13 +7,32 @@ This is a minimal host implementation to run Microsoft BASIC (KIM-1 kb9.bin buil
 ```bash
 # Run with CPU1 implementation (standard mode)
 bun run basic-runner.ts
+bun run basic-runner.ts --cpu1
 
-# Run with SyncCPU for CPU implementation divergence detection
+# Run with CPU2 implementation
+bun run basic-runner.ts --cpu2
+
+# Run with SyncCPU (runs both CPU1 and CPU2 in parallel)
+bun run basic-runner.ts --sync
+
+# Run with SyncCPU in debug mode (logs divergences)
 bun run basic-runner.ts --debug
+
+# Run with SyncCPU and exit on first divergence
+bun run basic-runner.ts --sync --exit-on-divergence
 
 # Run with tracing enabled (shows each instruction)
 bun run basic-runner.ts --trace
 ```
+
+### Command Line Options
+
+- `--cpu1`: Use CPU1 implementation (default if none specified)
+- `--cpu2`: Use CPU2 implementation
+- `--sync`: Use SyncCPU implementation (runs both CPU1 and CPU2 in lockstep)
+- `--debug`: Enable debug mode with detailed logging (implies --sync)
+- `--exit-on-divergence`: Exit immediately when a divergence is detected between CPU implementations
+- `--trace`: Enable instruction tracing (shows each instruction as it executes)
 
 ## Description
 

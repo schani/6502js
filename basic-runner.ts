@@ -27,9 +27,13 @@ import { CPU2 } from "./cpu2";
 import { SyncCPU } from "./sync-cpu";
 import { defined } from "@glideapps/ts-necessities";
 
-// rudimentary CLI flags
+// Command line flags
 const TRACE = process.argv.includes("--trace");
 const DEBUG = process.argv.includes("--debug");
+const EXIT_ON_DIVERGENCE = process.argv.includes("--exit-on-divergence");
+const USE_CPU1 = process.argv.includes("--cpu1");
+const USE_CPU2 = process.argv.includes("--cpu2");
+const USE_SYNC = process.argv.includes("--sync") || DEBUG; // --debug implies --sync
 
 // ---------------------------------------------------------------------------
 // Constants / helpers
@@ -67,8 +71,18 @@ function push16(cpu: CPUState, val: number) {
 // ---------------------------------------------------------------------------
 
 function buildCPU(): CPU {
-    // Use either CPU1 or SyncCPU depending on debug mode
-    const cpu = DEBUG ? new SyncCPU() : new CPU1();
+    // Determine which CPU implementation to use based on command line flags
+    let cpu: CPU;
+    
+    if (USE_SYNC) {
+        cpu = new SyncCPU();
+    } else if (USE_CPU2) {
+        cpu = new CPU2();
+    } else {
+        // Default to CPU1 if no specific implementation is requested
+        cpu = new CPU1();
+    }
+    
     const state = cpu.getState();
 
     // Load BASIC ROM image
@@ -92,7 +106,11 @@ function buildCPU(): CPU {
 
     // Use CPU interface methods instead of directly manipulating memory
     for (let i = 0; i < maxLen; i++) {
-        cpu.loadByte(0x2000 + i, bin[i]);
+        const byteValue = bin[i];
+        // Ensure byteValue is defined before passing it to loadByte
+        if (byteValue !== undefined) {
+            cpu.loadByte(0x2000 + i, byteValue);
+        }
     }
 
     // Write monitor stubs that are *not* inside the BASIC image (high ROM)
@@ -220,17 +238,34 @@ async function main() {
     const trapSet = new Set([MONRDKEY, MONCOUT, ISCNTC, LOAD, SAVE]);
 
     // Console message explaining CPU usage
-    if (DEBUG) {
-        console.log("Running MS-BASIC with SyncCPU (debug mode enabled)\n");
-        console.log("CPU divergences will be logged to:", DIVERGENCE_LOG);
-        console.log(
-            "Check this log to identify issues that need to be fixed in the CPU implementations.\n",
-        );
+    if (USE_SYNC) {
+        console.log("Running MS-BASIC with SyncCPU");
+        if (DEBUG) {
+            console.log("Debug mode enabled");
+            console.log("CPU divergences will be logged to:", DIVERGENCE_LOG);
+            console.log("Check this log to identify issues that need to be fixed in the CPU implementations.");
+        }
+        if (EXIT_ON_DIVERGENCE) {
+            console.log("Will exit immediately on CPU divergence");
+        } else {
+            console.log("Will continue on CPU divergence using CPU1's state");
+        }
+        console.log("");
+    } else if (USE_CPU2) {
+        console.log("Running MS-BASIC with CPU2");
+        console.log("Use --sync flag to run with SyncCPU and detect implementation divergences.");
+        console.log("");
     } else {
-        console.log("Running MS-BASIC with CPU1\n");
-        console.log(
-            "Use --debug flag to run with SyncCPU and detect implementation divergences.\n",
-        );
+        console.log("Running MS-BASIC with CPU1");
+        console.log("");
+        console.log("Available options:");
+        console.log("  --cpu1            Use CPU1 implementation (default)");
+        console.log("  --cpu2            Use CPU2 implementation");
+        console.log("  --sync            Use SyncCPU (runs both CPU1 and CPU2 in parallel)");
+        console.log("  --debug           Enable debug mode with detailed logging");
+        console.log("  --exit-on-divergence Exit immediately when CPU implementations diverge");
+        console.log("  --trace           Enable instruction tracing");
+        console.log("");
     }
 
     // Track instruction count for periodic status reporting
@@ -303,19 +338,28 @@ async function main() {
                 dumpDivergenceSummary();
             }
         } catch (error) {
-            if (DEBUG) {
+            if (USE_SYNC) {
                 const errorMessage = String(error);
                 const opcode = cpu.readByte(cpu.getProgramCounter() - 1); // Rough approximation of last executed opcode
 
                 // Log the divergence
-                logDivergence(opcode, errorMessage);
-
-                // Don't crash the program, just log and continue with CPU1's state
-                console.error(
-                    `CPU divergence detected with opcode 0x${opcode.toString(16).padStart(2, "0")}`,
-                );
+                if (DEBUG) {
+                    logDivergence(opcode, errorMessage);
+                }
+                
+                console.error(`CPU divergence detected with opcode 0x${opcode.toString(16).padStart(2, "0")}`);
+                
+                if (EXIT_ON_DIVERGENCE) {
+                    console.error("Full error details:");
+                    console.error(errorMessage);
+                    console.error("\nExiting due to CPU divergence (--exit-on-divergence flag is set)");
+                    exit(1);
+                }
+                
+                // Don't crash the program, just continue with CPU1's state
+                console.error("Continuing with CPU1's state...");
             } else {
-                throw error; // In non-debug mode, let errors crash the program
+                throw error; // In non-SyncCPU mode, let errors crash the program
             }
         }
     }
