@@ -21,7 +21,7 @@
 import { readFileSync, appendFileSync } from "fs";
 import { exit } from "process";
 import { setTimeout } from "timers/promises";
-import type { CPU, CPUState } from "./cpu-interface";
+import type { CPU } from "./cpu-interface";
 import { CPU1 } from "./cpu1";
 import { CPU2 } from "./cpu2";
 import { SyncCPU } from "./sync-cpu";
@@ -38,13 +38,20 @@ const USE_SYNC = process.argv.includes("--sync") || DEBUG; // --debug implies --
 // Constants / helpers
 // ---------------------------------------------------------------------------
 
-const KB9_PATH = "./kb9.bin";
 const DIVERGENCE_LOG = "./cpu-divergence.log";
 
 // KB9 build (KIM-1 v1.1)
-// I/O vectors are *inside* the binary, not in the 6502 reset page.
-const MONRDKEY = 0x1e5a;
-const MONCOUT = 0x1ea0;
+// const ROM_PATH = "./kb9.bin";
+// const ROM_ADDR = 0x2000;
+// const MONRDKEY = 0x1e5a;
+// const MONCOUT = 0x1ea0;
+// const COLD_START = 0x4065;
+
+const ROM_PATH = "./osi.bin";
+const ROM_ADDR = 0xa000;
+const MONRDKEY = 0xffeb;
+const MONCOUT = 0xffee;
+const COLD_START = 0xbd11;
 
 // We still stub these for completeness (not used by KB9 but harmless)
 const ISCNTC = 0xffb7;
@@ -55,15 +62,15 @@ const SAVE = 0xffbc;
 function pop16(cpu: CPU): number {
     // Save current SP
     const sp = cpu.getStackPointer();
-    
+
     // Increment SP and read low byte
     cpu.setStackPointer((sp + 1) & 0xff);
     const lo = cpu.readByte(0x0100 + cpu.getStackPointer());
-    
+
     // Increment SP and read high byte
     cpu.setStackPointer((cpu.getStackPointer() + 1) & 0xff);
     const hi = cpu.readByte(0x0100 + cpu.getStackPointer());
-    
+
     return (hi << 8) | lo;
 }
 
@@ -71,11 +78,11 @@ function push16(cpu: CPU, val: number) {
     // Push high byte first
     const hi = (val >> 8) & 0xff;
     const lo = val & 0xff;
-    
+
     // Push high byte
     cpu.loadByte(0x0100 + cpu.getStackPointer(), hi);
     cpu.setStackPointer((cpu.getStackPointer() - 1) & 0xff);
-    
+
     // Push low byte
     cpu.loadByte(0x0100 + cpu.getStackPointer(), lo);
     cpu.setStackPointer((cpu.getStackPointer() - 1) & 0xff);
@@ -103,37 +110,30 @@ function buildCPU(): CPU {
     // Load BASIC ROM image
     let bin: Buffer;
     try {
-        bin = readFileSync(KB9_PATH);
+        bin = readFileSync(ROM_PATH);
     } catch (e) {
         console.error(
-            `Cannot read ${KB9_PATH}. Build or download kb9.bin first.`,
+            `Cannot read ${ROM_PATH}. Build or download kb9.bin first.`,
         );
         exit(1);
     }
-    if (bin.length < 0x2000) {
+    if (bin.length > 0x10000 - ROM_ADDR) {
         console.error(
-            `kb9.bin too small (got ${bin.length} bytes, expected ≥ 8192). Did the build fail?`,
+            `kb9.bin too large: got ${bin.length} bytes, expected <=${0x10000 - ROM_ADDR}`,
         );
         exit(1);
     }
     // KIM-1 kb9.bin layout: single contiguous blob expected to be loaded at $2000
-    const maxLen = Math.min(bin.length, 0x10000 - 0x2000);
+    const maxLen = Math.min(bin.length, 0x10000 - ROM_ADDR);
 
     // Use CPU interface methods instead of directly manipulating memory
     for (let i = 0; i < maxLen; i++) {
         const byteValue = bin[i];
         // Ensure byteValue is defined before passing it to loadByte
         if (byteValue !== undefined) {
-            cpu.loadByte(0x2000 + i, byteValue);
+            cpu.loadByte(ROM_ADDR + i, byteValue);
         }
     }
-
-    // Write monitor stubs that are *not* inside the BASIC image (high ROM)
-    cpu.loadByte(LOAD, 0x60);
-    cpu.loadByte(SAVE, 0x60);
-    // ISCNTC: CLC ; RTS
-    cpu.loadByte(ISCNTC, 0x18); // CLC
-    cpu.loadByte(ISCNTC + 1, 0x60); // RTS
 
     // Initial state using CPU interface methods
     cpu.setAccumulator(0);
@@ -141,7 +141,7 @@ function buildCPU(): CPU {
     cpu.setYRegister(0);
     cpu.setStackPointer(0xfd);
     cpu.setStatusRegister(0x24);
-    cpu.setProgramCounter(0x4065);
+    cpu.setProgramCounter(COLD_START);
 
     return cpu;
 }
