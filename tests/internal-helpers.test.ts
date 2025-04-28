@@ -17,8 +17,8 @@ describe("Internal helper functions", () => {
     cpu.step(); // This calls pushWord internally
     
     // Verify the return address was written correctly
-    // pc-1 should be written to the stack (0x0001)
-    expect(cpu.readByte(0x01FC)).toBe(0x00); // Low byte
+    // JSR pushes PC+2-1 to stack, which is 2 in this case (0x0002)
+    expect(cpu.readByte(0x01FC)).toBe(0x02); // Low byte
     expect(cpu.readByte(0x01FD)).toBe(0x00); // High byte
     
     // Test readWord via JMP indirect

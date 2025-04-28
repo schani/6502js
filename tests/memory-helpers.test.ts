@@ -63,7 +63,7 @@ describe("Memory helper functions", () => {
     
     // RTS pulls address from stack, adds 1, and sets PC
     expect(cycles2).toBe(6);
-    expect(cpu.getProgramCounter()).toBe(2); // Since JSR saves PC+2-1=1, RTS adds 1 to get 2
+    expect(cpu.getProgramCounter()).toBe(3); // Since JSR saves PC+2-1=2, RTS adds 1 to get 3
   });
   
 });

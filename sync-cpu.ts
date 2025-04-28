@@ -284,33 +284,7 @@ export class SyncCPU implements CPU {
         }[] = [];
 
         for (let i = 0; i < mem1.length; i++) {
-            // Skip checking the stack page (0x0100-0x01FF) as implementations can differ
-            // in what exactly they push on the stack, but still produce correct behavior
-            if (i >= 0x0100 && i <= 0x01ff) {
-                continue;
-            }
-
-            // Only check addresses that have non-zero values in either CPU
-            if ((mem1[i] !== 0 || mem2[i] !== 0) && mem1[i] !== mem2[i]) {
-                // We have a memory difference - check if it's a known issue with CPU2
-                const lastOpcode = this.readByte(this.getProgramCounter() - 1);
-
-                // These are the opcodes that CPU2 is missing or implements differently
-                const knownProblematicOpcodes = [
-                    0x09, // ORA immediate
-                    0x2d, // AND absolute
-                    0x49, // EOR immediate
-                    0x4d, // EOR absolute
-                ];
-
-                // If this is a memory difference caused by a known problematic opcode, skip it
-                if (knownProblematicOpcodes.includes(lastOpcode)) {
-                    console.warn(
-                        `Ignoring memory difference at 0x${i.toString(16)} after opcode 0x${lastOpcode.toString(16)} - this is a known CPU2 implementation gap`,
-                    );
-                    continue;
-                }
-
+            if (mem1[i] !== mem2[i]) {
                 memDiffs.push({ address: i, cpu1: mem1[i], cpu2: mem2[i] });
 
                 // If we find too many differences, break to avoid overwhelming the error message
