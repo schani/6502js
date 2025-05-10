@@ -347,3 +347,12 @@ These improvements will help ensure that both CPU implementations correctly impl
   - Memory initialization behavior might differ in edge cases
 - This refactoring improves test maintainability and makes them more robust
 - The tests are now implementation-agnostic, focusing on behavior rather than implementation details
+
+## 2025-05-10
+
+### Improved Basic Runner User Experience
+
+- Added proper Ctrl-C handling to allow users to gracefully exit the BASIC emulator
+- Implemented a SIGINT event listener that properly terminates the process when Ctrl-C is pressed
+- This provides a better user experience by allowing clean exit without needing to force-quit the terminal
+- The system now shows a friendly "Exiting MS-BASIC emulator..." message when terminated

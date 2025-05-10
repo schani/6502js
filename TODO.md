@@ -142,5 +142,6 @@
 - [ ] Potential future improvements:
   - [ ] Add more examples of running simple 6502 programs
   - [x] Improve debugging with memory dump and trace functionality
+  - [x] Add proper SIGINT (Ctrl-C) handling to basic-runner.ts
   - [ ] Add a memory visualization feature
   - [ ] Consider implementing decimal mode for ADC and SBC

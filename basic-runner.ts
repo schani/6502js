@@ -161,9 +161,17 @@ try {
     }
 
     process.stdin.on("data", (data: Buffer) => {
-        // Add each byte to the buffer
+        // Check for Ctrl-C (ASCII value 3)
         for (let i = 0; i < data.length; i++) {
-            inputBuffer.push(defined(data[i]));
+            const byte = defined(data[i]);
+
+            // If Ctrl-C is pressed
+            if (byte === 3) {
+                console.log("\nExiting MS-BASIC emulator...");
+                exit(0);
+            }
+
+            inputBuffer.push(byte);
         }
 
         // If there's a pending promise, resolve it with the next character
