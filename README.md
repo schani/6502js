@@ -25,6 +25,12 @@ The **SyncCPU** wrapper runs both implementations in parallel, comparing their s
 
 See [SYNC-CPU-SUMMARY.md](SYNC-CPU-SUMMARY.md) for details on the dual-CPU architecture.
 
+## Running MS-BASIC
+
+```bash
+bun run basic-runner.ts
+```
+
 ## Running Tests
 
 The test suite is organized by instruction categories in the `tests/` directory to improve maintainability. To run all tests:
