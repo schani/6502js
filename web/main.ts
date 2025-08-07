@@ -182,15 +182,43 @@ function renderAll() {
   const base = parseInt(baseHex, 16) || 0xA000;
   renderMemory(base);
   renderConsole();
-  $("status").textContent = `PC=$${fmt16(model.snap.pc)}  instr=${model.instrCount}`;
+  const waiting = model.waitingForInput;
+  $("status").textContent = waiting
+    ? `Waiting for input… PC=$${fmt16(model.snap.pc)} instr=${model.instrCount} (queue=${model.inputBuf.length})`
+    : `PC=$${fmt16(model.snap.pc)}  instr=${model.instrCount}`;
+
+  // Toggle controls based on state
+  const btnRun = $("btn-run");
+  const btnPause = $("btn-pause");
+  const btnStep = $("btn-step");
+  if (waiting) {
+    btnRun.setAttribute("disabled", "true");
+    btnStep.setAttribute("disabled", "true");
+    btnPause.setAttribute("disabled", "true");
+  } else {
+    if (model.running) {
+      btnRun.setAttribute("disabled", "true");
+      btnPause.removeAttribute("disabled");
+      btnStep.setAttribute("disabled", "true");
+    } else {
+      btnRun.removeAttribute("disabled");
+      btnPause.setAttribute("disabled", "true");
+      btnStep.removeAttribute("disabled");
+    }
+  }
 }
 
 async function main() {
   await model.init();
   // Wire controls
   $("btn-reset").addEventListener("click", async () => { await model.init(); renderAll(); });
-  $("btn-step").addEventListener("click", () => { model.step(); renderAll(); });
+  $("btn-step").addEventListener("click", () => {
+    if (model.waitingForInput) return; // blocked on input
+    model.step();
+    renderAll();
+  });
   $("btn-run").addEventListener("click", () => {
+    if (model.waitingForInput) return; // blocked on input
     model.running = true;
     $("btn-run").setAttribute("disabled", "true");
     $("btn-pause").removeAttribute("disabled");
@@ -198,7 +226,13 @@ async function main() {
       if (!model.running) return;
       const keep = model.runTick(20000);
       renderAll();
-      if (keep) requestAnimationFrame(tick); else model.running && requestAnimationFrame(tick);
+      // Stop scheduling if blocked on input
+      if (model.waitingForInput) {
+        model.running = false;
+        renderAll();
+        return;
+      }
+      if (keep && model.running) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
   });
