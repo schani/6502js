@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>6502 Debugger</title>
+    <style>
+      body { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; margin: 0; color: #222; }
+      header { padding: 8px 12px; background: #f5f5f5; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 8px; }
+      header button, header input { font: inherit; padding: 4px 8px; }
+      main { display: grid; grid-template-columns: 280px 1fr 360px; grid-template-rows: auto 1fr; gap: 8px; padding: 8px; height: calc(100vh - 50px); box-sizing: border-box; }
+      .panel { border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
+      .panel h3 { margin: 0; padding: 6px 8px; background: #fafafa; border-bottom: 1px solid #eee; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
+      .content { padding: 8px; overflow: auto; }
+      .grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 6px; }
+      .reg { display: flex; justify-content: space-between; gap: 6px; }
+      .reg input { width: 64px; font: inherit; padding: 2px 4px; }
+      .mono { font-family: inherit; white-space: pre; }
+      .rows { font-family: inherit; white-space: pre; line-height: 1.25; }
+      .cur { background: #ffe6b3; }
+      .bp { color: #b00; font-weight: 700; }
+      .footer { font-size: 12px; color: #666; padding-top: 6px; }
+      .disasm-line { cursor: pointer; }
+      .io { height: 140px; resize: vertical; width: 100%; box-sizing: border-box; }
+      .mem-addr { width: 90px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <button id="btn-reset">Reset</button>
+      <button id="btn-step">Step</button>
+      <button id="btn-run">Run</button>
+      <button id="btn-pause" disabled>Pause</button>
+      <span id="status" style="margin-left:8px; color:#555"></span>
+    </header>
+    <main>
+      <section class="panel" style="grid-row: 1 / span 2">
+        <h3>Registers</h3>
+        <div class="content">
+          <div class="grid">
+            <div class="reg">A <input id="reg-a" /></div>
+            <div class="reg">X <input id="reg-x" /></div>
+            <div class="reg">Y <input id="reg-y" /></div>
+            <div class="reg">SP <input id="reg-sp" /></div>
+            <div class="reg">PC <input id="reg-pc" /></div>
+            <div class="reg">P <input id="reg-p" /></div>
+          </div>
+          <div class="footer" id="flags"></div>
+        </div>
+      </section>
+      <section class="panel" style="grid-column: 2">
+        <h3>Disassembly</h3>
+        <div class="content">
+          <div id="disasm" class="rows"></div>
+        </div>
+      </section>
+      <section class="panel" style="grid-column: 3; grid-row: 1">
+        <h3>Memory</h3>
+        <div class="content">
+          Base: <input id="mem-base" class="mem-addr" value="A000" />
+          <button id="mem-go">Go</button>
+          <div id="memory" class="rows" style="margin-top:6px"></div>
+        </div>
+      </section>
+      <section class="panel" style="grid-column: 2 / span 2; grid-row: 2">
+        <h3>Console</h3>
+        <div class="content">
+          <textarea id="console-out" class="io" readonly></textarea>
+          <div style="margin-top:6px">Input: <input id="console-in" /> <button id="send">Send</button></div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="./dist/web/main.js"></script>
+  </body>
+  </html>
+

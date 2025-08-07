@@ -1,0 +1,240 @@
+import { CPU1 } from "../cpu1";
+import type { CPU } from "../cpu-interface";
+import { disassemble } from "../disasm";
+
+// BASIC ROM (OSI)
+const ROM_PATH = "./osi.bin";
+const ROM_ADDR = 0xA000;
+const COLD_START = 0xBD11;
+const MONRDKEY = 0xFFEB;
+const MONCOUT = 0xFFEE;
+const ISCNTC = 0xFFB7;
+const LOAD = 0xFFB9;
+const SAVE = 0xFFBC;
+
+type Snapshot = {
+  a: number; x: number; y: number; sp: number; p: number; pc: number;
+};
+
+class DebuggerModel {
+  cpu: CPU;
+  running = false;
+  breakpoints = new Set<number>();
+  output: string = "";
+  inputBuf: number[] = [];
+  instrCount = 0;
+  waitingForInput = false;
+
+  constructor() {
+    this.cpu = new CPU1();
+  }
+
+  async init() {
+    const res = await fetch(ROM_PATH);
+    const buf = new Uint8Array(await res.arrayBuffer());
+    for (let i = 0; i < buf.length; i++) this.cpu.loadByte(ROM_ADDR + i, buf[i]!);
+    this.cpu.setAccumulator(0);
+    this.cpu.setXRegister(0);
+    this.cpu.setYRegister(0);
+    this.cpu.setStackPointer(0xfd);
+    this.cpu.setStatusRegister(0x24);
+    this.cpu.setProgramCounter(COLD_START);
+  }
+
+  get snap(): Snapshot {
+    return {
+      a: this.cpu.getAccumulator(),
+      x: this.cpu.getXRegister(),
+      y: this.cpu.getYRegister(),
+      sp: this.cpu.getStackPointer(),
+      p: this.cpu.getStatusRegister(),
+      pc: this.cpu.getProgramCounter(),
+    };
+  }
+
+  setReg(name: keyof Snapshot, valHex: string) {
+    const v = parseInt(valHex, 16) >>> 0;
+    if (Number.isNaN(v)) return;
+    switch (name) {
+      case "a": this.cpu.setAccumulator(v); break;
+      case "x": this.cpu.setXRegister(v); break;
+      case "y": this.cpu.setYRegister(v); break;
+      case "sp": this.cpu.setStackPointer(v); break;
+      case "p": this.cpu.setStatusRegister(v); break;
+      case "pc": this.cpu.setProgramCounter(v); break;
+    }
+  }
+
+  private pop16(): number {
+    const sp1 = (this.cpu.getStackPointer() + 1) & 0xff;
+    this.cpu.setStackPointer(sp1);
+    const lo = this.cpu.readByte(0x0100 + this.cpu.getStackPointer());
+    const sp2 = (this.cpu.getStackPointer() + 1) & 0xff;
+    this.cpu.setStackPointer(sp2);
+    const hi = this.cpu.readByte(0x0100 + this.cpu.getStackPointer());
+    return (hi << 8) | lo;
+  }
+
+  step(): void {
+    const pc = this.cpu.getProgramCounter();
+    // Handle ROM monitor traps similar to basic-runner.ts
+    if (pc === MONRDKEY || pc === MONCOUT || pc === ISCNTC || pc === LOAD || pc === SAVE) {
+      const ret = (this.pop16() + 1) & 0xffff;
+      if (pc === MONCOUT) {
+        const c = this.cpu.getAccumulator() & 0xff;
+        this.output += String.fromCharCode(c);
+      } else if (pc === MONRDKEY) {
+        if (this.inputBuf.length === 0) {
+          // Block until input available, keep PC at MONRDKEY
+          this.waitingForInput = true;
+          return;
+        }
+        const c = this.inputBuf.shift()!;
+        this.cpu.setAccumulator(c & 0xff);
+        this.waitingForInput = false;
+      }
+      this.cpu.setProgramCounter(ret);
+      return;
+    }
+
+    this.cpu.step(false);
+    this.instrCount++;
+  }
+
+  runTick(maxInstr = 10000): boolean {
+    if (this.waitingForInput) return false;
+    for (let i = 0; i < maxInstr; i++) {
+      if (this.breakpoints.has(this.cpu.getProgramCounter())) return false;
+      this.step();
+      if (!this.running) return false;
+      if (this.waitingForInput) return false;
+    }
+    return true; // keep going
+  }
+}
+
+// ---------------- UI wiring ----------------
+
+const model = new DebuggerModel();
+
+const $ = (id: string) => document.getElementById(id)!;
+const fmt8 = (v: number) => v.toString(16).toUpperCase().padStart(2, "0");
+const fmt16 = (v: number) => v.toString(16).toUpperCase().padStart(4, "0");
+
+function renderRegs() {
+  const s = model.snap;
+  (document.getElementById("reg-a") as HTMLInputElement).value = fmt8(s.a);
+  (document.getElementById("reg-x") as HTMLInputElement).value = fmt8(s.x);
+  (document.getElementById("reg-y") as HTMLInputElement).value = fmt8(s.y);
+  (document.getElementById("reg-sp") as HTMLInputElement).value = fmt8(s.sp);
+  (document.getElementById("reg-pc") as HTMLInputElement).value = fmt16(s.pc);
+  (document.getElementById("reg-p") as HTMLInputElement).value = fmt8(s.p);
+  const flagsSpec: Array<[string, number]> = [["N",0x80],["V",0x40],["-",0x20],["B",0x10],["D",0x08],["I",0x04],["Z",0x02],["C",0x01]];
+  const flags = flagsSpec.map(([n, m]) => ((s.p & m) ? n : n.toLowerCase())).join("");
+  $("flags").textContent = `Flags: ${flags}`;
+}
+
+function renderDisasm() {
+  const pc = model.snap.pc;
+  const lines: { addr: number; text: string; len: number }[] = [];
+  let addr = pc;
+  for (let i = 0; i < 40; i++) {
+    const [asm, len] = disassemble(model.cpu, addr);
+    lines.push({ addr, text: `${fmt16(addr)}: ${asm}`, len });
+    addr = (addr + len) & 0xffff;
+  }
+  const d = $("disasm");
+  d.innerHTML = lines.map(l => {
+    const isCur = l.addr === pc;
+    const hasBp = model.breakpoints.has(l.addr);
+    const cls = ["disasm-line", isCur ? "cur" : "", hasBp ? "bp" : ""].filter(Boolean).join(" ");
+    const m = hasBp ? "● " : "  ";
+    return `<div data-addr="${l.addr}" class="${cls}">${m}${l.text}</div>`;
+  }).join("");
+}
+
+function renderMemory(base: number) {
+  const rows: string[] = [];
+  for (let r = 0; r < 16; r++) {
+    const addr = (base + r * 16) & 0xffff;
+    const bytes: string[] = [];
+    const chars: string[] = [];
+    for (let i = 0; i < 16; i++) {
+      const b = model.cpu.readByte(addr + i) & 0xff;
+      bytes.push(fmt8(b));
+      chars.push(b >= 32 && b < 127 ? String.fromCharCode(b) : ".");
+    }
+    rows.push(`${fmt16(addr)}  ${bytes.join(" ")}  |${chars.join("")}|`);
+  }
+  $("memory").textContent = rows.join("\n");
+}
+
+function renderConsole() {
+  const out = $("console-out") as HTMLTextAreaElement;
+  out.value = model.output;
+  out.scrollTop = out.scrollHeight;
+}
+
+function renderAll() {
+  renderRegs();
+  renderDisasm();
+  const baseHex = (document.getElementById("mem-base") as HTMLInputElement).value;
+  const base = parseInt(baseHex, 16) || 0xA000;
+  renderMemory(base);
+  renderConsole();
+  $("status").textContent = `PC=$${fmt16(model.snap.pc)}  instr=${model.instrCount}`;
+}
+
+async function main() {
+  await model.init();
+  // Wire controls
+  $("btn-reset").addEventListener("click", async () => { await model.init(); renderAll(); });
+  $("btn-step").addEventListener("click", () => { model.step(); renderAll(); });
+  $("btn-run").addEventListener("click", () => {
+    model.running = true;
+    $("btn-run").setAttribute("disabled", "true");
+    $("btn-pause").removeAttribute("disabled");
+    const tick = () => {
+      if (!model.running) return;
+      const keep = model.runTick(20000);
+      renderAll();
+      if (keep) requestAnimationFrame(tick); else model.running && requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+  $("btn-pause").addEventListener("click", () => {
+    model.running = false;
+    $("btn-pause").setAttribute("disabled", "true");
+    $("btn-run").removeAttribute("disabled");
+  });
+  $("mem-go").addEventListener("click", () => renderAll());
+  $("send").addEventListener("click", () => {
+    const inp = $("console-in") as HTMLInputElement;
+    const s = inp.value + "\r";
+    for (const ch of s) model.inputBuf.push(ch.charCodeAt(0) & 0xff);
+    inp.value = "";
+    // If waiting at MONRDKEY, consume immediately
+    if (model.waitingForInput) {
+      model.step();
+      renderAll();
+    }
+  });
+  $("disasm").addEventListener("click", (e) => {
+    const t = e.target as HTMLElement;
+    const row = t.closest('.disasm-line') as HTMLElement | null;
+    if (!row || !row.dataset.addr) return;
+    const addr = parseInt(row.dataset.addr, 10);
+    if (model.breakpoints.has(addr)) model.breakpoints.delete(addr); else model.breakpoints.add(addr);
+    renderDisasm();
+  });
+
+  // Editable register inputs
+  for (const id of ["a","x","y","sp","pc","p"]) {
+    const el = document.getElementById(`reg-${id}`) as HTMLInputElement;
+    el.addEventListener("change", () => model.setReg(id as keyof Snapshot, el.value));
+  }
+
+  renderAll();
+}
+
+main();

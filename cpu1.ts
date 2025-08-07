@@ -1,7 +1,7 @@
 import { disassemble } from "./disasm";
 import type { CPU, CPUState } from "./cpu-interface";
 import { createCPUState } from "./cpu-interface";
-import { CARRY, ZERO, INTERRUPT, DECIMAL, BREAK, UNUSED, OVERFLOW, NEGATIVE } from "./6502";
+import { CARRY, ZERO, INTERRUPT, DECIMAL, BREAK, UNUSED, OVERFLOW, NEGATIVE } from "./constants";
 
 /**
  * Full-featured implementation of the 6502 CPU
