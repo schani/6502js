@@ -4,6 +4,7 @@
     "scripts": {
         "typecheck": "bunx tsc --noEmit",
         "test": "bun test-runner.ts",
+        "dsl": "bun run dsl-runner.ts",
         "web:build": "bunx tsc -p web/tsconfig.json",
         "web:serve": "bun run web/serve.ts"
     },
