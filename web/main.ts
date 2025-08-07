@@ -24,6 +24,8 @@ class DebuggerModel {
   inputBuf: number[] = [];
   instrCount = 0;
   waitingForInput = false;
+  memSnapshot: Uint8Array | null = null;
+  lastDiffCount = 0;
 
   constructor() {
     this.cpu = new CPU1();
@@ -155,18 +157,87 @@ function renderDisasm() {
 
 function renderMemory(base: number) {
   const rows: string[] = [];
+  const bytesPerRow = 16; // fixed width hex dump
   for (let r = 0; r < 16; r++) {
-    const addr = (base + r * 16) & 0xffff;
+    const addr = (base + r * bytesPerRow) & 0xffff;
     const bytes: string[] = [];
     const chars: string[] = [];
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < bytesPerRow; i++) {
       const b = model.cpu.readByte(addr + i) & 0xff;
-      bytes.push(fmt8(b));
+      const isChanged = model.memSnapshot ? (model.memSnapshot[(addr + i) & 0xffff] !== b) : false;
+      const txt = fmt8(b);
+      bytes.push(isChanged ? `<span class="changed">${txt}</span>` : txt);
       chars.push(b >= 32 && b < 127 ? String.fromCharCode(b) : ".");
     }
     rows.push(`${fmt16(addr)}  ${bytes.join(" ")}  |${chars.join("")}|`);
   }
   $("memory").textContent = rows.join("\n");
+}
+
+function takeSnapshot() {
+  const state = model.cpu.getState();
+  model.memSnapshot = new Uint8Array(state.mem); // full copy
+  model.lastDiffCount = 0;
+  $("diff-summary").textContent = `Snapshot taken.`;
+  renderAll();
+}
+
+function compareSnapshot() {
+  if (!model.memSnapshot) {
+    $("diff-summary").textContent = `No snapshot. Take one first.`;
+    return;
+  }
+  const state = model.cpu.getState();
+  let changed = 0;
+  type Block = { start: number; prev: number[]; curr: number[] };
+  const blocks: Block[] = [];
+  let i = 0;
+  while (i < 65536) {
+    const prev = model.memSnapshot[i]!;
+    const cur = state.mem[i]!;
+    if (prev !== cur) {
+      const start = i;
+      const prevBytes: number[] = [];
+      const currBytes: number[] = [];
+      while (i < 65536 && model.memSnapshot[i]! !== state.mem[i]!) {
+        prevBytes.push(model.memSnapshot[i]!);
+        currBytes.push(state.mem[i]!);
+        i++;
+        changed++;
+      }
+      blocks.push({ start, prev: prevBytes, curr: currBytes });
+    } else {
+      i++;
+    }
+  }
+  model.lastDiffCount = changed;
+
+  const toAscii = (arr: number[]) =>
+    arr.map((b) => (b >= 32 && b < 127 ? String.fromCharCode(b) : ".")).join("");
+
+  const lines: string[] = [];
+  if (changed === 0) {
+    lines.push("No differences since snapshot.");
+  } else {
+    lines.push(`Changed bytes: ${changed}. Blocks: ${blocks.length}`);
+    const maxBlocks = 16;
+    for (let bi = 0; bi < Math.min(blocks.length, maxBlocks); bi++) {
+      const b = blocks[bi]!;
+      const end = (b.start + b.curr.length - 1) & 0xffff;
+      const prevHex = b.prev.map((x) => fmt8(x)).join(" ");
+      const currHex = b.curr.map((x) => fmt8(x)).join(" ");
+      const currTxt = toAscii(b.curr);
+      lines.push(`\n$${fmt16(b.start)}-$${fmt16(end)} (len ${b.curr.length})`);
+      lines.push(`  prev: ${prevHex}`);
+      lines.push(`  curr: ${currHex}`);
+      lines.push(`  text: "${currTxt}"`);
+    }
+    if (blocks.length > maxBlocks) {
+      lines.push(`\n… ${blocks.length - maxBlocks} more block(s) not shown`);
+    }
+  }
+  $("diff-summary").textContent = lines.join("\n");
+  renderAll();
 }
 
 function renderConsole() {
@@ -218,23 +289,11 @@ async function main() {
     renderAll();
   });
   $("btn-run").addEventListener("click", () => {
-    if (model.waitingForInput) return; // blocked on input
+    if (model.waitingForInput) return; // cannot start while blocked
     model.running = true;
     $("btn-run").setAttribute("disabled", "true");
     $("btn-pause").removeAttribute("disabled");
-    const tick = () => {
-      if (!model.running) return;
-      const keep = model.runTick(20000);
-      renderAll();
-      // Stop scheduling if blocked on input
-      if (model.waitingForInput) {
-        model.running = false;
-        renderAll();
-        return;
-      }
-      if (keep && model.running) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
+    scheduleRunLoop();
   });
   $("btn-pause").addEventListener("click", () => {
     model.running = false;
@@ -242,6 +301,8 @@ async function main() {
     $("btn-run").removeAttribute("disabled");
   });
   $("mem-go").addEventListener("click", () => renderAll());
+  $("mem-snapshot").addEventListener("click", () => takeSnapshot());
+  $("mem-compare").addEventListener("click", () => compareSnapshot());
   $("send").addEventListener("click", () => {
     const inp = $("console-in") as HTMLInputElement;
     const s = inp.value + "\r";
@@ -251,6 +312,8 @@ async function main() {
     if (model.waitingForInput) {
       model.step();
       renderAll();
+      // If we were running, keep running
+      if (model.running) scheduleRunLoop();
     }
   });
   $("disasm").addEventListener("click", (e) => {
@@ -266,6 +329,25 @@ async function main() {
   for (const id of ["a","x","y","sp","pc","p"]) {
     const el = document.getElementById(`reg-${id}`) as HTMLInputElement;
     el.addEventListener("change", () => model.setReg(id as keyof Snapshot, el.value));
+  }
+
+  // Simple run loop scheduler shared between controls and input
+  let rafScheduled = false;
+  function runLoopTick() {
+    rafScheduled = false;
+    if (!model.running) return;
+    const keep = model.runTick(20000);
+    renderAll();
+    if (model.waitingForInput) {
+      // stay in running mode but don't schedule until input arrives
+      return;
+    }
+    if (keep && model.running) scheduleRunLoop();
+  }
+  function scheduleRunLoop() {
+    if (rafScheduled) return;
+    rafScheduled = true;
+    requestAnimationFrame(runLoopTick);
   }
 
   renderAll();
