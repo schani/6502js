@@ -40,23 +40,17 @@ const USE_SYNC = process.argv.includes("--sync") || DEBUG; // --debug implies --
 
 const DIVERGENCE_LOG = "./cpu-divergence.log";
 
-// KB9 build (KIM-1 v1.1)
-// const ROM_PATH = "./kb9.bin";
-// const ROM_ADDR = 0x2000;
-// const MONRDKEY = 0x1e5a;
-// const MONCOUT = 0x1ea0;
-// const COLD_START = 0x4065;
-
 const ROM_PATH = "./osi.bin";
-const ROM_ADDR = 0xa000;
-const MONRDKEY = 0xffeb;
-const MONCOUT = 0xffee;
-const COLD_START = 0xbd11;
+
+const ROM_ADDR = 0xa000; // in .cfg: BASROM
+const MONRDKEY = 0xffeb; // in .lbl
+const MONCOUT = 0xffee; // in .lbl
+const COLD_START = 0xbd11; // in .lbl
 
 // We still stub these for completeness (not used by KB9 but harmless)
-const ISCNTC = 0xffb7;
-const LOAD = 0xffb9;
-const SAVE = 0xffbc;
+const MONISCNTC = 0xfff1; // in .lbl
+const LOAD = 0xfff4; // in .lbl
+const SAVE = 0xfff7; // in .lbl
 
 // Fixed stack operations to use the CPU interface
 function pop16(cpu: CPU): number {
@@ -258,7 +252,7 @@ async function main() {
     const cpu = buildCPU();
     const state = cpu.getState();
 
-    const trapSet = new Set([MONRDKEY, MONCOUT, ISCNTC, LOAD, SAVE]);
+    const trapSet = new Set([MONRDKEY, MONCOUT, MONISCNTC, LOAD, SAVE]);
 
     // Console message explaining CPU usage
     if (USE_SYNC) {
@@ -341,7 +335,7 @@ async function main() {
                     writeChar(cpu.getAccumulator());
                     break;
                 }
-                case ISCNTC: {
+                case MONISCNTC: {
                     // C already clear from stub; nothing else
                     break;
                 }
