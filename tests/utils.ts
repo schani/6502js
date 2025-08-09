@@ -18,7 +18,7 @@ import {
  * Currently using CPU1 for testing to maintain compatibility.
  * Once CPU1 and CPU2 are fully compatible, we can switch to SyncCPU.
  */
-export function createCPU(): CPU {
+export function createCPU(): any {
     // Using SyncCPU to test both implementations simultaneously
     return new SyncCPU();
 }

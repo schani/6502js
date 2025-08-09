@@ -11,9 +11,11 @@ import { disassemble } from "./disasm";
  */
 export class CPU2 implements CPU {
     private state: CPUState;
+    private mem: Uint8Array;
 
     constructor() {
         this.state = createCPUState();
+        this.mem = new Uint8Array(65536);
     }
 
     /**
@@ -27,7 +29,9 @@ export class CPU2 implements CPU {
      * Reset the CPU to initial state
      */
     reset(): void {
+        const mem = this.mem;
         this.state = createCPUState();
+        this.mem = mem;
     }
 
     /**
@@ -36,7 +40,7 @@ export class CPU2 implements CPU {
      * @returns Number of clock cycles consumed by the instruction
      */
     step(trace = false): number {
-        return step6502(this.state, trace);
+        return step6502(this.state, this.mem, trace);
     }
 
     /**
@@ -45,7 +49,7 @@ export class CPU2 implements CPU {
      * @param value Byte value to load
      */
     loadByte(address: number, value: number): void {
-        this.state.mem[address & 0xffff] = value & 0xff;
+        this.mem[address & 0xffff] = value & 0xff;
     }
 
     /**
@@ -54,8 +58,8 @@ export class CPU2 implements CPU {
      * @param value 16-bit value to load
      */
     loadWord(address: number, value: number): void {
-        this.state.mem[address & 0xffff] = value & 0xff;
-        this.state.mem[(address + 1) & 0xffff] = (value >> 8) & 0xff;
+        this.mem[address & 0xffff] = value & 0xff;
+        this.mem[(address + 1) & 0xffff] = (value >> 8) & 0xff;
     }
 
     /**
@@ -64,7 +68,7 @@ export class CPU2 implements CPU {
      * @returns Byte value at address
      */
     readByte(address: number): number {
-        return defined(this.state.mem[address & 0xffff]);
+        return defined(this.mem[address & 0xffff]);
     }
 
     /**
@@ -73,8 +77,8 @@ export class CPU2 implements CPU {
      * @returns 16-bit value
      */
     readWord(address: number): number {
-        const lo = defined(this.state.mem[address & 0xffff]);
-        const hi = defined(this.state.mem[(address + 1) & 0xffff]);
+        const lo = defined(this.mem[address & 0xffff]);
+        const hi = defined(this.mem[(address + 1) & 0xffff]);
         return (hi << 8) | lo;
     }
 
@@ -214,9 +218,10 @@ const enum F {
 
 /* ─────────────────── helpers ─────────────────── */
 
-const rd = (s: CPUState, a: number) => defined(s.mem[a & 0xffff]);
+let CURRENT_MEM_CPU2: Uint8Array;
+const rd = (s: CPUState, a: number) => defined(CURRENT_MEM_CPU2[a & 0xffff]);
 const wr = (s: CPUState, a: number, v: number) => {
-    s.mem[a & 0xffff] = v & 0xff;
+    CURRENT_MEM_CPU2[a & 0xffff] = v & 0xff;
 };
 const rd16 = (s: CPUState, a: number) => rd(s, a) | (rd(s, a + 1) << 8);
 const rd16bug = (
@@ -356,13 +361,16 @@ const shiftMem2 = (
 
 export function step6502(
     s: CPUState,
+    mem: Uint8Array,
     trace = false,
 ): number /* cycles (approx) */ {
+    CURRENT_MEM_CPU2 = mem;
     const opPC = s.pc;
     const op = rd(s, s.pc++);
 
     if (trace) {
-        const [text] = disassemble(s, opPC);
+        const reader = { readByte: (addr: number) => rd(s, addr), readWord: (addr: number) => rd16(s, addr) } as unknown as CPU;
+        const [text] = disassemble(reader, opPC);
         console.log(
             opPC.toString(16).padStart(4, "0"),
             op.toString(16).padStart(2, "0"),

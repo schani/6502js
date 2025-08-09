@@ -6,11 +6,15 @@ import { CARRY, ZERO, INTERRUPT, DECIMAL, BREAK, UNUSED, OVERFLOW, NEGATIVE } fr
 /**
  * Full-featured implementation of the 6502 CPU
  */
+let CURRENT_MEM_CPU1: Uint8Array;
+
 export class CPU1 implements CPU {
     private state: CPUState;
+    private mem: Uint8Array;
 
     constructor() {
         this.state = createCPUState();
+        this.mem = new Uint8Array(65536);
     }
 
     /**
@@ -24,7 +28,9 @@ export class CPU1 implements CPU {
      * Reset the CPU to initial state
      */
     reset(): void {
+        const mem = this.mem;
         this.state = createCPUState();
+        this.mem = mem; // Preserve external memory
     }
 
     /**
@@ -33,6 +39,7 @@ export class CPU1 implements CPU {
      * @returns Number of clock cycles consumed by the instruction
      */
     step(trace = false): number {
+        CURRENT_MEM_CPU1 = this.mem;
         return step6502(this.state, trace);
     }
     
@@ -42,7 +49,7 @@ export class CPU1 implements CPU {
      * @param value Byte value to load
      */
     loadByte(address: number, value: number): void {
-        writeByte(this.state, address, value);
+        this.mem[address & 0xffff] = value & 0xff;
     }
     
     /**
@@ -51,7 +58,8 @@ export class CPU1 implements CPU {
      * @param value 16-bit value to load
      */
     loadWord(address: number, value: number): void {
-        writeWord(this.state, address & 0xffff, value);
+        this.mem[address & 0xffff] = value & 0xff;
+        this.mem[(address + 1) & 0xffff] = (value >> 8) & 0xff;
     }
     
     /**
@@ -60,7 +68,7 @@ export class CPU1 implements CPU {
      * @returns Byte value at address
      */
     readByte(address: number): number {
-        return readByte(this.state, address);
+        return this.mem[address & 0xffff] || 0;
     }
     
     /**
@@ -69,7 +77,9 @@ export class CPU1 implements CPU {
      * @returns 16-bit value
      */
     readWord(address: number): number {
-        return readWord(this.state, address);
+        const lo = this.mem[address & 0xffff] || 0;
+        const hi = this.mem[(address + 1) & 0xffff] || 0;
+        return (hi << 8) | lo;
     }
     
     /**
@@ -212,7 +222,7 @@ function updateZeroAndNegativeFlags(cpu: CPUState, value: number): void {
 
 // Memory access helpers
 function readByte(cpu: CPUState, address: number): number {
-    return cpu.mem[address & 0xffff] || 0;
+    return CURRENT_MEM_CPU1[address & 0xffff] || 0;
 }
 
 function readWord(cpu: CPUState, address: number): number {
@@ -222,7 +232,7 @@ function readWord(cpu: CPUState, address: number): number {
 }
 
 function writeByte(cpu: CPUState, address: number, value: number): void {
-    cpu.mem[address & 0xffff] = value & 0xff;
+    CURRENT_MEM_CPU1[address & 0xffff] = value & 0xff;
 }
 
 function writeWord(cpu: CPUState, address: number, value: number): void {
@@ -459,8 +469,12 @@ export function step6502(cpu: CPUState, trace = false): number /* cycles */ {
     let cycles = 0;
 
     if (trace) {
-        // Disassemble the current instruction at the current PC
-        const [asmInstruction, instructionLength] = disassemble(cpu, currentPC);
+        // Disassemble the current instruction at the current PC using a lightweight reader
+        const reader = {
+            readByte: (addr: number) => readByte(cpu, addr),
+            readWord: (addr: number) => readWord(cpu, addr),
+        } as unknown as CPU;
+        const [asmInstruction, instructionLength] = disassemble(reader, currentPC);
 
         // Format CPU state with register values
         const stateStr =

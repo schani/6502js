@@ -1,5 +1,5 @@
-import { CPU1 } from "../cpu1";
-import type { CPU } from "../cpu-interface";
+import type { CPU } from "../6502";
+import { CPU1 } from "../6502";
 import { disassemble } from "../disasm";
 
 // BASIC ROM (OSI)
@@ -44,14 +44,8 @@ class DebuggerModel {
   }
 
   get snap(): Snapshot {
-    return {
-      a: this.cpu.getAccumulator(),
-      x: this.cpu.getXRegister(),
-      y: this.cpu.getYRegister(),
-      sp: this.cpu.getStackPointer(),
-      p: this.cpu.getStatusRegister(),
-      pc: this.cpu.getProgramCounter(),
-    };
+    const s = this.cpu.getState();
+    return { a: s.a, x: s.x, y: s.y, sp: s.sp, p: s.p, pc: s.pc };
   }
 
   setReg(name: keyof Snapshot, valHex: string) {
@@ -68,22 +62,22 @@ class DebuggerModel {
   }
 
   private pop16(): number {
-    const sp1 = (this.cpu.getStackPointer() + 1) & 0xff;
+    const sp1 = (this.cpu.getState().sp + 1) & 0xff;
     this.cpu.setStackPointer(sp1);
-    const lo = this.cpu.readByte(0x0100 + this.cpu.getStackPointer());
-    const sp2 = (this.cpu.getStackPointer() + 1) & 0xff;
+    const lo = this.cpu.readByte(0x0100 + this.cpu.getState().sp);
+    const sp2 = (this.cpu.getState().sp + 1) & 0xff;
     this.cpu.setStackPointer(sp2);
-    const hi = this.cpu.readByte(0x0100 + this.cpu.getStackPointer());
+    const hi = this.cpu.readByte(0x0100 + this.cpu.getState().sp);
     return (hi << 8) | lo;
   }
 
   step(): void {
-    const pc = this.cpu.getProgramCounter();
+    const pc = this.cpu.getState().pc;
     // Handle ROM monitor traps similar to basic-runner.ts
     if (pc === MONRDKEY || pc === MONCOUT || pc === ISCNTC || pc === LOAD || pc === SAVE) {
       const ret = (this.pop16() + 1) & 0xffff;
       if (pc === MONCOUT) {
-        const c = this.cpu.getAccumulator() & 0xff;
+        const c = this.cpu.getState().a & 0xff;
         this.output += String.fromCharCode(c);
       } else if (pc === MONRDKEY) {
         if (this.inputBuf.length === 0) {
@@ -106,7 +100,7 @@ class DebuggerModel {
   runTick(maxInstr = 10000): boolean {
     if (this.waitingForInput) return false;
     for (let i = 0; i < maxInstr; i++) {
-      if (this.breakpoints.has(this.cpu.getProgramCounter())) return false;
+      if (this.breakpoints.has(this.cpu.getState().pc)) return false;
       this.step();
       if (!this.running) return false;
       if (this.waitingForInput) return false;
@@ -175,8 +169,9 @@ function renderMemory(base: number) {
 }
 
 function takeSnapshot() {
-  const state = model.cpu.getState();
-  model.memSnapshot = new Uint8Array(state.mem); // full copy
+  const snap = new Uint8Array(65536);
+  for (let i = 0; i < 65536; i++) snap[i] = model.cpu.readByte(i) & 0xff;
+  model.memSnapshot = snap;
   model.lastDiffCount = 0;
   $("diff-summary").textContent = `Snapshot taken.`;
   renderAll();
@@ -187,21 +182,23 @@ function compareSnapshot() {
     $("diff-summary").textContent = `No snapshot. Take one first.`;
     return;
   }
-  const state = model.cpu.getState();
   let changed = 0;
   type Block = { start: number; prev: number[]; curr: number[] };
   const blocks: Block[] = [];
   let i = 0;
   while (i < 65536) {
     const prev = model.memSnapshot[i]!;
-    const cur = state.mem[i]!;
+    const cur = model.cpu.readByte(i) & 0xff;
     if (prev !== cur) {
       const start = i;
       const prevBytes: number[] = [];
       const currBytes: number[] = [];
-      while (i < 65536 && model.memSnapshot[i]! !== state.mem[i]!) {
-        prevBytes.push(model.memSnapshot[i]!);
-        currBytes.push(state.mem[i]!);
+      while (i < 65536) {
+        const pv = model.memSnapshot[i]!;
+        const cv = model.cpu.readByte(i) & 0xff;
+        if (pv === cv) break;
+        prevBytes.push(pv);
+        currBytes.push(cv);
         i++;
         changed++;
       }

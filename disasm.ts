@@ -1,4 +1,4 @@
-import type { CPU, CPUState } from "./6502";
+import type { CPU } from "./6502";
 
 // Addressing modes
 enum AddressingMode {
@@ -231,11 +231,10 @@ const INSTRUCTIONS: { [opcode: number]: Instruction } = {
  * @returns A tuple of [disassembled instruction string, instruction length in bytes]
  */
 export function disassemble(
-  cpu: CPU | CPUState,
+  cpu: CPU,
   addr: number,
 ): [asm: string, len: number] {
-  // Handle both CPU interface and direct CPUState access
-  const opcode = 'readByte' in cpu ? cpu.readByte(addr) : (cpu.mem[addr] || 0);
+  const opcode = cpu.readByte(addr);
   const instruction = INSTRUCTIONS[opcode];
 
   if (!instruction) {
@@ -254,7 +253,7 @@ export function disassemble(
       break;
 
     case AddressingMode.IMMEDIATE:
-      operandValue = 'readByte' in cpu ? cpu.readByte(addr + 1) : (cpu.mem[addr + 1] || 0);
+      operandValue = cpu.readByte(addr + 1);
       break;
 
     case AddressingMode.ZERO_PAGE:
@@ -262,22 +261,18 @@ export function disassemble(
     case AddressingMode.ZERO_PAGE_Y:
     case AddressingMode.INDEXED_INDIRECT:
     case AddressingMode.INDIRECT_INDEXED:
-      operandValue = 'readByte' in cpu ? cpu.readByte(addr + 1) : (cpu.mem[addr + 1] || 0);
+      operandValue = cpu.readByte(addr + 1);
       break;
 
     case AddressingMode.ABSOLUTE:
     case AddressingMode.ABSOLUTE_X:
     case AddressingMode.ABSOLUTE_Y:
     case AddressingMode.INDIRECT:
-      if ('readWord' in cpu) {
-        operandValue = cpu.readWord(addr + 1);
-      } else {
-        operandValue = (cpu.mem[addr + 1] || 0) | ((cpu.mem[addr + 2] || 0) << 8);
-      }
+      operandValue = cpu.readWord(addr + 1);
       break;
 
     case AddressingMode.RELATIVE:
-      operandValue = 'readByte' in cpu ? cpu.readByte(addr + 1) : (cpu.mem[addr + 1] || 0);
+      operandValue = cpu.readByte(addr + 1);
       // Calculate target address (PC + 2 + signed offset)
       if (operandValue & 0x80) {
         // Negative offset
