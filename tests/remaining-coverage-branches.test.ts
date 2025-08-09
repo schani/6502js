@@ -104,7 +104,7 @@ describe("Remaining branch and flag operations", () => {
     cpu.setStatusFlag(CARRY);  // Set carry flag
     
     cpu.step();
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // Carry flag should be cleared
+    expect((cpu.getState().p & CARRY) === 0).toBe(false); // Carry flag should be cleared
     
     // Test SEC (Set Carry)
     cpu.setProgramCounter(0);
@@ -112,7 +112,7 @@ describe("Remaining branch and flag operations", () => {
     cpu.clearStatusFlag(CARRY);  // Clear carry flag
     
     cpu.step();
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry flag should be set
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // Carry flag should be set
     
     // Test CLI (Clear Interrupt)
     cpu.setProgramCounter(0);
@@ -120,7 +120,7 @@ describe("Remaining branch and flag operations", () => {
     cpu.setStatusFlag(INTERRUPT); // Set interrupt flag
     
     cpu.step();
-    expect(cpu.isStatusFlagSet(INTERRUPT)).toBe(false); // Interrupt flag should be cleared
+    expect((cpu.getState().p & INTERRUPT) === 0).toBe(false); // Interrupt flag should be cleared
     
     // Test SEI (Set Interrupt)
     cpu.setProgramCounter(0);
@@ -128,7 +128,7 @@ describe("Remaining branch and flag operations", () => {
     cpu.clearStatusFlag(INTERRUPT); // Clear interrupt flag
     
     cpu.step();
-    expect(cpu.isStatusFlagSet(INTERRUPT)).toBe(true); // Interrupt flag should be set
+    expect((cpu.getState().p & INTERRUPT) !== 0).toBe(true); // Interrupt flag should be set
     
     // Test CLV (Clear Overflow)
     cpu.setProgramCounter(0);
@@ -136,7 +136,7 @@ describe("Remaining branch and flag operations", () => {
     cpu.setStatusFlag(OVERFLOW);  // Set overflow flag
     
     cpu.step();
-    expect(cpu.isStatusFlagSet(OVERFLOW)).toBe(false); // Overflow flag should be cleared
+    expect((cpu.getState().p & OVERFLOW) === 0).toBe(false); // Overflow flag should be cleared
     
     // Test CLD (Clear Decimal)
     cpu.setProgramCounter(0);
@@ -144,7 +144,7 @@ describe("Remaining branch and flag operations", () => {
     cpu.setStatusFlag(DECIMAL);   // Set decimal flag
     
     cpu.step();
-    expect(cpu.isStatusFlagSet(DECIMAL)).toBe(false); // Decimal flag should be cleared
+    expect((cpu.getState().p & DECIMAL) === 0).toBe(false); // Decimal flag should be cleared
     
     // Test SED (Set Decimal)
     cpu.setProgramCounter(0);
@@ -152,7 +152,7 @@ describe("Remaining branch and flag operations", () => {
     cpu.clearStatusFlag(DECIMAL); // Clear decimal flag
     
     cpu.step();
-    expect(cpu.isStatusFlagSet(DECIMAL)).toBe(true); // Decimal flag should be set
+    expect((cpu.getState().p & DECIMAL) !== 0).toBe(true); // Decimal flag should be set
   });
   
   it("should test compare operations with various results", () => {
@@ -165,8 +165,8 @@ describe("Remaining branch and flag operations", () => {
     cpu.setAccumulator(0x42);  // Accumulator value
     
     cpu.step();
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);   // Zero flag should be set
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true);  // Carry flag should be set (A >= M)
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);   // Zero flag should be set
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true);  // Carry flag should be set (A >= M)
     
     // Test CMP with accumulator greater (clears Z flag, sets C flag)
     cpu.setProgramCounter(0);
@@ -175,8 +175,8 @@ describe("Remaining branch and flag operations", () => {
     cpu.setAccumulator(0x42);  // Accumulator value
     
     cpu.step();
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(false);   // Zero flag should be cleared
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true);   // Carry flag should be set (A >= M)
+    expect((cpu.getState().p & ZERO) === 0).toBe(false);   // Zero flag should be cleared
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true);   // Carry flag should be set (A >= M)
     
     // Test CMP with accumulator less (clears Z flag, clears C flag)
     cpu.setProgramCounter(0);
@@ -185,7 +185,7 @@ describe("Remaining branch and flag operations", () => {
     cpu.setAccumulator(0x42);  // Accumulator value
     
     cpu.step();
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(false);   // Zero flag should be cleared
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false);  // Carry flag should be cleared (A < M)
+    expect((cpu.getState().p & ZERO) === 0).toBe(false);   // Zero flag should be cleared
+    expect((cpu.getState().p & CARRY) === 0).toBe(false);  // Carry flag should be cleared (A < M)
   });
 });

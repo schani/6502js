@@ -78,8 +78,8 @@ describe("LDY instruction complete coverage", () => {
     let cycles = cpu.step();
     expect(cycles).toBe(2);
     expect(cpu.getYRegister()).toBe(0x00);
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true); // Zero flag should be set
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(false); // Negative flag should be clear
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true); // Zero flag should be set
+    expect((cpu.getState().p & NEGATIVE) === 0).toBe(false); // Negative flag should be clear
     
     // Test LDY with negative result
     cpu.loadByte(0x1002, 0xA0); // LDY #$80
@@ -90,7 +90,7 @@ describe("LDY instruction complete coverage", () => {
     cycles = cpu.step();
     expect(cycles).toBe(2);
     expect(cpu.getYRegister()).toBe(0x80);
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(false); // Zero flag should be clear
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true); // Negative flag should be set
+    expect((cpu.getState().p & ZERO) === 0).toBe(false); // Zero flag should be clear
+    expect((cpu.getState().p & NEGATIVE) !== 0).toBe(true); // Negative flag should be set
   });
 });

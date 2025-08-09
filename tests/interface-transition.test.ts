@@ -25,20 +25,20 @@ describe("CPU Interface Tests", () => {
     
     // Set status flags
     cpu.setStatusFlag(ZERO | CARRY);
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(false);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true);
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);
+    expect((cpu.getState().p & NEGATIVE) === 0).toBe(false);
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true);
     
     // Clear status flags
     cpu.clearStatusFlag(CARRY);
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false);
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);
+    expect((cpu.getState().p & CARRY) === 0).toBe(false);
     
     // Set full status register
     cpu.setStatusRegister(NEGATIVE);
     expect(cpu.getStatusRegister()).toBe(NEGATIVE);
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true);
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(false);
+    expect((cpu.getState().p & NEGATIVE) !== 0).toBe(true);
+    expect((cpu.getState().p & ZERO) === 0).toBe(false);
     
     // Memory access
     cpu.loadByte(0x2000, 0xFF);

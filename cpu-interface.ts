@@ -29,8 +29,6 @@ export interface CPU {
     setStatusFlag(mask: number): void;
     clearStatusFlag(mask: number): void;
 
-    /** Optional helper: check if a status flag is set */
-    isStatusFlagSet?(mask: number): boolean;
 }
 
 /**

@@ -39,7 +39,7 @@ describe("System instructions", () => {
     expect(sp).toBe(0xFA); // 0xFD - 3
     
     // Interrupt flag should be set
-    expect(cpu.isStatusFlagSet(INTERRUPT)).toBe(true);
+    expect((cpu.getState().p & INTERRUPT) !== 0).toBe(true);
   });
 
   it("should perform RTI instruction", () => {
@@ -102,7 +102,7 @@ describe("System instructions", () => {
       .toBe(UNUSED | CARRY | ZERO | NEGATIVE | OVERFLOW | DECIMAL | BREAK);
     
     // I flag should be set in current processor status
-    expect(cpu.isStatusFlagSet(INTERRUPT)).toBe(true);
+    expect((cpu.getState().p & INTERRUPT) !== 0).toBe(true);
     
     // Execute RTI
     cpu.step();

@@ -259,9 +259,9 @@ describe("Addressing modes", () => {
     
     // Verify results
     expect(cycles).toBe(4);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry set (A >= M)
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(false); // Zero clear (A != M)
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(false); // Negative clear (result bit 7 clear)
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // Carry set (A >= M)
+    expect((cpu.getState().p & ZERO)).toBe(false); // Zero clear (A != M)
+    expect((cpu.getState().p & NEGATIVE)).toBe(false); // Negative clear (result bit 7 clear)
     
     // Test CMP with Absolute,X and page crossing
     cpu.loadByte(2, 0xDD); // CMP Absolute,X
@@ -274,7 +274,7 @@ describe("Addressing modes", () => {
     cycles = cpu.step();
     
     expect(cycles).toBe(5); // 4+1 cycles (page boundary crossed)
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry set (A >= M)
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // Carry set (A >= M)
     // Zero flag may not be set as expected due to the comparison result
     
     // Test CMP with Absolute,Y and page crossing
@@ -289,7 +289,7 @@ describe("Addressing modes", () => {
     cycles = cpu.step();
     
     expect(cycles).toBe(5); // 4+1 cycles (page boundary crossed)
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // Carry clear (A < M)
+    expect((cpu.getState().p & CARRY)).toBe(false); // Carry clear (A < M)
     // Note: The negative flag won't be set for every case, so we're not testing it here
     
     // Test CMP with (Indirect,X)
@@ -303,7 +303,7 @@ describe("Addressing modes", () => {
     cycles = cpu.step();
     
     expect(cycles).toBe(6);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // Carry clear (A < M)
+    expect((cpu.getState().p & CARRY)).toBe(false); // Carry clear (A < M)
     
     // Test CMP with (Indirect),Y and page crossing
     cpu.loadByte(10, 0xD1); // CMP (Indirect),Y
@@ -317,8 +317,8 @@ describe("Addressing modes", () => {
     cycles = cpu.step();
     
     expect(cycles).toBe(6); // 5+1 cycles (page boundary crossed)
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry set (A >= M)
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true); // Zero set (A == M)
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // Carry set (A >= M)
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true); // Zero set (A == M)
     
     // Test CPX with Zero Page
     cpu.loadByte(12, 0xE4); // CPX Zero Page
@@ -331,7 +331,7 @@ describe("Addressing modes", () => {
     cycles = cpu.step();
     
     expect(cycles).toBe(3);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry set (X >= M)
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // Carry set (X >= M)
     
     // Test CPX with Absolute
     cpu.loadByte(14, 0xEC); // CPX Absolute
@@ -343,7 +343,7 @@ describe("Addressing modes", () => {
     cycles = cpu.step();
     
     expect(cycles).toBe(4);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // Carry clear (X < M)
+    expect((cpu.getState().p & CARRY)).toBe(false); // Carry clear (X < M)
     
     // Test CPY with Zero Page
     cpu.loadByte(17, 0xC4); // CPY Zero Page
@@ -355,8 +355,8 @@ describe("Addressing modes", () => {
     cycles = cpu.step();
     
     expect(cycles).toBe(3);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry set (Y >= M)
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true); // Zero set (Y == M)
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // Carry set (Y >= M)
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true); // Zero set (Y == M)
     
     // Test CPY with Absolute
     cpu.loadByte(19, 0xCC); // CPY Absolute
@@ -368,7 +368,7 @@ describe("Addressing modes", () => {
     cycles = cpu.step();
     
     expect(cycles).toBe(4);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // Carry clear (Y < M)
+    expect((cpu.getState().p & CARRY)).toBe(false); // Carry clear (Y < M)
   });
   
   it("should perform other memory operations with various addressing modes", () => {
@@ -388,7 +388,7 @@ describe("Addressing modes", () => {
     // Verify results
     expect(cycles).toBe(6);
     expect(cpu.readByte(0x90)).toBe(0xAA); // 0x55 << 1 = 0xAA
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // Carry clear (bit 7 was 0)
+    expect((cpu.getState().p & CARRY)).toBe(false); // Carry clear (bit 7 was 0)
     
     // Test ASL Absolute,X
     cpu.loadByte(2, 0x1E); // ASL Absolute,X
@@ -402,8 +402,8 @@ describe("Addressing modes", () => {
     
     expect(cycles).toBe(7);
     expect(cpu.readByte(0x0310)).toBe(0x00); // 0x80 << 1 = 0x00 (with overflow)
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry set (bit 7 was 1)
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true); // Zero set (result is 0)
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // Carry set (bit 7 was 1)
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true); // Zero set (result is 0)
     
     // Test LSR Zero Page,X
     cpu.loadByte(5, 0x56); // LSR Zero Page,X
@@ -416,7 +416,7 @@ describe("Addressing modes", () => {
     
     expect(cycles).toBe(6);
     expect(cpu.readByte(0x90)).toBe(0x55); // 0xAA >> 1 = 0x55
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // Carry clear (bit 0 was 0)
+    expect((cpu.getState().p & CARRY)).toBe(false); // Carry clear (bit 0 was 0)
     
     // Test LSR Absolute,X
     cpu.loadByte(7, 0x5E); // LSR Absolute,X
@@ -430,8 +430,8 @@ describe("Addressing modes", () => {
     
     expect(cycles).toBe(7);
     expect(cpu.readByte(0x0310)).toBe(0x00); // 0x01 >> 1 = 0x00
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry set (bit 0 was 1)
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true); // Zero set (result is 0)
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // Carry set (bit 0 was 1)
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true); // Zero set (result is 0)
     
     // Test ROL Zero Page,X
     cpu.loadByte(10, 0x36); // ROL Zero Page,X
@@ -445,7 +445,7 @@ describe("Addressing modes", () => {
     
     expect(cycles).toBe(6);
     expect(cpu.readByte(0x90)).toBe(0xAB); // (0x55 << 1) | 0x01 = 0xAB
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // Carry clear (bit 7 was 0)
+    expect((cpu.getState().p & CARRY)).toBe(false); // Carry clear (bit 7 was 0)
     
     // Test ROL Absolute,X
     cpu.loadByte(12, 0x3E); // ROL Absolute,X
@@ -459,8 +459,8 @@ describe("Addressing modes", () => {
     
     expect(cycles).toBe(7);
     expect(cpu.readByte(0x0310)).toBe(0x00); // (0x80 << 1) | 0x00 = 0x00 (with overflow)
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry set (bit 7 was 1)
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true); // Zero set (result is 0)
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // Carry set (bit 7 was 1)
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true); // Zero set (result is 0)
     
     // Test ROR Zero Page,X
     cpu.loadByte(15, 0x76); // ROR Zero Page,X
@@ -473,7 +473,7 @@ describe("Addressing modes", () => {
     
     expect(cycles).toBe(6);
     expect(cpu.readByte(0x90)).toBe(0xD5); // (0xAA >> 1) | 0x80 = 0xD5
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // Carry clear (bit 0 was 0)
+    expect((cpu.getState().p & CARRY)).toBe(false); // Carry clear (bit 0 was 0)
     
     // Test ROR Absolute,X
     cpu.loadByte(17, 0x7E); // ROR Absolute,X
@@ -489,8 +489,8 @@ describe("Addressing modes", () => {
     
     expect(cycles).toBe(7);
     expect(cpu.readByte(0x0310)).toBe(0x80); // (0x01 >> 1) | 0x80 = 0x80
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry set (bit 0 was 1)
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true); // Negative set (bit 7 of result is 1)
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // Carry set (bit 0 was 1)
+    expect((cpu.getState().p & NEGATIVE) !== 0).toBe(true); // Negative set (bit 7 of result is 1)
   });
   
   it("should have additional test for branch instructions", () => {

@@ -26,8 +26,8 @@ describe("ROR Absolute,X Complete Coverage", () => {
     // Verify the results
     // 0x01 >> 1 = 0x00 (with carry flag set)
     expect(cpu.readByte(0x3005)).toBe(0x00);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true);  // Carry should be set
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);   // Zero flag should be set
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true);  // Carry should be set
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);   // Zero flag should be set
   });
   
   it("should test ROR Absolute,X with carry clear (line 1581)", () => {
@@ -54,8 +54,8 @@ describe("ROR Absolute,X Complete Coverage", () => {
     // Since carry was initially set, bit 7 will be 1
     // So result is 0x01 | 0x80 = 0x81
     expect(cpu.readByte(0x3005)).toBe(0x81);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false);     // Carry should be clear
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true);   // Negative flag should be set
+    expect((cpu.getState().p & CARRY)).toBe(false);     // Carry should be clear
+    expect((cpu.getState().p & NEGATIVE) !== 0).toBe(true);   // Negative flag should be set
   });
   
   it("should test ROR Absolute,X with all coverage variations", () => {
@@ -75,7 +75,7 @@ describe("ROR Absolute,X Complete Coverage", () => {
     
     // 0x55 >> 1 = 0x2A (with carry flag set due to LSB being 1)
     expect(cpu.readByte(0x4010)).toBe(0x2A);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true);  // Carry should be set
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true);  // Carry should be set
     
     // Test 2: Value with bit 0 clear (even), carry initially set
     cpu.setProgramCounter(0);
@@ -90,8 +90,8 @@ describe("ROR Absolute,X Complete Coverage", () => {
     
     // 0xAA >> 1 = 0x55 with carry in to bit 7, so 0xD5
     expect(cpu.readByte(0x4010)).toBe(0xD5);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false);     // Carry should be clear
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true);   // Negative flag should be set
+    expect((cpu.getState().p & CARRY)).toBe(false);     // Carry should be clear
+    expect((cpu.getState().p & NEGATIVE) !== 0).toBe(true);   // Negative flag should be set
     
     // Test 3: Zero result
     cpu.setProgramCounter(0);
@@ -106,7 +106,7 @@ describe("ROR Absolute,X Complete Coverage", () => {
     
     // 0x00 >> 1 = 0x00 (with carry flag clear)
     expect(cpu.readByte(0x4010)).toBe(0x00);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false);    // Carry should be clear
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);      // Zero flag should be set
+    expect((cpu.getState().p & CARRY)).toBe(false);    // Carry should be clear
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);      // Zero flag should be set
   });
 });

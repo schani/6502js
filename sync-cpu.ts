@@ -96,7 +96,6 @@ export class SyncCPU implements CPU {
   getYRegister(): number { return this.cpu1.getYRegister(); }
   getStackPointer(): number { return this.cpu1.getStackPointer(); }
   getStatusRegister(): number { return this.cpu1.getStatusRegister(); }
-  isStatusFlagSet(mask: number): boolean { return this.cpu1.isStatusFlagSet(mask); }
 
   // Compare CPU states (registers only)
   private compareStates(): void {

@@ -105,16 +105,16 @@ describe("SyncCPU", () => {
 
         // Execute LDA #$80
         syncCpu.step();
-        expect(syncCpu.isStatusFlagSet(NEGATIVE)).toBe(true);
-        expect(syncCpu.isStatusFlagSet(ZERO)).toBe(false);
+        expect((syncCpu.getState().p & NEGATIVE) !== 0).toBe(true);
+        expect((syncCpu.getState().p & ZERO) === 0).toBe(false);
 
         // Execute ADC #$80
         syncCpu.step();
         // 0x80 + 0x80 = 0x00 with carry and overflow
         expect(syncCpu.getAccumulator()).toBe(0x00);
-        expect(syncCpu.isStatusFlagSet(CARRY)).toBe(true);
-        expect(syncCpu.isStatusFlagSet(ZERO)).toBe(true);
-        expect(syncCpu.isStatusFlagSet(OVERFLOW)).toBe(true);
-        expect(syncCpu.isStatusFlagSet(NEGATIVE)).toBe(false);
+        expect((syncCpu.getState().p & CARRY) !== 0).toBe(true);
+        expect((syncCpu.getState().p & ZERO) !== 0).toBe(true);
+        expect((syncCpu.getState().p & OVERFLOW) !== 0).toBe(true);
+        expect((syncCpu.getState().p & NEGATIVE) === 0).toBe(false);
     });
 });

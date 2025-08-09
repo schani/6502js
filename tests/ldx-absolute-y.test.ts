@@ -48,7 +48,7 @@ describe("LDX Absolute,Y addressing mode", () => {
     expect(cpu.getXRegister()).toBe(0x84);
     
     // Check if negative flag was set
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true);
+    expect((cpu.getState().p & NEGATIVE) !== 0).toBe(true);
     
     // One more test with zero result
     cpu.setProgramCounter(0x1000);
@@ -67,6 +67,6 @@ describe("LDX Absolute,Y addressing mode", () => {
     expect(cpu.getXRegister()).toBe(0x00);
     
     // Check if zero flag was set
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);
   });
 });

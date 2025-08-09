@@ -194,15 +194,8 @@ export class CPU1 implements CPU {
         return this.state.p;
     }
     
-    /**
-     * Check if a status flag is set
-     * @param mask Bit mask to check
-     * @returns True if any specified flag is set
-     */
-    isStatusFlagSet(mask: number): boolean {
-        return (this.state.p & mask) !== 0;
-    }
 }
+
 
 // Helper function to update zero and negative flags based on a value
 function updateZeroAndNegativeFlags(cpu: CPUState, value: number): void {

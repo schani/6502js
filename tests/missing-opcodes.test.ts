@@ -16,7 +16,7 @@ describe("Missing opcodes tests for 100% coverage", () => {
     let cycles = cpu.step();
     expect(cycles).toBe(4); // Always 4 cycles for LDX Absolute
     expect(cpu.getXRegister()).toBe(0x00);
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true); // Zero flag should be set
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true); // Zero flag should be set
     
     // Test loading positive value
     cpu.setProgramCounter(0);
@@ -28,8 +28,8 @@ describe("Missing opcodes tests for 100% coverage", () => {
     cycles = cpu.step();
     expect(cycles).toBe(4);
     expect(cpu.getXRegister()).toBe(0x42);
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(false); // Zero flag should be cleared
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(false); // Negative flag should be cleared
+    expect((cpu.getState().p & ZERO) === 0).toBe(false); // Zero flag should be cleared
+    expect((cpu.getState().p & NEGATIVE) === 0).toBe(false); // Negative flag should be cleared
     
     // Test loading negative value
     cpu.setProgramCounter(0);
@@ -41,8 +41,8 @@ describe("Missing opcodes tests for 100% coverage", () => {
     cycles = cpu.step();
     expect(cycles).toBe(4);
     expect(cpu.getXRegister()).toBe(0x80);
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(false); // Zero flag should be cleared
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true); // Negative flag should be set
+    expect((cpu.getState().p & ZERO) === 0).toBe(false); // Zero flag should be cleared
+    expect((cpu.getState().p & NEGATIVE) !== 0).toBe(true); // Negative flag should be set
   });
 
   it("should test CMP Absolute (0xCD)", () => {
@@ -58,9 +58,9 @@ describe("Missing opcodes tests for 100% coverage", () => {
     
     let cycles = cpu.step();
     expect(cycles).toBe(4); // Always 4 cycles for CMP Absolute
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);   // Zero flag set (values are equal)
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true);  // Carry flag set (A >= M)
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(false); // Negative flag clear
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);   // Zero flag set (values are equal)
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true);  // Carry flag set (A >= M)
+    expect((cpu.getState().p & NEGATIVE) === 0).toBe(false); // Negative flag clear
     
     // Test with A > M
     cpu.setProgramCounter(0);
@@ -72,9 +72,9 @@ describe("Missing opcodes tests for 100% coverage", () => {
     
     cycles = cpu.step();
     expect(cycles).toBe(4);
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(false);   // Zero flag clear (values are not equal)
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true);   // Carry flag set (A >= M)
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(false); // Negative flag clear
+    expect((cpu.getState().p & ZERO) === 0).toBe(false);   // Zero flag clear (values are not equal)
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true);   // Carry flag set (A >= M)
+    expect((cpu.getState().p & NEGATIVE) === 0).toBe(false); // Negative flag clear
     
     // Test with A < M
     cpu.setProgramCounter(0);
@@ -86,9 +86,9 @@ describe("Missing opcodes tests for 100% coverage", () => {
     
     cycles = cpu.step();
     expect(cycles).toBe(4);
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(false);    // Zero flag clear (values are not equal)
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false);   // Carry flag clear (A < M)
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true); // Negative flag may be set based on result
+    expect((cpu.getState().p & ZERO) === 0).toBe(false);    // Zero flag clear (values are not equal)
+    expect((cpu.getState().p & CARRY) === 0).toBe(false);   // Carry flag clear (A < M)
+    expect((cpu.getState().p & NEGATIVE) !== 0).toBe(true); // Negative flag may be set based on result
   });
   
   // Testing more of the uncovered instructions
@@ -127,8 +127,8 @@ describe("Missing opcodes tests for 100% coverage", () => {
     
     cpu.step();
     expect(cpu.getAccumulator()).toBe(0x00);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false);  // Carry should be clear
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);    // Zero flag should be set
+    expect((cpu.getState().p & CARRY) === 0).toBe(false);  // Carry should be clear
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);    // Zero flag should be set
     
     // Test ASL with zero input and zero output (no carry)
     cpu.setProgramCounter(0);
@@ -137,8 +137,8 @@ describe("Missing opcodes tests for 100% coverage", () => {
     
     cpu.step();
     expect(cpu.getAccumulator()).toBe(0x00);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false);  // Carry should be clear
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);    // Zero flag should be set
+    expect((cpu.getState().p & CARRY) === 0).toBe(false);  // Carry should be clear
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);    // Zero flag should be set
     
     // Test ROL with carry set and zero input
     cpu.setProgramCounter(0);
@@ -148,8 +148,8 @@ describe("Missing opcodes tests for 100% coverage", () => {
     
     cpu.step();
     expect(cpu.getAccumulator()).toBe(0x01);         // Result should be 0x01 (carry rotated into bit 0)
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false);  // No carry out
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(false);   // Zero flag should be clear
+    expect((cpu.getState().p & CARRY) === 0).toBe(false);  // No carry out
+    expect((cpu.getState().p & ZERO) === 0).toBe(false);   // Zero flag should be clear
     
     // Test ROR with carry set and zero input
     cpu.setProgramCounter(0);
@@ -159,7 +159,7 @@ describe("Missing opcodes tests for 100% coverage", () => {
     
     cpu.step();
     expect(cpu.getAccumulator()).toBe(0x80);         // Result should be 0x80 (carry rotated into bit 7)
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false);  // No carry out
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true); // Negative flag should be set
+    expect((cpu.getState().p & CARRY) === 0).toBe(false);  // No carry out
+    expect((cpu.getState().p & NEGATIVE) !== 0).toBe(true); // Negative flag should be set
   });
 });

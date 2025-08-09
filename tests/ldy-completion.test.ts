@@ -15,7 +15,7 @@ describe("Complete LDY instruction coverage", () => {
     
     expect(cycles).toBe(3);
     expect(cpu.getYRegister()).toBe(0); // Should read 0 from uninitialized memory
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true); // Zero flag should be set
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true); // Zero flag should be set
     expect(cpu.getProgramCounter()).toBe(0x1002);
     
     // Absolute test with negative value after wrap-around
@@ -28,7 +28,7 @@ describe("Complete LDY instruction coverage", () => {
     
     expect(cycles).toBe(4);
     expect(cpu.getYRegister()).toBe(0x80);
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true); // Negative flag should be set
+    expect((cpu.getState().p & NEGATIVE) !== 0).toBe(true); // Negative flag should be set
     expect(cpu.getProgramCounter()).toBe(0x1005);
     
     // Zero Page,X test with wrap-around

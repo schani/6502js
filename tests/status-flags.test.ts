@@ -14,7 +14,7 @@ describe("Status flag instructions", () => {
     
     const cycles = cpu.step();
     
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // Carry should be cleared
+    expect((cpu.getState().p & CARRY) === 0).toBe(false); // Carry should be cleared
     expect(cpu.getProgramCounter()).toBe(1);
     expect(cycles).toBe(2);
   });
@@ -31,7 +31,7 @@ describe("Status flag instructions", () => {
     
     const cycles = cpu.step();
     
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry should be set
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // Carry should be set
     expect(cpu.getProgramCounter()).toBe(1);
     expect(cycles).toBe(2);
   });
@@ -48,7 +48,7 @@ describe("Status flag instructions", () => {
     
     const cycles = cpu.step();
     
-    expect(cpu.isStatusFlagSet(INTERRUPT)).toBe(false); // Interrupt disable should be cleared
+    expect((cpu.getState().p & INTERRUPT) === 0).toBe(false); // Interrupt disable should be cleared
     expect(cpu.getProgramCounter()).toBe(1);
     expect(cycles).toBe(2);
   });
@@ -65,7 +65,7 @@ describe("Status flag instructions", () => {
     
     const cycles = cpu.step();
     
-    expect(cpu.isStatusFlagSet(INTERRUPT)).toBe(true); // Interrupt disable should be set
+    expect((cpu.getState().p & INTERRUPT) !== 0).toBe(true); // Interrupt disable should be set
     expect(cpu.getProgramCounter()).toBe(1);
     expect(cycles).toBe(2);
   });
@@ -82,7 +82,7 @@ describe("Status flag instructions", () => {
     
     const cycles = cpu.step();
     
-    expect(cpu.isStatusFlagSet(DECIMAL)).toBe(false); // Decimal flag should be cleared
+    expect((cpu.getState().p & DECIMAL) === 0).toBe(false); // Decimal flag should be cleared
     expect(cpu.getProgramCounter()).toBe(1);
     expect(cycles).toBe(2);
   });
@@ -99,7 +99,7 @@ describe("Status flag instructions", () => {
     
     const cycles = cpu.step();
     
-    expect(cpu.isStatusFlagSet(DECIMAL)).toBe(true); // Decimal flag should be set
+    expect((cpu.getState().p & DECIMAL) !== 0).toBe(true); // Decimal flag should be set
     expect(cpu.getProgramCounter()).toBe(1);
     expect(cycles).toBe(2);
   });
@@ -116,7 +116,7 @@ describe("Status flag instructions", () => {
     
     const cycles = cpu.step();
     
-    expect(cpu.isStatusFlagSet(OVERFLOW)).toBe(false); // Overflow flag should be cleared
+    expect((cpu.getState().p & OVERFLOW) === 0).toBe(false); // Overflow flag should be cleared
     expect(cpu.getProgramCounter()).toBe(1);
     expect(cycles).toBe(2);
   });

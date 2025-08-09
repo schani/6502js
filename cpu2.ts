@@ -194,14 +194,6 @@ export class CPU2 implements CPU {
         return this.state.p;
     }
 
-    /**
-     * Check if a status flag is set
-     * @param mask Bit mask to check
-     * @returns True if any specified flag is set
-     */
-    isStatusFlagSet(mask: number): boolean {
-        return (this.state.p & mask) !== 0;
-    }
 }
 
 /* status-flag bit masks */

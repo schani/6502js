@@ -57,8 +57,8 @@ describe("Final 100% coverage tests", () => {
     // Execute ADC
     cpu.step();
     expect(cpu.getAccumulator()).toBe(0x70); // 0x30 + 0x40 = 0x70
-    expect(cpu.isStatusFlagSet(OVERFLOW)).toBe(false); // No overflow
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false);    // No carry
+    expect((cpu.getState().p & OVERFLOW)).toBe(false); // No overflow
+    expect((cpu.getState().p & CARRY)).toBe(false);    // No carry
     
     // 2. Test positive + positive with carry but no overflow
     cpu.setProgramCounter(0);
@@ -74,8 +74,8 @@ describe("Final 100% coverage tests", () => {
     // Execute ADC
     cpu.step();
     expect(cpu.getAccumulator()).toBe(0x05); // 0x95 + 0x70 = 0x105 (with carry)
-    expect(cpu.isStatusFlagSet(OVERFLOW)).toBe(false); // No overflow
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry flag set
+    expect((cpu.getState().p & OVERFLOW)).toBe(false); // No overflow
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // Carry flag set
     
     // 3. Test positive + positive with overflow (result is negative)
     cpu.setProgramCounter(0);
@@ -91,8 +91,8 @@ describe("Final 100% coverage tests", () => {
     // Execute ADC
     cpu.step();
     expect(cpu.getAccumulator()).toBe(0xE0); // 0x70 + 0x70 = 0xE0 (negative)
-    expect(cpu.isStatusFlagSet(OVERFLOW)).toBe(true); // Overflow flag set
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true); // Negative flag set
+    expect((cpu.getState().p & OVERFLOW) !== 0).toBe(true); // Overflow flag set
+    expect((cpu.getState().p & NEGATIVE) !== 0).toBe(true); // Negative flag set
     
     // 4. Test negative + negative with overflow (result is positive)
     cpu.setProgramCounter(0);
@@ -108,8 +108,8 @@ describe("Final 100% coverage tests", () => {
     // Execute ADC
     cpu.step();
     expect(cpu.getAccumulator()).toBe(0x20); // 0x90 + 0x90 = 0x120 (0x20 with carry)
-    expect(cpu.isStatusFlagSet(OVERFLOW)).toBe(true); // Overflow flag set
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry flag set
+    expect((cpu.getState().p & OVERFLOW) !== 0).toBe(true); // Overflow flag set
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // Carry flag set
   });
   
   // Test SBC with edge cases to cover all code paths
@@ -126,8 +126,8 @@ describe("Final 100% coverage tests", () => {
     // Execute SBC
     cpu.step();
     expect(cpu.getAccumulator()).toBe(0x20); // 0x50 - 0x30 = 0x20
-    expect(cpu.isStatusFlagSet(OVERFLOW)).toBe(false); // No overflow
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // No borrow needed
+    expect((cpu.getState().p & OVERFLOW)).toBe(false); // No overflow
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // No borrow needed
     
     // 2. Test positive - positive with borrow (negative result)
     cpu.setProgramCounter(0);
@@ -139,8 +139,8 @@ describe("Final 100% coverage tests", () => {
     // Execute SBC
     cpu.step();
     expect(cpu.getAccumulator()).toBe(0xE0); // 0x30 - 0x50 = 0xE0 (negative)
-    expect(cpu.isStatusFlagSet(OVERFLOW)).toBe(false); // No overflow
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // Borrow needed
+    expect((cpu.getState().p & OVERFLOW)).toBe(false); // No overflow
+    expect((cpu.getState().p & CARRY)).toBe(false); // Borrow needed
     
     // 3. Test negative - positive with overflow (positive result)
     cpu.setProgramCounter(0);
@@ -152,8 +152,8 @@ describe("Final 100% coverage tests", () => {
     // Execute SBC
     cpu.step();
     expect(cpu.getAccumulator()).toBe(0x20); // 0x90 - 0x70 = 0x20
-    expect(cpu.isStatusFlagSet(OVERFLOW)).toBe(true); // Overflow flag set
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // No borrow needed
+    expect((cpu.getState().p & OVERFLOW) !== 0).toBe(true); // Overflow flag set
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // No borrow needed
     
     // 4. Test positive - negative with overflow (negative result)
     cpu.setProgramCounter(0);
@@ -165,8 +165,8 @@ describe("Final 100% coverage tests", () => {
     // Execute SBC
     cpu.step();
     expect(cpu.getAccumulator()).toBe(0x90); // 0x20 - 0x90 = 0x90 (negative result)
-    expect(cpu.isStatusFlagSet(OVERFLOW)).toBe(true); // Overflow flag set
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true); // Negative flag set
+    expect((cpu.getState().p & OVERFLOW) !== 0).toBe(true); // Overflow flag set
+    expect((cpu.getState().p & NEGATIVE) !== 0).toBe(true); // Negative flag set
   });
   
   // Test all branch instructions with various conditions 
@@ -225,8 +225,8 @@ describe("Final 100% coverage tests", () => {
     
     cpu.step();
     expect(cpu.getAccumulator()).toBe(0x00); // Result: 0x00, bit 0 goes to carry
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry flag set
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);  // Zero flag set
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // Carry flag set
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);  // Zero flag set
     
     // Test ROR Zero Page with carry clear
     cpu.setProgramCounter(0);
@@ -237,8 +237,8 @@ describe("Final 100% coverage tests", () => {
     
     cpu.step();
     expect(cpu.readByte(0x80)).toBe(0x00); // Result: 0x00, bit 0 goes to carry
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry flag set
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);  // Zero flag set
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // Carry flag set
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);  // Zero flag set
     
     // Test ROR Absolute with carry clear
     cpu.setProgramCounter(0);
@@ -250,8 +250,8 @@ describe("Final 100% coverage tests", () => {
     
     cpu.step();
     expect(cpu.readByte(0x1000)).toBe(0x00); // Result: 0x00, bit 0 goes to carry
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry flag set
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);  // Zero flag set
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // Carry flag set
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);  // Zero flag set
     
     // Test ROR Absolute,X with carry clear
     cpu.setProgramCounter(0);
@@ -264,8 +264,8 @@ describe("Final 100% coverage tests", () => {
     
     cpu.step();
     expect(cpu.readByte(0x1005)).toBe(0x00); // Result: 0x00, bit 0 goes to carry
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry flag set
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);  // Zero flag set
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // Carry flag set
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);  // Zero flag set
   });
   
   // Test BRK and RTI with specific status flags
@@ -299,7 +299,7 @@ describe("Final 100% coverage tests", () => {
     
     // Check stack state after BRK
     expect(cpu.getStackPointer()).toBe(initialSP - 3); // Stack pointer decremented by 3
-    expect(cpu.isStatusFlagSet(INTERRUPT)).toBe(true); // Interrupt flag set
+    expect((cpu.getState().p & INTERRUPT) !== 0).toBe(true); // Interrupt flag set
     expect(cpu.getProgramCounter()).toBe(0x2000); // PC set to interrupt vector
     
     // Check status pushed on stack (using direct memory read)
@@ -323,13 +323,13 @@ describe("Final 100% coverage tests", () => {
     expect(cpu.getProgramCounter()).toBe(0x1002); // PC set to address after BRK
     
     // Check restored flag values
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true);
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true);
-    expect(cpu.isStatusFlagSet(OVERFLOW)).toBe(true);
-    expect(cpu.isStatusFlagSet(DECIMAL)).toBe(true);
-    expect(cpu.isStatusFlagSet(UNUSED)).toBe(true);
-    expect(cpu.isStatusFlagSet(BREAK)).toBe(false); // B flag not restored
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true);
+    expect((cpu.getState().p & NEGATIVE) !== 0).toBe(true);
+    expect((cpu.getState().p & OVERFLOW) !== 0).toBe(true);
+    expect((cpu.getState().p & DECIMAL) !== 0).toBe(true);
+    expect((cpu.getState().p & UNUSED) !== 0).toBe(true);
+    expect((cpu.getState().p & BREAK)).toBe(false); // B flag not restored
   });
   
   // Test zero page wrapping behavior
@@ -387,7 +387,7 @@ describe("Final 100% coverage tests", () => {
     // Check results
     expect(cycles1).toBe(4); // No page crossing
     expect(cpu.getXRegister()).toBe(0x00);
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);
     
     // Test with page crossing, loading negative value
     cpu.setProgramCounter(0);
@@ -403,7 +403,7 @@ describe("Final 100% coverage tests", () => {
     // Check results
     expect(cycles2).toBe(5); // Page crossing adds a cycle
     expect(cpu.getXRegister()).toBe(0x80);
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true);
+    expect((cpu.getState().p & NEGATIVE) !== 0).toBe(true);
     
     // Test without page crossing, loading positive value
     cpu.setProgramCounter(0);
@@ -418,8 +418,8 @@ describe("Final 100% coverage tests", () => {
     
     // Check results
     expect(cpu.getXRegister()).toBe(0x42);
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(false);
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(false);
+    expect((cpu.getState().p & ZERO)).toBe(false);
+    expect((cpu.getState().p & NEGATIVE)).toBe(false);
   });
 });
 

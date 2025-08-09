@@ -16,8 +16,8 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
     
     cpu.step();
     expect(cpu.readByte(0x80)).toBe(0x00);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // Carry should be clear
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);   // Zero flag should be set
+    expect((cpu.getState().p & CARRY) === 0).toBe(false); // Carry should be clear
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);   // Zero flag should be set
     
     // Test ASL Zero Page with 0x80 value (sets carry, result zero)
     cpu.setProgramCounter(0);
@@ -27,8 +27,8 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
     
     cpu.step();
     expect(cpu.readByte(0x80)).toBe(0x00);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry should be set
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);  // Zero flag should be set
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // Carry should be set
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);  // Zero flag should be set
   });
   
   // Test ASL with edge cases - Absolute
@@ -44,8 +44,8 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
     
     cpu.step();
     expect(cpu.readByte(0x1000)).toBe(0x00);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry should be set
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);  // Zero flag should be set
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // Carry should be set
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);  // Zero flag should be set
   });
   
   // Test ASL with edge cases - Absolute,X
@@ -62,8 +62,8 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
     
     cpu.step();
     expect(cpu.readByte(0x1005)).toBe(0x00);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry should be set
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);  // Zero flag should be set
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // Carry should be set
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);  // Zero flag should be set
   });
   
   // Test LSR with edge cases - Zero Page
@@ -78,8 +78,8 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
     
     cpu.step();
     expect(cpu.readByte(0x80)).toBe(0x00);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry should be set
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);  // Zero flag should be set
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // Carry should be set
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);  // Zero flag should be set
   });
   
   // Test LSR with edge cases - Absolute
@@ -95,8 +95,8 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
     
     cpu.step();
     expect(cpu.readByte(0x1000)).toBe(0x00);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true); // Carry should be set
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);  // Zero flag should be set
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true); // Carry should be set
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);  // Zero flag should be set
   });
   
   // Test ROL with edge cases - Zero Page
@@ -112,8 +112,8 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
     
     cpu.step();
     expect(cpu.readByte(0x80)).toBe(0x01); // Rotated carry in
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // No carry out
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(false);  // Not zero
+    expect((cpu.getState().p & CARRY) === 0).toBe(false); // No carry out
+    expect((cpu.getState().p & ZERO) === 0).toBe(false);  // Not zero
     
     // Test ROL Zero Page with 0x80 value and carry set
     cpu.setProgramCounter(0);
@@ -124,8 +124,8 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
     
     cpu.step();
     expect(cpu.readByte(0x80)).toBe(0x01); // Rotated with carry set
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true);  // Carry should be set from bit 7
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(false);  // Not zero
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true);  // Carry should be set from bit 7
+    expect((cpu.getState().p & ZERO) === 0).toBe(false);  // Not zero
   });
   
   // Test ROR with edge cases - Zero Page
@@ -141,8 +141,8 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
     
     cpu.step();
     expect(cpu.readByte(0x80)).toBe(0x80); // Rotated carry to bit 7
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false);     // No carry out
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true);   // Negative flag set
+    expect((cpu.getState().p & CARRY) === 0).toBe(false);     // No carry out
+    expect((cpu.getState().p & NEGATIVE) !== 0).toBe(true);   // Negative flag set
     
     // Test ROR Zero Page with 0x01 value and carry set
     cpu.setProgramCounter(0);
@@ -153,7 +153,7 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
     
     cpu.step();
     expect(cpu.readByte(0x80)).toBe(0x80); // Rotated with carry in
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true);      // Carry should be set from bit 0
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true);   // Negative flag set
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true);      // Carry should be set from bit 0
+    expect((cpu.getState().p & NEGATIVE) !== 0).toBe(true);   // Negative flag set
   });
 });

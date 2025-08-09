@@ -20,8 +20,8 @@ describe("LDY with different addressing modes", () => {
     // Verify
     expect(cycles).toBe(4);
     expect(cpu.getYRegister()).toBe(0x42);
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(false); // Result is not zero
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(false); // Result is not negative
+    expect((cpu.getState().p & ZERO) === 0).toBe(false); // Result is not zero
+    expect((cpu.getState().p & NEGATIVE) === 0).toBe(false); // Result is not negative
   });
   
   it("should perform LDY Absolute instruction", () => {
@@ -41,8 +41,8 @@ describe("LDY with different addressing modes", () => {
     // Verify
     expect(cycles).toBe(4);
     expect(cpu.getYRegister()).toBe(0x80);
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(false); // Result is not zero
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true); // Result is negative (bit 7 set)
+    expect((cpu.getState().p & ZERO) === 0).toBe(false); // Result is not zero
+    expect((cpu.getState().p & NEGATIVE) !== 0).toBe(true); // Result is negative (bit 7 set)
   });
   
   it("should perform LDY Absolute,X instruction", () => {
@@ -63,8 +63,8 @@ describe("LDY with different addressing modes", () => {
     // Verify
     expect(cycles).toBe(4); // No page boundary crossed
     expect(cpu.getYRegister()).toBe(0x00);
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true); // Result is zero
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(false); // Result is not negative
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true); // Result is zero
+    expect((cpu.getState().p & NEGATIVE) === 0).toBe(false); // Result is not negative
   });
   
   it("should perform LDY Absolute,X instruction with page crossing", () => {
@@ -85,7 +85,7 @@ describe("LDY with different addressing modes", () => {
     // Verify
     expect(cycles).toBe(5); // +1 cycle for page boundary crossing
     expect(cpu.getYRegister()).toBe(0xFF);
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(false); // Result is not zero
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true); // Result is negative (bit 7 set)
+    expect((cpu.getState().p & ZERO) === 0).toBe(false); // Result is not zero
+    expect((cpu.getState().p & NEGATIVE) !== 0).toBe(true); // Result is negative (bit 7 set)
   });
 });

@@ -15,8 +15,8 @@ describe("Extreme edge cases to achieve 100% coverage", () => {
     
     cpu.step();
     expect(cpu.readByte(0x81)).toBe(0x00);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // No carry out
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);   // Zero flag set
+    expect((cpu.getState().p & CARRY)).toBe(false); // No carry out
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);   // Zero flag set
   });
   
   // Test ASL Absolute,X with zero input (no carry out, zero result)
@@ -32,8 +32,8 @@ describe("Extreme edge cases to achieve 100% coverage", () => {
     
     cpu.step();
     expect(cpu.readByte(0x1005)).toBe(0x00);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // No carry out
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);   // Zero flag set
+    expect((cpu.getState().p & CARRY)).toBe(false); // No carry out
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);   // Zero flag set
   });
   
   // Test LSR Zero Page,X with zero input (no carry out, zero result)
@@ -48,8 +48,8 @@ describe("Extreme edge cases to achieve 100% coverage", () => {
     
     cpu.step();
     expect(cpu.readByte(0x81)).toBe(0x00);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // No carry out
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);   // Zero flag set
+    expect((cpu.getState().p & CARRY)).toBe(false); // No carry out
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);   // Zero flag set
   });
   
   // Test LSR Absolute,X with zero input (no carry out, zero result)
@@ -65,8 +65,8 @@ describe("Extreme edge cases to achieve 100% coverage", () => {
     
     cpu.step();
     expect(cpu.readByte(0x1005)).toBe(0x00);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // No carry out
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);   // Zero flag set
+    expect((cpu.getState().p & CARRY)).toBe(false); // No carry out
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);   // Zero flag set
   });
   
   // Test ROL Zero Page,X with zero input (no carry out, zero/carry result)
@@ -83,8 +83,8 @@ describe("Extreme edge cases to achieve 100% coverage", () => {
     
     cpu.step();
     expect(cpu.readByte(0x81)).toBe(0x00);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // No carry out
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);   // Zero flag set
+    expect((cpu.getState().p & CARRY)).toBe(false); // No carry out
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);   // Zero flag set
     
     // Test with carry set
     cpu.setProgramCounter(0);
@@ -96,8 +96,8 @@ describe("Extreme edge cases to achieve 100% coverage", () => {
     
     cpu.step();
     expect(cpu.readByte(0x81)).toBe(0x01);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // No carry out
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(false);  // Zero flag clear
+    expect((cpu.getState().p & CARRY)).toBe(false); // No carry out
+    expect((cpu.getState().p & ZERO)).toBe(false);  // Zero flag clear
   });
   
   // Test ROL Absolute,X with various inputs
@@ -115,8 +115,8 @@ describe("Extreme edge cases to achieve 100% coverage", () => {
     
     cpu.step();
     expect(cpu.readByte(0x1005)).toBe(0x00);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // No carry out
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);   // Zero flag set
+    expect((cpu.getState().p & CARRY)).toBe(false); // No carry out
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);   // Zero flag set
     
     // Test with carry set, zero input
     cpu.setProgramCounter(0);
@@ -129,8 +129,8 @@ describe("Extreme edge cases to achieve 100% coverage", () => {
     
     cpu.step();
     expect(cpu.readByte(0x1005)).toBe(0x01);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // No carry out
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(false);  // Zero flag clear
+    expect((cpu.getState().p & CARRY)).toBe(false); // No carry out
+    expect((cpu.getState().p & ZERO)).toBe(false);  // Zero flag clear
   });
   
   // Test ROR Zero Page,X with various inputs
@@ -147,8 +147,8 @@ describe("Extreme edge cases to achieve 100% coverage", () => {
     
     cpu.step();
     expect(cpu.readByte(0x81)).toBe(0x00);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // No carry out
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);   // Zero flag set
+    expect((cpu.getState().p & CARRY)).toBe(false); // No carry out
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);   // Zero flag set
     
     // Test with carry set, zero input
     cpu.setProgramCounter(0);
@@ -160,8 +160,8 @@ describe("Extreme edge cases to achieve 100% coverage", () => {
     
     cpu.step();
     expect(cpu.readByte(0x81)).toBe(0x80);  // Carry rotated to bit 7
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // No carry out
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true); // Negative flag set
+    expect((cpu.getState().p & CARRY)).toBe(false); // No carry out
+    expect((cpu.getState().p & NEGATIVE) !== 0).toBe(true); // Negative flag set
   });
   
   // Test ROR Absolute,X with various inputs
@@ -179,8 +179,8 @@ describe("Extreme edge cases to achieve 100% coverage", () => {
     
     cpu.step();
     expect(cpu.readByte(0x1005)).toBe(0x00);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // No carry out
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);   // Zero flag set
+    expect((cpu.getState().p & CARRY)).toBe(false); // No carry out
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);   // Zero flag set
     
     // Test with carry set, zero input
     cpu.setProgramCounter(0);
@@ -193,7 +193,7 @@ describe("Extreme edge cases to achieve 100% coverage", () => {
     
     cpu.step();
     expect(cpu.readByte(0x1005)).toBe(0x80);  // Carry rotated to bit 7
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(false); // No carry out
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(true); // Negative flag set
+    expect((cpu.getState().p & CARRY)).toBe(false); // No carry out
+    expect((cpu.getState().p & NEGATIVE) !== 0).toBe(true); // Negative flag set
   });
 });

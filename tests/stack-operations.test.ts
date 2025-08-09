@@ -33,8 +33,8 @@ describe("Stack operations", () => {
     expect(cpu.getStackPointer()).toBe(0xFD);
     expect(cpu.getProgramCounter()).toBe(2);
     expect(cycles).toBe(4);
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(false);
-    expect(cpu.isStatusFlagSet(NEGATIVE)).toBe(false);
+    expect((cpu.getState().p & ZERO) === 0).toBe(false);
+    expect((cpu.getState().p & NEGATIVE) === 0).toBe(false);
   });
   
   it("should perform PHP and PLP instructions", () => {
@@ -70,10 +70,10 @@ describe("Stack operations", () => {
     
     // Check that status was pulled from stack (B and unused should be ignored)
     // Note: We confirm each flag individually rather than checking entire status register
-    expect(cpu.isStatusFlagSet(ZERO)).toBe(true);
-    expect(cpu.isStatusFlagSet(CARRY)).toBe(true);
-    expect(cpu.isStatusFlagSet(UNUSED)).toBe(true);
-    expect(cpu.isStatusFlagSet(BREAK)).toBe(false); // BREAK flag shouldn't be set from PLP
+    expect((cpu.getState().p & ZERO) !== 0).toBe(true);
+    expect((cpu.getState().p & CARRY) !== 0).toBe(true);
+    expect((cpu.getState().p & UNUSED) !== 0).toBe(true);
+    expect((cpu.getState().p & BREAK) === 0).toBe(false); // BREAK flag shouldn't be set from PLP
     expect(cpu.getStackPointer()).toBe(0xFD);
     expect(cpu.getProgramCounter()).toBe(2);
     expect(cycles).toBe(4);
