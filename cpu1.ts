@@ -20,17 +20,17 @@ export class CPU1 implements CPU {
     /**
      * Get the current CPU state
      */
-    getState(): CPUState {
+    async getState(): Promise<CPUState> {
         return this.state;
     }
 
     /**
      * Reset the CPU to initial state
      */
-    reset(): void {
+    async reset(): Promise<void> {
         const mem = this.mem;
         this.state = createCPUState();
-        this.mem = mem; // Preserve external memory
+        this.mem = mem;
     }
 
     /**
@@ -38,7 +38,7 @@ export class CPU1 implements CPU {
      * @param trace Whether to log trace information during execution
      * @returns Number of clock cycles consumed by the instruction
      */
-    step(trace = false): number {
+    async step(trace = false): Promise<number> {
         CURRENT_MEM_CPU1 = this.mem;
         return step6502(this.state, trace);
     }
@@ -48,7 +48,7 @@ export class CPU1 implements CPU {
      * @param address Memory address
      * @param value Byte value to load
      */
-    loadByte(address: number, value: number): void {
+    async loadByte(address: number, value: number): Promise<void> {
         this.mem[address & 0xffff] = value & 0xff;
     }
     
@@ -57,7 +57,7 @@ export class CPU1 implements CPU {
      * @param address Memory address for low byte
      * @param value 16-bit value to load
      */
-    loadWord(address: number, value: number): void {
+    async loadWord(address: number, value: number): Promise<void> {
         this.mem[address & 0xffff] = value & 0xff;
         this.mem[(address + 1) & 0xffff] = (value >> 8) & 0xff;
     }
@@ -67,7 +67,7 @@ export class CPU1 implements CPU {
      * @param address Memory address
      * @returns Byte value at address
      */
-    readByte(address: number): number {
+    async readByte(address: number): Promise<number> {
         return this.mem[address & 0xffff] || 0;
     }
     
@@ -76,7 +76,7 @@ export class CPU1 implements CPU {
      * @param address Memory address of low byte
      * @returns 16-bit value
      */
-    readWord(address: number): number {
+    async readWord(address: number): Promise<number> {
         const lo = this.mem[address & 0xffff] || 0;
         const hi = this.mem[(address + 1) & 0xffff] || 0;
         return (hi << 8) | lo;
@@ -86,7 +86,7 @@ export class CPU1 implements CPU {
      * Set the program counter
      * @param address New program counter value
      */
-    setProgramCounter(address: number): void {
+    async setProgramCounter(address: number): Promise<void> {
         this.state.pc = address & 0xffff;
     }
     
@@ -94,7 +94,7 @@ export class CPU1 implements CPU {
      * Set the accumulator register
      * @param value Value to set
      */
-    setAccumulator(value: number): void {
+    async setAccumulator(value: number): Promise<void> {
         this.state.a = value & 0xff;
     }
     
@@ -102,7 +102,7 @@ export class CPU1 implements CPU {
      * Set the X index register
      * @param value Value to set
      */
-    setXRegister(value: number): void {
+    async setXRegister(value: number): Promise<void> {
         this.state.x = value & 0xff;
     }
     
@@ -110,7 +110,7 @@ export class CPU1 implements CPU {
      * Set the Y index register
      * @param value Value to set
      */
-    setYRegister(value: number): void {
+    async setYRegister(value: number): Promise<void> {
         this.state.y = value & 0xff;
     }
     
@@ -118,7 +118,7 @@ export class CPU1 implements CPU {
      * Set the stack pointer
      * @param value Value to set
      */
-    setStackPointer(value: number): void {
+    async setStackPointer(value: number): Promise<void> {
         this.state.sp = value & 0xff;
     }
     
@@ -126,7 +126,7 @@ export class CPU1 implements CPU {
      * Set the status register
      * @param value Value to set
      */
-    setStatusRegister(value: number): void {
+    async setStatusRegister(value: number): Promise<void> {
         this.state.p = value & 0xff;
     }
     
@@ -134,7 +134,7 @@ export class CPU1 implements CPU {
      * Set status flag bits
      * @param mask Bit mask of flags to set
      */
-    setStatusFlag(mask: number): void {
+    async setStatusFlag(mask: number): Promise<void> {
         this.state.p |= mask & 0xff;
     }
     
@@ -142,7 +142,7 @@ export class CPU1 implements CPU {
      * Clear status flag bits
      * @param mask Bit mask of flags to clear
      */
-    clearStatusFlag(mask: number): void {
+    async clearStatusFlag(mask: number): Promise<void> {
         this.state.p &= ~(mask & 0xff);
     }
     

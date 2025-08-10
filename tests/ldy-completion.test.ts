@@ -2,57 +2,57 @@ import { describe, expect, it } from "bun:test";
 import { type CPU, createCPU, ZERO, NEGATIVE } from "./utils";
 
 describe("Complete LDY instruction coverage", () => {
-  it("should test every possible LDY addressing mode and flag combination", () => {
+  it("should test every possible LDY addressing mode and flag combination", async () => {
     const cpu = createCPU();
     
     // Zero Page test with uninitialized memory
-    cpu.loadByte(0x1000, 0xA4); // LDY Zero Page
-    cpu.loadByte(0x1001, 0x90); // Zero page address (uninitialized)
+    await cpu.loadByte(0x1000, 0xA4); // LDY Zero Page
+    await cpu.loadByte(0x1001, 0x90); // Zero page address (uninitialized)
     
-    cpu.setProgramCounter(0x1000);
+    await cpu.setProgramCounter(0x1000);
     
-    let cycles = cpu.step();
+    let cycles = await cpu.step();
     
     expect(cycles).toBe(3);
-    expect(cpu.getYRegister()).toBe(0); // Should read 0 from uninitialized memory
-    expect((cpu.getState().p & ZERO) !== 0).toBe(true); // Zero flag should be set
-    expect(cpu.getProgramCounter()).toBe(0x1002);
+    expect(await cpu.getYRegister()).toBe(0); // Should read 0 from uninitialized memory
+    expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
+    expect(await cpu.getProgramCounter()).toBe(0x1002);
     
     // Absolute test with negative value after wrap-around
-    cpu.loadByte(0x1002, 0xAC); // LDY Absolute
-    cpu.loadByte(0x1003, 0xFF); // Low byte of address
-    cpu.loadByte(0x1004, 0xFF); // High byte of address (0xFFFF)
-    cpu.loadByte(0xFFFF, 0x80); // Negative value
+    await cpu.loadByte(0x1002, 0xAC); // LDY Absolute
+    await cpu.loadByte(0x1003, 0xFF); // Low byte of address
+    await cpu.loadByte(0x1004, 0xFF); // High byte of address (0xFFFF)
+    await cpu.loadByte(0xFFFF, 0x80); // Negative value
     
-    cycles = cpu.step();
+    cycles = await cpu.step();
     
     expect(cycles).toBe(4);
-    expect(cpu.getYRegister()).toBe(0x80);
-    expect((cpu.getState().p & NEGATIVE) !== 0).toBe(true); // Negative flag should be set
-    expect(cpu.getProgramCounter()).toBe(0x1005);
+    expect(await cpu.getYRegister()).toBe(0x80);
+    expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Negative flag should be set
+    expect(await cpu.getProgramCounter()).toBe(0x1005);
     
     // Zero Page,X test with wrap-around
-    cpu.loadByte(0x1005, 0xB4); // LDY Zero Page,X
-    cpu.loadByte(0x1006, 0xF0); // Zero page address
-    cpu.loadByte(0x000F, 0x42); // Value at 0xF0 + 0x1F = 0x10F, which wraps to 0x0F
+    await cpu.loadByte(0x1005, 0xB4); // LDY Zero Page,X
+    await cpu.loadByte(0x1006, 0xF0); // Zero page address
+    await cpu.loadByte(0x000F, 0x42); // Value at 0xF0 + 0x1F = 0x10F, which wraps to 0x0F
     
-    cpu.setXRegister(0x1F); // X offset causes wrap-around
+    await cpu.setXRegister(0x1F); // X offset causes wrap-around
     
-    cycles = cpu.step();
+    cycles = await cpu.step();
     
     expect(cycles).toBe(4);
-    expect(cpu.getYRegister()).toBe(0x42);
-    expect(cpu.getProgramCounter()).toBe(0x1007);
+    expect(await cpu.getYRegister()).toBe(0x42);
+    expect(await cpu.getProgramCounter()).toBe(0x1007);
     
     // Absolute,X test with page crossing
-    cpu.loadByte(0x1007, 0xBC); // LDY Absolute,X
-    cpu.loadByte(0x1008, 0x00); // Low byte of address
-    cpu.loadByte(0x1009, 0x04); // High byte of address (0x0400)
-    cpu.loadByte(0x0500, 0x37); // Value at 0x0400 + 0x100 = 0x0500
+    await cpu.loadByte(0x1007, 0xBC); // LDY Absolute,X
+    await cpu.loadByte(0x1008, 0x00); // Low byte of address
+    await cpu.loadByte(0x1009, 0x04); // High byte of address (0x0400)
+    await cpu.loadByte(0x0500, 0x37); // Value at 0x0400 + 0x100 = 0x0500
     
-    cpu.setXRegister(0x100); // Page boundary crossing
+    await cpu.setXRegister(0x100); // Page boundary crossing
     
-    cycles = cpu.step();
+    cycles = await cpu.step();
     
     // Accept either 4 or 5 cycles - either is valid, as implementations might differ
     // on whether they count an extra cycle for this page crossing
@@ -66,6 +66,6 @@ describe("Complete LDY instruction coverage", () => {
     // - Others may return 0 if they don't fully implement page crossing behavior
     // Both are acceptable for test purposes as we're gradually improving implementation
     expect([0, 0x37]).toContain(cpu.getYRegister());
-    expect(cpu.getProgramCounter()).toBe(0x100A);
+    expect(await cpu.getProgramCounter()).toBe(0x100A);
   });
 });

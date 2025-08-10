@@ -2,27 +2,27 @@ import { describe, expect, it } from "bun:test";
 import { CPU1 } from "../6502";
 
 describe("Memory helper functions for 100% coverage", () => {
-  it("should test writeWord directly", () => {
+  it("should test writeWord directly", async () => {
     const cpu = new CPU1();
     
     // First make sure the memory is zeroed
-    expect(cpu.readByte(0x1000)).toBe(0);
-    expect(cpu.readByte(0x1001)).toBe(0);
+    expect(await cpu.readByte(0x1000)).toBe(0);
+    expect(await cpu.readByte(0x1001)).toBe(0);
     
     // Now test writing a word at address 0x1000
     // We can use the loadWord method directly
-    cpu.loadWord(0x1000, 0x1234);
+    await cpu.loadWord(0x1000, 0x1234);
     
     // Check if the word was written correctly
-    expect(cpu.readByte(0x1000)).toBe(0x34); // Low byte
-    expect(cpu.readByte(0x1001)).toBe(0x12); // High byte
+    expect(await cpu.readByte(0x1000)).toBe(0x34); // Low byte
+    expect(await cpu.readByte(0x1001)).toBe(0x12); // High byte
     
     // Test writing a word at a page boundary (0xFFFF-0x0000)
-    cpu.loadWord(0xFFFF, 0x7856);
+    await cpu.loadWord(0xFFFF, 0x7856);
     
     // Check if the word was written correctly across the boundary
-    expect(cpu.readByte(0xFFFF)).toBe(0x56); // Low byte
-    expect(cpu.readByte(0x0000)).toBe(0x78); // High byte
+    expect(await cpu.readByte(0xFFFF)).toBe(0x56); // Low byte
+    expect(await cpu.readByte(0x0000)).toBe(0x78); // High byte
   });
   
   it("should test zero page X addressing with wrap around", () => {

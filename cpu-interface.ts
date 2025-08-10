@@ -5,29 +5,29 @@ export interface CPU {
     /**
      * Get the full CPU state (registers and PC; memory is external)
      */
-    getState(): CPUState;
+    getState(): Promise<CPUState>;
     
     /** Reset CPU to initial state */
-    reset(): void;
+    reset(): Promise<void>;
     
     /** Execute a single instruction */
-    step(trace?: boolean): number;
+    step(trace?: boolean): Promise<number>;
     
     /** Memory accessors (operate on external memory supplied at construction) */
-    loadByte(address: number, value: number): void;
-    loadWord(address: number, value: number): void;
-    readByte(address: number): number;
-    readWord(address: number): number;
+    loadByte(address: number, value: number): Promise<void>;
+    loadWord(address: number, value: number): Promise<void>;
+    readByte(address: number): Promise<number>;
+    readWord(address: number): Promise<number>;
     
     /** Register/mode mutators */
-    setProgramCounter(address: number): void;
-    setAccumulator(value: number): void;
-    setXRegister(value: number): void;
-    setYRegister(value: number): void;
-    setStackPointer(value: number): void;
-    setStatusRegister(value: number): void;
-    setStatusFlag(mask: number): void;
-    clearStatusFlag(mask: number): void;
+    setProgramCounter(address: number): Promise<void>;
+    setAccumulator(value: number): Promise<void>;
+    setXRegister(value: number): Promise<void>;
+    setYRegister(value: number): Promise<void>;
+    setStackPointer(value: number): Promise<void>;
+    setStatusRegister(value: number): Promise<void>;
+    setStatusFlag(mask: number): Promise<void>;
+    clearStatusFlag(mask: number): Promise<void>;
 
 }
 

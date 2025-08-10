@@ -53,40 +53,36 @@ const LOAD = 0xfff4; // in .lbl
 const SAVE = 0xfff7; // in .lbl
 
 // Fixed stack operations to use the CPU interface
-function pop16(cpu: CPU): number {
+async function pop16(cpu: CPU): Promise<number> {
     // Save current SP
-    const sp = cpu.getStackPointer();
-
-    // Increment SP and read low byte
-    cpu.setStackPointer((sp + 1) & 0xff);
-    const lo = cpu.readByte(0x0100 + cpu.getStackPointer());
-
-    // Increment SP and read high byte
-    cpu.setStackPointer((cpu.getStackPointer() + 1) & 0xff);
-    const hi = cpu.readByte(0x0100 + cpu.getStackPointer());
-
+    const sp0 = (await cpu.getState()).sp;
+    await cpu.setStackPointer((sp0 + 1) & 0xff);
+    const sp1 = (await cpu.getState()).sp;
+    const lo = await cpu.readByte(0x0100 + sp1);
+    await cpu.setStackPointer((sp1 + 1) & 0xff);
+    const sp2 = (await cpu.getState()).sp;
+    const hi = await cpu.readByte(0x0100 + sp2);
     return (hi << 8) | lo;
 }
 
-function push16(cpu: CPU, val: number) {
+async function push16(cpu: CPU, val: number) {
     // Push high byte first
     const hi = (val >> 8) & 0xff;
     const lo = val & 0xff;
 
-    // Push high byte
-    cpu.loadByte(0x0100 + cpu.getStackPointer(), hi);
-    cpu.setStackPointer((cpu.getStackPointer() - 1) & 0xff);
-
-    // Push low byte
-    cpu.loadByte(0x0100 + cpu.getStackPointer(), lo);
-    cpu.setStackPointer((cpu.getStackPointer() - 1) & 0xff);
+    const sp0 = (await cpu.getState()).sp;
+    await cpu.loadByte(0x0100 + sp0, hi);
+    await cpu.setStackPointer((sp0 - 1) & 0xff);
+    const sp1 = (await cpu.getState()).sp;
+    await cpu.loadByte(0x0100 + sp1, lo);
+    await cpu.setStackPointer((sp1 - 1) & 0xff);
 }
 
 // ---------------------------------------------------------------------------
 // CPU / memory initialisation
 // ---------------------------------------------------------------------------
 
-function buildCPU(): CPU {
+async function buildCPU(): Promise<CPU> {
     // Determine which CPU implementation to use based on command line flags
     let cpu: CPU;
 
@@ -99,7 +95,7 @@ function buildCPU(): CPU {
         cpu = new CPU1();
     }
 
-    const state = cpu.getState();
+    let state = await cpu.getState();
 
     // Load BASIC ROM image
     let bin: Buffer;
@@ -125,17 +121,17 @@ function buildCPU(): CPU {
         const byteValue = bin[i];
         // Ensure byteValue is defined before passing it to loadByte
         if (byteValue !== undefined) {
-            cpu.loadByte(ROM_ADDR + i, byteValue);
+            await cpu.loadByte(ROM_ADDR + i, byteValue);
         }
     }
 
     // Initial state using CPU interface methods
-    cpu.setAccumulator(0);
-    cpu.setXRegister(0);
-    cpu.setYRegister(0);
-    cpu.setStackPointer(0xfd);
-    cpu.setStatusRegister(0x24);
-    cpu.setProgramCounter(COLD_START);
+    await cpu.setAccumulator(0);
+    await cpu.setXRegister(0);
+    await cpu.setYRegister(0);
+    await cpu.setStackPointer(0xfd);
+    await cpu.setStatusRegister(0x24);
+    await cpu.setProgramCounter(COLD_START);
 
     return cpu;
 }
@@ -249,8 +245,8 @@ function logDivergence(opcode: number, error: string) {
 // ---------------------------------------------------------------------------
 
 async function main() {
-    const cpu = buildCPU();
-    const state = cpu.getState();
+    const cpu = await buildCPU();
+    let state = await cpu.getState();
 
     const trapSet = new Set([MONRDKEY, MONCOUT, MONISCNTC, LOAD, SAVE]);
 
@@ -321,18 +317,19 @@ async function main() {
 
     while (true) {
         // Intercept before executing the opcode at PC
+        state = await cpu.getState();
         if (trapSet.has(state.pc)) {
             const addr = state.pc;
-            const ret = pop16(cpu) + 1; // emulate RTS using CPU interface
+            const ret = (await pop16(cpu)) + 1; // emulate RTS using CPU interface
 
             switch (addr) {
                 case MONRDKEY: {
                     const c = await readChar();
-                    cpu.setAccumulator(c & 0xff);
+                    await cpu.setAccumulator(c & 0xff);
                     break;
                 }
                 case MONCOUT: {
-                    writeChar(cpu.getAccumulator());
+                    writeChar((await cpu.getState()).a);
                     break;
                 }
                 case MONISCNTC: {
@@ -345,15 +342,15 @@ async function main() {
                     break;
             }
 
-            cpu.setProgramCounter(ret);
+            await cpu.setProgramCounter(ret);
             continue;
         }
 
         // Execute CPU step and catch any divergences
-        const pc = cpu.getProgramCounter();
-        const opcode = cpu.readByte(pc);
+        const pc = (await cpu.getState()).pc;
+        const opcode = await cpu.readByte(pc);
         try {
-            cpu.step(TRACE);
+            await cpu.step(TRACE);
 
             // Count instructions for reporting
             instructionCount++;

@@ -1,4 +1,5 @@
-import type { CPU } from "./6502";
+// Minimal sync reader, decoupled from async CPU interface
+interface CPU { readByte(addr: number): number; readWord(addr: number): number; }
 
 // Addressing modes
 enum AddressingMode {

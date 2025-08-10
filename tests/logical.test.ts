@@ -2,17 +2,17 @@ import { describe, expect, it } from "bun:test";
 import { createCPU, ZERO, NEGATIVE, OVERFLOW } from "./utils";
 
 describe("Logical operations", () => {
-  it("should perform AND immediate instruction", () => {
+  it("should perform AND immediate instruction", async () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.setAccumulator(0xF0);
+    await cpu.setAccumulator(0xF0);
     
     // Set up memory
-    cpu.loadByte(0, 0x29); // AND immediate
-    cpu.loadByte(1, 0x0F); // Value to AND with accumulator
+    await cpu.loadByte(0, 0x29); // AND immediate
+    await cpu.loadByte(1, 0x0F); // Value to AND with accumulator
     
-    const cycles = cpu.step();
+    const cycles = await cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x00); // 0xF0 & 0x0F = 0x00
     expect(cpu.getProgramCounter()).toBe(2);
@@ -20,18 +20,18 @@ describe("Logical operations", () => {
     expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // Zero flag should be set
   });
   
-  it("should perform AND zero page instruction", () => {
+  it("should perform AND zero page instruction", async () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.setAccumulator(0xF0);
+    await cpu.setAccumulator(0xF0);
     
     // Set up memory
-    cpu.loadByte(0, 0x25); // AND zero page
-    cpu.loadByte(1, 0x42); // Zero page address
-    cpu.loadByte(0x42, 0x0F); // Value to AND with accumulator
+    await cpu.loadByte(0, 0x25); // AND zero page
+    await cpu.loadByte(1, 0x42); // Zero page address
+    await cpu.loadByte(0x42, 0x0F); // Value to AND with accumulator
     
-    const cycles = cpu.step();
+    const cycles = await cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x00); // 0xF0 & 0x0F = 0x00
     expect(cpu.getProgramCounter()).toBe(2);
@@ -39,19 +39,19 @@ describe("Logical operations", () => {
     expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // Zero flag should be set
   });
 
-  it("should perform AND zero page,X instruction", () => {
+  it("should perform AND zero page,X instruction", async () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.setAccumulator(0xF0);
+    await cpu.setAccumulator(0xF0);
     cpu.setXRegister(0x05);
     
     // Set up memory
-    cpu.loadByte(0, 0x35); // AND zero page,X
-    cpu.loadByte(1, 0x42); // Zero page address
-    cpu.loadByte(0x47, 0x0F); // Value at (zero page address + X)
+    await cpu.loadByte(0, 0x35); // AND zero page,X
+    await cpu.loadByte(1, 0x42); // Zero page address
+    await cpu.loadByte(0x47, 0x0F); // Value at (zero page address + X)
     
-    const cycles = cpu.step();
+    const cycles = await cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x00); // 0xF0 & 0x0F = 0x00
     expect(cpu.getProgramCounter()).toBe(2);
@@ -59,19 +59,19 @@ describe("Logical operations", () => {
     expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // Zero flag should be set
   });
 
-  it("should perform AND absolute instruction", () => {
+  it("should perform AND absolute instruction", async () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.setAccumulator(0xF0);
+    await cpu.setAccumulator(0xF0);
     
     // Set up memory
-    cpu.loadByte(0, 0x2D); // AND absolute
-    cpu.loadByte(1, 0x34); // Low byte of address
-    cpu.loadByte(2, 0x12); // High byte of address
-    cpu.loadByte(0x1234, 0x0F); // Value at absolute address
+    await cpu.loadByte(0, 0x2D); // AND absolute
+    await cpu.loadByte(1, 0x34); // Low byte of address
+    await cpu.loadByte(2, 0x12); // High byte of address
+    await cpu.loadByte(0x1234, 0x0F); // Value at absolute address
     
-    const cycles = cpu.step();
+    const cycles = await cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x00); // 0xF0 & 0x0F = 0x00
     expect(cpu.getProgramCounter()).toBe(3);
@@ -79,17 +79,17 @@ describe("Logical operations", () => {
     expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // Zero flag should be set
   });
   
-  it("should perform ORA immediate instruction", () => {
+  it("should perform ORA immediate instruction", async () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.setAccumulator(0xF0);
+    await cpu.setAccumulator(0xF0);
     
     // Set up memory
-    cpu.loadByte(0, 0x09); // ORA immediate
-    cpu.loadByte(1, 0x0F); // Value to OR with accumulator
+    await cpu.loadByte(0, 0x09); // ORA immediate
+    await cpu.loadByte(1, 0x0F); // Value to OR with accumulator
     
-    const cycles = cpu.step();
+    const cycles = await cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0xFF); // 0xF0 | 0x0F = 0xFF
     expect(cpu.getProgramCounter()).toBe(2);
@@ -97,18 +97,18 @@ describe("Logical operations", () => {
     expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Negative flag should be set
   });
   
-  it("should perform ORA zero page instruction", () => {
+  it("should perform ORA zero page instruction", async () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.setAccumulator(0xF0);
+    await cpu.setAccumulator(0xF0);
     
     // Set up memory
-    cpu.loadByte(0, 0x05); // ORA zero page
-    cpu.loadByte(1, 0x42); // Zero page address
-    cpu.loadByte(0x42, 0x0F); // Value to OR with accumulator
+    await cpu.loadByte(0, 0x05); // ORA zero page
+    await cpu.loadByte(1, 0x42); // Zero page address
+    await cpu.loadByte(0x42, 0x0F); // Value to OR with accumulator
     
-    const cycles = cpu.step();
+    const cycles = await cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0xFF); // 0xF0 | 0x0F = 0xFF
     expect(cpu.getProgramCounter()).toBe(2);
@@ -116,19 +116,19 @@ describe("Logical operations", () => {
     expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Negative flag should be set
   });
   
-  it("should perform ORA absolute instruction", () => {
+  it("should perform ORA absolute instruction", async () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.setAccumulator(0xF0);
+    await cpu.setAccumulator(0xF0);
     
     // Set up memory
-    cpu.loadByte(0, 0x0D); // ORA absolute
-    cpu.loadByte(1, 0x34); // Low byte of address
-    cpu.loadByte(2, 0x12); // High byte of address
-    cpu.loadByte(0x1234, 0x0F); // Value at absolute address
+    await cpu.loadByte(0, 0x0D); // ORA absolute
+    await cpu.loadByte(1, 0x34); // Low byte of address
+    await cpu.loadByte(2, 0x12); // High byte of address
+    await cpu.loadByte(0x1234, 0x0F); // Value at absolute address
     
-    const cycles = cpu.step();
+    const cycles = await cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0xFF); // 0xF0 | 0x0F = 0xFF
     expect(cpu.getProgramCounter()).toBe(3);
@@ -136,73 +136,73 @@ describe("Logical operations", () => {
     expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Negative flag should be set
   });
   
-  it("should perform EOR immediate instruction", () => {
+  it("should perform EOR immediate instruction", async () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.setAccumulator(0xFF);
+    await cpu.setAccumulator(0xFF);
     
     // Set up memory
-    cpu.loadByte(0, 0x49); // EOR immediate
-    cpu.loadByte(1, 0xF0); // Value to XOR with accumulator
+    await cpu.loadByte(0, 0x49); // EOR immediate
+    await cpu.loadByte(1, 0xF0); // Value to XOR with accumulator
     
-    const cycles = cpu.step();
+    const cycles = await cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x0F); // 0xFF ^ 0xF0 = 0x0F
     expect(cpu.getProgramCounter()).toBe(2);
     expect(cycles).toBe(2);
   });
   
-  it("should perform EOR zero page instruction", () => {
+  it("should perform EOR zero page instruction", async () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.setAccumulator(0xFF);
+    await cpu.setAccumulator(0xFF);
     
     // Set up memory
-    cpu.loadByte(0, 0x45); // EOR zero page
-    cpu.loadByte(1, 0x42); // Zero page address
-    cpu.loadByte(0x42, 0xF0); // Value to XOR with accumulator
+    await cpu.loadByte(0, 0x45); // EOR zero page
+    await cpu.loadByte(1, 0x42); // Zero page address
+    await cpu.loadByte(0x42, 0xF0); // Value to XOR with accumulator
     
-    const cycles = cpu.step();
+    const cycles = await cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x0F); // 0xFF ^ 0xF0 = 0x0F
     expect(cpu.getProgramCounter()).toBe(2);
     expect(cycles).toBe(3);
   });
   
-  it("should perform EOR absolute instruction", () => {
+  it("should perform EOR absolute instruction", async () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.setAccumulator(0xFF);
+    await cpu.setAccumulator(0xFF);
     
     // Set up memory
-    cpu.loadByte(0, 0x4D); // EOR absolute
-    cpu.loadByte(1, 0x34); // Low byte of address
-    cpu.loadByte(2, 0x12); // High byte of address
-    cpu.loadByte(0x1234, 0xF0); // Value at absolute address
+    await cpu.loadByte(0, 0x4D); // EOR absolute
+    await cpu.loadByte(1, 0x34); // Low byte of address
+    await cpu.loadByte(2, 0x12); // High byte of address
+    await cpu.loadByte(0x1234, 0xF0); // Value at absolute address
     
-    const cycles = cpu.step();
+    const cycles = await cpu.step();
     
     expect(cpu.getAccumulator()).toBe(0x0F); // 0xFF ^ 0xF0 = 0x0F
     expect(cpu.getProgramCounter()).toBe(3);
     expect(cycles).toBe(4);
   });
   
-  it("should perform BIT zero page instruction", () => {
+  it("should perform BIT zero page instruction", async () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.setAccumulator(0x0F);
-    cpu.setStatusRegister(0); // Clear all flags
+    await cpu.setAccumulator(0x0F);
+    await cpu.setStatusRegister(0); // Clear all flags
     
     // Set up memory
-    cpu.loadByte(0, 0x24); // BIT zero page
-    cpu.loadByte(1, 0x20); // Zero page address
-    cpu.loadByte(0x20, 0xC0); // Test value (bits 7 and 6 are set)
+    await cpu.loadByte(0, 0x24); // BIT zero page
+    await cpu.loadByte(1, 0x20); // Zero page address
+    await cpu.loadByte(0x20, 0xC0); // Test value (bits 7 and 6 are set)
     
-    const cycles = cpu.step();
+    const cycles = await cpu.step();
     
     // BIT sets N and V from bits 7 and 6 of memory
     expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Bit 7 of memory -> N flag
@@ -217,20 +217,20 @@ describe("Logical operations", () => {
     expect(cycles).toBe(3);
   });
   
-  it("should perform BIT absolute instruction", () => {
+  it("should perform BIT absolute instruction", async () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.setAccumulator(0x0F);
-    cpu.setStatusRegister(0); // Clear all flags
+    await cpu.setAccumulator(0x0F);
+    await cpu.setStatusRegister(0); // Clear all flags
     
     // Set up memory
-    cpu.loadByte(0, 0x2C); // BIT absolute
-    cpu.loadByte(1, 0x34); // Low byte of address
-    cpu.loadByte(2, 0x12); // High byte of address
-    cpu.loadByte(0x1234, 0xC0); // Test value (bits 7 and 6 are set)
+    await cpu.loadByte(0, 0x2C); // BIT absolute
+    await cpu.loadByte(1, 0x34); // Low byte of address
+    await cpu.loadByte(2, 0x12); // High byte of address
+    await cpu.loadByte(0x1234, 0xC0); // Test value (bits 7 and 6 are set)
     
-    const cycles = cpu.step();
+    const cycles = await cpu.step();
     
     // BIT sets N and V from bits 7 and 6 of memory
     expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Bit 7 of memory -> N flag
@@ -245,19 +245,19 @@ describe("Logical operations", () => {
     expect(cycles).toBe(4);
   });
   
-  it("should correctly handle BIT with matching bits", () => {
+  it("should correctly handle BIT with matching bits", async () => {
     const cpu = createCPU();
     
     // Set up CPU state
-    cpu.setAccumulator(0xC0); // Matches the test value
-    cpu.setStatusRegister(0); // Clear all flags
+    await cpu.setAccumulator(0xC0); // Matches the test value
+    await cpu.setStatusRegister(0); // Clear all flags
     
     // Set up memory
-    cpu.loadByte(0, 0x24); // BIT zero page
-    cpu.loadByte(1, 0x20); // Zero page address
-    cpu.loadByte(0x20, 0xC0); // Test value (bits 7 and 6 are set)
+    await cpu.loadByte(0, 0x24); // BIT zero page
+    await cpu.loadByte(1, 0x20); // Zero page address
+    await cpu.loadByte(0x20, 0xC0); // Test value (bits 7 and 6 are set)
     
-    const cycles = cpu.step();
+    const cycles = await cpu.step();
     
     // BIT sets N and V from bits 7 and 6 of memory
     expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Bit 7 of memory -> N flag
