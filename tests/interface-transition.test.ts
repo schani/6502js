@@ -1,10 +1,9 @@
+import { describe, expect, it } from "bun:test";
 /**
  * This test file demonstrates transitioning from direct CPU state access
  * to using the CPU interface methods
  */
-import { describe, expect, it } from "bun:test";
-import { type CPU, createCPU, ZERO, NEGATIVE, CARRY } from "./utils";
-
+import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStackPointer, getStatusRegister, createCPU, type CPU, CARRY, ZERO, NEGATIVE } from "./utils";
 describe("CPU Interface Tests", () => {
   it("should demonstrate all interface methods", async () => {
     const cpu = createCPU();
@@ -17,11 +16,11 @@ describe("CPU Interface Tests", () => {
     await cpu.setProgramCounter(0x1000);
     
     // Verify registers
-    expect(cpu.getAccumulator()).toBe(0x42);
-    expect(cpu.getXRegister()).toBe(0x84);
-    expect(cpu.getYRegister()).toBe(0x28);
-    expect(cpu.getStackPointer()).toBe(0xF0);
-    expect(cpu.getProgramCounter()).toBe(0x1000);
+    expect(await getAccumulator(cpu)).toBe(0x42);
+    expect(await getXRegister(cpu)).toBe(0x84);
+    expect(await getYRegister(cpu)).toBe(0x28);
+    expect(await getStackPointer(cpu)).toBe(0xF0);
+    expect(await getProgramCounter(cpu)).toBe(0x1000);
     
     // Set status flags
     await cpu.setStatusFlag(ZERO | CARRY);
@@ -36,7 +35,7 @@ describe("CPU Interface Tests", () => {
     
     // Set full status register
     await cpu.setStatusRegister(NEGATIVE);
-    expect(cpu.getStatusRegister()).toBe(NEGATIVE);
+    expect(await getStatusRegister(cpu)).toBe(NEGATIVE);
     expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true);
     expect(((await cpu.getState()).p & ZERO) === 0).toBe(true);
     
@@ -51,11 +50,11 @@ describe("CPU Interface Tests", () => {
     
     // Reset and verify defaults
     await cpu.reset();
-    expect(cpu.getAccumulator()).toBe(0);
-    expect(cpu.getXRegister()).toBe(0);
-    expect(cpu.getYRegister()).toBe(0);
-    expect(cpu.getProgramCounter()).toBe(0);
-    expect(cpu.getStackPointer()).toBe(0xFD);
+    expect(await getAccumulator(cpu)).toBe(0);
+    expect(await getXRegister(cpu)).toBe(0);
+    expect(await getYRegister(cpu)).toBe(0);
+    expect(await getProgramCounter(cpu)).toBe(0);
+    expect(await getStackPointer(cpu)).toBe(0xFD);
   });
   
   it("should run a simple program using the interface", async () => {
@@ -78,13 +77,13 @@ describe("CPU Interface Tests", () => {
     
     // Run the program
     await cpu.step(); // LDA #5
-    expect(cpu.getAccumulator()).toBe(5);
+    expect(await getAccumulator(cpu)).toBe(5);
     
     await cpu.step(); // ADC #3 (with carry set, so 5 + 3 + 1 = 9)
-    expect(cpu.getAccumulator()).toBe(9);
+    expect(await getAccumulator(cpu)).toBe(9);
     
     await cpu.step(); // STA $80
     expect(await cpu.readByte(0x80)).toBe(9);
-    expect(cpu.getProgramCounter()).toBe(0x1006);
+    expect(await getProgramCounter(cpu)).toBe(0x1006);
   });
 });

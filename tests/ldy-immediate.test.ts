@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { type CPU, createCPU, ZERO, NEGATIVE } from "./utils";
+import { type CPU, createCPU, ZERO, NEGATIVE, getYRegister, getProgramCounter, getStatusRegister } from "./utils";
 
 describe("LDY immediate mode comprehensive tests", async () => {
   it("should load immediate value into Y register from uninitialized memory", async () => {
@@ -16,10 +16,10 @@ describe("LDY immediate mode comprehensive tests", async () => {
     
     // Verify
     expect(cycles).toBe(2);
-    expect(cpu.getYRegister()).toBe(0); // Should be 0 from uninitialized memory
-    expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // Zero flag should be set
-    expect(cpu.getStatusRegister() & NEGATIVE).toBe(0); // Negative flag should be clear
-    expect(cpu.getProgramCounter()).toBe(0x1002); // PC should advance past opcode and operand
+    expect(await getYRegister(cpu)).toBe(0); // Should be 0 from uninitialized memory
+    expect(await getStatusRegister(cpu) & ZERO).toBe(ZERO); // Zero flag should be set
+    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0); // Negative flag should be clear
+    expect(await getProgramCounter(cpu)).toBe(0x1002); // PC should advance past opcode and operand
   });
   
   it("should load zero into Y register with zero flag set", async () => {
@@ -39,10 +39,10 @@ describe("LDY immediate mode comprehensive tests", async () => {
     
     // Verify
     expect(cycles).toBe(2);
-    expect(cpu.getYRegister()).toBe(0);
-    expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // Zero flag should be set
-    expect(cpu.getStatusRegister() & NEGATIVE).toBe(0); // Negative flag should be clear
-    expect(cpu.getProgramCounter()).toBe(0x1002);
+    expect(await getYRegister(cpu)).toBe(0);
+    expect(await getStatusRegister(cpu) & ZERO).toBe(ZERO); // Zero flag should be set
+    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0); // Negative flag should be clear
+    expect(await getProgramCounter(cpu)).toBe(0x1002);
   });
   
   it("should load negative value into Y register with negative flag set", async () => {
@@ -62,9 +62,9 @@ describe("LDY immediate mode comprehensive tests", async () => {
     
     // Verify
     expect(cycles).toBe(2);
-    expect(cpu.getYRegister()).toBe(0x80);
-    expect(cpu.getStatusRegister() & ZERO).toBe(0); // Zero flag should be clear
-    expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Negative flag should be set
-    expect(cpu.getProgramCounter()).toBe(0x1002);
+    expect(await getYRegister(cpu)).toBe(0x80);
+    expect(await getStatusRegister(cpu) & ZERO).toBe(0); // Zero flag should be clear
+    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(NEGATIVE); // Negative flag should be set
+    expect(await getProgramCounter(cpu)).toBe(0x1002);
   });
 });

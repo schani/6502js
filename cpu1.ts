@@ -40,7 +40,7 @@ export class CPU1 implements CPU {
      */
     async step(trace = false): Promise<number> {
         CURRENT_MEM_CPU1 = this.mem;
-        return step6502(this.state, trace);
+        return await step6502(this.state, this, trace);
     }
     
     /**
@@ -453,7 +453,7 @@ function getStatusString(cpu: CPUState): string {
     );
 }
 
-export function step6502(cpu: CPUState, trace = false): number /* cycles */ {
+export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = false): Promise<number /* cycles */> {
     // Save the current PC for trace output before it gets incremented
     const currentPC = cpu.pc;
 
@@ -461,13 +461,9 @@ export function step6502(cpu: CPUState, trace = false): number /* cycles */ {
     const opcode = readByte(cpu, cpu.pc++);
     let cycles = 0;
 
-    if (trace) {
-        // Disassemble the current instruction at the current PC using a lightweight reader
-        const reader = {
-            readByte: (addr: number) => readByte(cpu, addr),
-            readWord: (addr: number) => readWord(cpu, addr),
-        } as unknown as CPU;
-        const [asmInstruction, instructionLength] = disassemble(reader, currentPC);
+    if (trace && cpuInterface) {
+        // Disassemble the current instruction at the current PC
+        const [asmInstruction, instructionLength] = await disassemble(cpuInterface, currentPC);
 
         // Format CPU state with register values
         const stateStr =

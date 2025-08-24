@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { CPU1 } from "../6502";
+import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStackPointer, getStatusRegister } from "./utils";
 
 describe("Memory helper functions for 100% coverage", () => {
   it("should test writeWord directly", async () => {
@@ -25,7 +26,7 @@ describe("Memory helper functions for 100% coverage", () => {
     expect(await cpu.readByte(0x0000)).toBe(0x78); // High byte
   });
   
-  it("should test zero page X addressing with wrap around", () => {
+  it("should test zero page X addressing with wrap around", async () => {
     const cpu = new CPU1();
     
     // Set up a value in zero page
@@ -41,10 +42,10 @@ describe("Memory helper functions for 100% coverage", () => {
     cpu.step();
     
     // Check if the correct value was loaded
-    expect(cpu.getAccumulator()).toBe(0x42);
+    expect(await getAccumulator(cpu)).toBe(0x42);
   });
   
-  it("should test zero page Y addressing with wrap around", () => {
+  it("should test zero page Y addressing with wrap around", async () => {
     const cpu = new CPU1();
     
     // Set up a value in zero page
@@ -60,10 +61,10 @@ describe("Memory helper functions for 100% coverage", () => {
     cpu.step();
     
     // Check if the correct value was loaded
-    expect(cpu.getXRegister()).toBe(0x37);
+    expect(await getXRegister(cpu)).toBe(0x37);
   });
   
-  it("should test indirect addressing with page boundary bug", () => {
+  it("should test indirect addressing with page boundary bug", async () => {
     const cpu = new CPU1();
     
     // Set up memory for the JMP Indirect test with page boundary bug
@@ -83,6 +84,6 @@ describe("Memory helper functions for 100% coverage", () => {
     cpu.step();
     
     // Check if PC was set correctly with the bug
-    expect(cpu.getProgramCounter()).toBe(0x1234);
+    expect(await getProgramCounter(cpu)).toBe(0x1234);
   });
 });

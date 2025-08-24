@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU } from "./utils";
+import { createCPU, getProgramCounter } from "./utils";
 
 describe("Internal helper functions", () => {
   it("should correctly read and write words", async () => {
@@ -35,6 +35,6 @@ describe("Internal helper functions", () => {
     await cpu.step(); // This calls readWord internally
     
     // Verify PC was set to the address read from memory
-    expect(cpu.getProgramCounter()).toBe(0x3742);
+    expect(await getProgramCounter(cpu)).toBe(0x3742);
   });
 });

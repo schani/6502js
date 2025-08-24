@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { CARRY, ZERO, NEGATIVE, OVERFLOW, DECIMAL, INTERRUPT } from "../6502";
-import { createCPU } from "./utils";
+import { createCPU, getProgramCounter } from "./utils";
 
 describe("Remaining branch and flag operations", async () => {
   it("should test BCS with page crossing", async () => {
@@ -23,7 +23,7 @@ describe("Remaining branch and flag operations", async () => {
     expect(cycles).toBe(4);
     
     // Check if PC was set correctly
-    expect(await cpu.getProgramCounter()).toBe(0x1102);
+    expect(await await getProgramCounter(cpu)).toBe(0x1102);
   });
   
   it("should test BEQ with page crossing", async () => {
@@ -46,7 +46,7 @@ describe("Remaining branch and flag operations", async () => {
     expect(cycles).toBe(4);
     
     // Check if PC was set correctly
-    expect(await cpu.getProgramCounter()).toBe(0x1102);
+    expect(await await getProgramCounter(cpu)).toBe(0x1102);
   });
   
   it("should test BMI with page crossing", async () => {
@@ -69,7 +69,7 @@ describe("Remaining branch and flag operations", async () => {
     expect(cycles).toBe(4);
     
     // Check if PC was set correctly
-    expect(await cpu.getProgramCounter()).toBe(0x1102);
+    expect(await await getProgramCounter(cpu)).toBe(0x1102);
   });
   
   it("should test BVS with page crossing", async () => {
@@ -92,7 +92,7 @@ describe("Remaining branch and flag operations", async () => {
     expect(cycles).toBe(4);
     
     // Check if PC was set correctly
-    expect(await cpu.getProgramCounter()).toBe(0x1102);
+    expect(await await getProgramCounter(cpu)).toBe(0x1102);
   });
   
   it("should test all flag setting and clearing instructions", async () => {

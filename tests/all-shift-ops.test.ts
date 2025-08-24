@@ -1,7 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { CARRY, ZERO, NEGATIVE } from "../6502";
-import { createCPU } from "./utils";
-
+import { getAccumulator, createCPU } from "./utils";
 // This test is a comprehensive test of all shift and rotate operations
 // to achieve 100% line coverage
 describe("All Shift and Rotate Operations for 100% Coverage", () => {
@@ -102,7 +101,7 @@ describe("All Shift and Rotate Operations for 100% Coverage", () => {
             
             // Check the result
             if (opcode === 0x0A) {
-               expect(await cpu.getAccumulator()).toBe(result);            } else {
+               expect(await await getAccumulator(cpu)).toBe(result);            } else {
                expect(await cpu.readByte(memLocation)).toBe(result);            }
           } else if (opcode === 0x4A || opcode === 0x46 || opcode === 0x56 || opcode === 0x4E || opcode === 0x5E) {
             // LSR - Shift right, bit 7 becomes 0, bit 0 goes to carry
@@ -114,7 +113,7 @@ describe("All Shift and Rotate Operations for 100% Coverage", () => {
             
             // Check the result
             if (opcode === 0x4A) {
-               expect(await cpu.getAccumulator()).toBe(result);            } else {
+               expect(await await getAccumulator(cpu)).toBe(result);            } else {
                expect(await cpu.readByte(memLocation)).toBe(result);            }
           } else if (opcode === 0x2A || opcode === 0x26 || opcode === 0x36 || opcode === 0x2E || opcode === 0x3E) {
             // ROL - Rotate left, bit 7 goes to carry, carry goes to bit 0
@@ -127,7 +126,7 @@ describe("All Shift and Rotate Operations for 100% Coverage", () => {
             
             // Check the result
             if (opcode === 0x2A) {
-               expect(await cpu.getAccumulator()).toBe(result);            } else {
+               expect(await await getAccumulator(cpu)).toBe(result);            } else {
                expect(await cpu.readByte(memLocation)).toBe(result);            }
           } else if (opcode === 0x6A || opcode === 0x66 || opcode === 0x76 || opcode === 0x6E || opcode === 0x7E) {
             // ROR - Rotate right, bit 0 goes to carry, carry goes to bit 7
@@ -140,7 +139,7 @@ describe("All Shift and Rotate Operations for 100% Coverage", () => {
             
             // Check the result
             if (opcode === 0x6A) {
-               expect(await cpu.getAccumulator()).toBe(result);            } else {
+               expect(await await getAccumulator(cpu)).toBe(result);            } else {
                expect(await cpu.readByte(memLocation)).toBe(result);            }
           }
         }

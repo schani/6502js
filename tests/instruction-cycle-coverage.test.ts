@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { CPU1, CARRY, ZERO, OVERFLOW, NEGATIVE } from "../6502";
+import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStackPointer, getStatusRegister } from "./utils";
 
 describe("Instruction cycle counting and edge cases", () => {
   // Focus on simpler tests that don't rely on complex memory layouts
@@ -16,7 +17,7 @@ describe("Instruction cycle counting and edge cases", () => {
     // Execute BVS
     let cycles = await cpu.step();
     expect(cycles).toBe(4); // 4 cycles for branch taken across page boundary
-    expect(cpu.getProgramCounter()).toBe(0x1FFD); // 0x2002 - 5 = 0x1FFD
+    expect(await getProgramCounter(cpu)).toBe(0x1FFD); // 0x2002 - 5 = 0x1FFD
     
     // Setup BMI instruction with negative offset
     await cpu.loadByte(0x3000, 0x30); // BMI
@@ -28,7 +29,7 @@ describe("Instruction cycle counting and edge cases", () => {
     // Execute BMI
     cycles = await cpu.step();
     expect(cycles).toBe(4); // 4 cycles for branch taken across page boundary
-    expect(cpu.getProgramCounter()).toBe(0x2FFD); // 0x3002 - 5 = 0x2FFD
+    expect(await getProgramCounter(cpu)).toBe(0x2FFD); // 0x3002 - 5 = 0x2FFD
   });
   
   it("should test branches with branch taken", async () => {
@@ -43,7 +44,7 @@ describe("Instruction cycle counting and edge cases", () => {
     
     let cycles = await cpu.step();
     expect(cycles).toBe(3); // 3 cycles for branch taken without page crossing
-    expect(cpu.getProgramCounter()).toBe(0x1012);
+    expect(await getProgramCounter(cpu)).toBe(0x1012);
     
     // Test BVS (Branch on Overflow Set)
     await cpu.loadByte(0x2000, 0x70); // BVS
@@ -54,7 +55,7 @@ describe("Instruction cycle counting and edge cases", () => {
     
     cycles = await cpu.step();
     expect(cycles).toBe(3); // 3 cycles for branch taken without page crossing
-    expect(cpu.getProgramCounter()).toBe(0x2012);
+    expect(await getProgramCounter(cpu)).toBe(0x2012);
   });
   
   it("should test branches with branch not taken", async () => {
@@ -69,7 +70,7 @@ describe("Instruction cycle counting and edge cases", () => {
     
     let cycles = await cpu.step();
     expect(cycles).toBe(2); // 2 cycles for branch not taken
-    expect(cpu.getProgramCounter()).toBe(0x1002);
+    expect(await getProgramCounter(cpu)).toBe(0x1002);
     
     // Test BVS (Branch on Overflow Set)
     await cpu.loadByte(0x2000, 0x70); // BVS
@@ -80,6 +81,6 @@ describe("Instruction cycle counting and edge cases", () => {
     
     cycles = await cpu.step();
     expect(cycles).toBe(2); // 2 cycles for branch not taken
-    expect(cpu.getProgramCounter()).toBe(0x2002);
+    expect(await getProgramCounter(cpu)).toBe(0x2002);
   });
 });

@@ -1,7 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { ZERO, NEGATIVE, CARRY } from "../6502";
-import { createCPU } from "./utils";
-
+import { getAccumulator, createCPU } from "./utils";
 describe("Missing opcodes tests for 100% coverage", () => {
   it("should test LDX Absolute (0xAE)", async () => {
     const cpu = createCPU();
@@ -126,7 +125,7 @@ describe("Missing opcodes tests for 100% coverage", () => {
     await cpu.setAccumulator(0x00);
     
     await cpu.step();
-    expect(await cpu.getAccumulator()).toBe(0x00);
+    expect(await await getAccumulator(cpu)).toBe(0x00);
     expect(((await cpu.getState()).p & CARRY) === 0).toBe(true);  // Carry should be clear
     expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true);    // Zero flag should be set
     
@@ -136,7 +135,7 @@ describe("Missing opcodes tests for 100% coverage", () => {
     await cpu.setAccumulator(0x00);
     
     await cpu.step();
-    expect(await cpu.getAccumulator()).toBe(0x00);
+    expect(await await getAccumulator(cpu)).toBe(0x00);
     expect(((await cpu.getState()).p & CARRY) === 0).toBe(true);  // Carry should be clear
     expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true);    // Zero flag should be set
     
@@ -147,7 +146,7 @@ describe("Missing opcodes tests for 100% coverage", () => {
     await cpu.setStatusRegister(CARRY);      // Set carry flag
     
     await cpu.step();
-    expect(await cpu.getAccumulator()).toBe(0x01);         // Result should be 0x01 (carry rotated into bit 0)
+    expect(await await getAccumulator(cpu)).toBe(0x01);         // Result should be 0x01 (carry rotated into bit 0)
     expect(((await cpu.getState()).p & CARRY) === 0).toBe(true);  // No carry out
     expect(((await cpu.getState()).p & ZERO) === 0).toBe(true);   // Zero flag should be clear
     
@@ -158,7 +157,7 @@ describe("Missing opcodes tests for 100% coverage", () => {
     await cpu.setStatusRegister(CARRY);      // Set carry flag
     
     await cpu.step();
-    expect(await cpu.getAccumulator()).toBe(0x80);         // Result should be 0x80 (carry rotated into bit 7)
+    expect(await await getAccumulator(cpu)).toBe(0x80);         // Result should be 0x80 (carry rotated into bit 7)
     expect(((await cpu.getState()).p & CARRY) === 0).toBe(true);  // No carry out
     expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Negative flag should be set
   });

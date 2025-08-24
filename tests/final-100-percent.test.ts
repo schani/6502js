@@ -1,9 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { 
-  ZERO, NEGATIVE, CARRY, INTERRUPT, OVERFLOW, UNUSED, BREAK, DECIMAL 
-} from "../6502";
-import { createCPU } from "./utils";
-
+import { ZERO, NEGATIVE, CARRY, INTERRUPT, OVERFLOW, UNUSED, BREAK, DECIMAL } from "../6502";
+import { getAccumulator, getXRegister, getProgramCounter, getStackPointer, createCPU } from "./utils";
 // This test targets the exact lines that are uncovered in the CPU code
 describe("Final 100% coverage tests", async () => {
   // Test writeWord function implementation directly
@@ -56,7 +53,7 @@ describe("Final 100% coverage tests", async () => {
     
     // Execute ADC
     await cpu.step();
-    expect(cpu.getAccumulator()).toBe(0x70); // 0x30 + 0x40 = 0x70
+    expect(await getAccumulator(cpu)).toBe(0x70); // 0x30 + 0x40 = 0x70
     expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(false); // No overflow
     expect(((await cpu.getState()).p & CARRY) !== 0).toBe(false);    // No carry
     
@@ -73,7 +70,7 @@ describe("Final 100% coverage tests", async () => {
     
     // Execute ADC
     await cpu.step();
-    expect(cpu.getAccumulator()).toBe(0x05); // 0x95 + 0x70 = 0x105 (with carry)
+    expect(await getAccumulator(cpu)).toBe(0x05); // 0x95 + 0x70 = 0x105 (with carry)
     expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(false); // No overflow
     expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry flag set
     
@@ -90,7 +87,7 @@ describe("Final 100% coverage tests", async () => {
     
     // Execute ADC
     await cpu.step();
-    expect(cpu.getAccumulator()).toBe(0xE0); // 0x70 + 0x70 = 0xE0 (negative)
+    expect(await getAccumulator(cpu)).toBe(0xE0); // 0x70 + 0x70 = 0xE0 (negative)
     expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(true); // Overflow flag set
     expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Negative flag set
     
@@ -107,7 +104,7 @@ describe("Final 100% coverage tests", async () => {
     
     // Execute ADC
     await cpu.step();
-    expect(cpu.getAccumulator()).toBe(0x20); // 0x90 + 0x90 = 0x120 (0x20 with carry)
+    expect(await getAccumulator(cpu)).toBe(0x20); // 0x90 + 0x90 = 0x120 (0x20 with carry)
     expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(true); // Overflow flag set
     expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry flag set
   });
@@ -125,7 +122,7 @@ describe("Final 100% coverage tests", async () => {
     
     // Execute SBC
     await cpu.step();
-    expect(cpu.getAccumulator()).toBe(0x20); // 0x50 - 0x30 = 0x20
+    expect(await getAccumulator(cpu)).toBe(0x20); // 0x50 - 0x30 = 0x20
     expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(false); // No overflow
     expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // No borrow needed
     
@@ -138,7 +135,7 @@ describe("Final 100% coverage tests", async () => {
     
     // Execute SBC
     await cpu.step();
-    expect(cpu.getAccumulator()).toBe(0xE0); // 0x30 - 0x50 = 0xE0 (negative)
+    expect(await getAccumulator(cpu)).toBe(0xE0); // 0x30 - 0x50 = 0xE0 (negative)
     expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(false); // No overflow
     expect(((await cpu.getState()).p & CARRY) !== 0).toBe(false); // Borrow needed
     
@@ -151,7 +148,7 @@ describe("Final 100% coverage tests", async () => {
     
     // Execute SBC
     await cpu.step();
-    expect(cpu.getAccumulator()).toBe(0x20); // 0x90 - 0x70 = 0x20
+    expect(await getAccumulator(cpu)).toBe(0x20); // 0x90 - 0x70 = 0x20
     expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(true); // Overflow flag set
     expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // No borrow needed
     
@@ -164,7 +161,7 @@ describe("Final 100% coverage tests", async () => {
     
     // Execute SBC
     await cpu.step();
-    expect(cpu.getAccumulator()).toBe(0x90); // 0x20 - 0x90 = 0x90 (negative result)
+    expect(await getAccumulator(cpu)).toBe(0x90); // 0x20 - 0x90 = 0x90 (negative result)
     expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(true); // Overflow flag set
     expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Negative flag set
   });
@@ -180,7 +177,7 @@ describe("Final 100% coverage tests", async () => {
     await cpu.setStatusFlag(CARRY);    // Set carry flag
     
     await cpu.step();
-    expect(cpu.getProgramCounter()).toBe(0x110C); // 0x10FA + 2 + 0x10 = 0x110C (correct calculation)
+    expect(await getProgramCounter(cpu)).toBe(0x110C); // 0x10FA + 2 + 0x10 = 0x110C (correct calculation)
     
     // Test BEQ with page crossing, zero set
     await cpu.setProgramCounter(0x10FA);
@@ -190,7 +187,7 @@ describe("Final 100% coverage tests", async () => {
     await cpu.setStatusFlag(ZERO);     // Set zero flag
     
     await cpu.step();
-    expect(cpu.getProgramCounter()).toBe(0x110C); // 0x10FA + 2 + 0x10 = 0x110C (correct calculation)
+    expect(await getProgramCounter(cpu)).toBe(0x110C); // 0x10FA + 2 + 0x10 = 0x110C (correct calculation)
     
     // Test BMI with page crossing, negative set
     await cpu.setProgramCounter(0x10FA);
@@ -200,7 +197,7 @@ describe("Final 100% coverage tests", async () => {
     await cpu.setStatusFlag(NEGATIVE); // Set negative flag
     
     await cpu.step();
-    expect(cpu.getProgramCounter()).toBe(0x110C); // 0x10FA + 2 + 0x10 = 0x110C (correct calculation)
+    expect(await getProgramCounter(cpu)).toBe(0x110C); // 0x10FA + 2 + 0x10 = 0x110C (correct calculation)
     
     // Test BVS with page crossing, overflow set
     await cpu.setProgramCounter(0x10FA);
@@ -210,7 +207,7 @@ describe("Final 100% coverage tests", async () => {
     await cpu.setStatusFlag(OVERFLOW); // Set overflow flag
     
     await cpu.step();
-    expect(cpu.getProgramCounter()).toBe(0x110C); // 0x10FA + 2 + 0x10 = 0x110C (correct calculation)
+    expect(await getProgramCounter(cpu)).toBe(0x110C); // 0x10FA + 2 + 0x10 = 0x110C (correct calculation)
   });
   
   // Test all shift/rotate instructions with the carry flag in both states
@@ -224,7 +221,7 @@ describe("Final 100% coverage tests", async () => {
     await cpu.clearStatusFlag(CARRY);   // Clear carry flag
     
     await cpu.step();
-    expect(cpu.getAccumulator()).toBe(0x00); // Result: 0x00, bit 0 goes to carry
+    expect(await getAccumulator(cpu)).toBe(0x00); // Result: 0x00, bit 0 goes to carry
     expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry flag set
     expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true);  // Zero flag set
     
@@ -292,18 +289,18 @@ describe("Final 100% coverage tests", async () => {
     await cpu.loadByte(0x1000, 0x00); // BRK
     
     // Save the initial stack pointer
-    const initialSP = cpu.getStackPointer();
+    const initialSP = await getStackPointer(cpu);
     
     // Execute BRK
     await cpu.step();
     
     // Check stack state after BRK
-    expect(cpu.getStackPointer()).toBe(initialSP - 3); // Stack pointer decremented by 3
+    expect(await getStackPointer(cpu)).toBe(initialSP - 3); // Stack pointer decremented by 3
     expect(((await cpu.getState()).p & INTERRUPT) !== 0).toBe(true); // Interrupt flag set
-    expect(cpu.getProgramCounter()).toBe(0x2000); // PC set to interrupt vector
+    expect(await getProgramCounter(cpu)).toBe(0x2000); // PC set to interrupt vector
     
     // Check status pushed on stack (using direct memory read)
-    const stackStatusValue = await cpu.readByte(0x0100 + cpu.getStackPointer() + 1);
+    const stackStatusValue = await cpu.readByte(0x0100 + await getStackPointer(cpu) + 1);
     expect((stackStatusValue & ZERO) === ZERO).toBe(true);
     expect((stackStatusValue & CARRY) === CARRY).toBe(true);
     expect((stackStatusValue & NEGATIVE) === NEGATIVE).toBe(true);
@@ -319,8 +316,8 @@ describe("Final 100% coverage tests", async () => {
     await cpu.step();
     
     // Check CPU state after RTI
-    expect(cpu.getStackPointer()).toBe(initialSP); // Stack pointer restored
-    expect(cpu.getProgramCounter()).toBe(0x1002); // PC set to address after BRK
+    expect(await getStackPointer(cpu)).toBe(initialSP); // Stack pointer restored
+    expect(await getProgramCounter(cpu)).toBe(0x1002); // PC set to address after BRK
     
     // Check restored flag values
     expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true);
@@ -350,7 +347,7 @@ describe("Final 100% coverage tests", async () => {
     await cpu.step();
     
     // Check result
-    expect(cpu.getAccumulator()).toBe(0x42);
+    expect(await getAccumulator(cpu)).toBe(0x42);
     
     // Test zero page Y addressing wrap-around
     // Setup memory
@@ -366,7 +363,7 @@ describe("Final 100% coverage tests", async () => {
     await cpu.step();
     
     // Check result
-    expect(cpu.getXRegister()).toBe(0x37);
+    expect(await getXRegister(cpu)).toBe(0x37);
   });
   
   // Test LDX Absolute,Y with various combinations
@@ -386,7 +383,7 @@ describe("Final 100% coverage tests", async () => {
     
     // Check results
     expect(cycles1).toBe(4); // No page crossing
-    expect(cpu.getXRegister()).toBe(0x00);
+    expect(await getXRegister(cpu)).toBe(0x00);
     expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true);
     
     // Test with page crossing, loading negative value
@@ -402,7 +399,7 @@ describe("Final 100% coverage tests", async () => {
     
     // Check results
     expect(cycles2).toBe(5); // Page crossing adds a cycle
-    expect(cpu.getXRegister()).toBe(0x80);
+    expect(await getXRegister(cpu)).toBe(0x80);
     expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true);
     
     // Test without page crossing, loading positive value
@@ -417,7 +414,7 @@ describe("Final 100% coverage tests", async () => {
     await cpu.step();
     
     // Check results
-    expect(cpu.getXRegister()).toBe(0x42);
+    expect(await getXRegister(cpu)).toBe(0x42);
     expect(((await cpu.getState()).p & ZERO) !== 0).toBe(false);
     expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(false);
   });

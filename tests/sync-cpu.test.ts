@@ -3,6 +3,7 @@ import { SyncCPU } from "../sync-cpu";
 import { CPU1 } from "../cpu1";
 import { CPU2 } from "../cpu2";
 import { CARRY, ZERO, OVERFLOW, NEGATIVE } from "../6502";
+import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStackPointer, getStatusRegister } from "./utils";
 
 describe("SyncCPU", () => {
     test("correctly synchronizes CPU states for basic operations", async () => {
@@ -21,12 +22,12 @@ describe("SyncCPU", () => {
         // Execute LDA #42
         let cycles = await syncCpu.step();
         expect(cycles).toBe(2);
-        expect(await syncCpu.getAccumulator()).toBe(0x2a);
+        expect(await await getAccumulator(syncCpu)).toBe(0x2a);
 
         // Execute ADC #13
         cycles = await syncCpu.step();
         expect(cycles).toBe(2);
-        expect(await syncCpu.getAccumulator()).toBe(0x37); // 42 + 13 = 55 (0x37)
+        expect(await await getAccumulator(syncCpu)).toBe(0x37); // 42 + 13 = 55 (0x37)
 
         // We successfully executed both steps, which means the states matched
     });
@@ -70,22 +71,22 @@ describe("SyncCPU", () => {
         // Execute JSR $0500
         let cycles = await syncCpu.step();
         expect(cycles).toBe(6);
-        expect(await syncCpu.getProgramCounter()).toBe(0x0500);
+        expect(await await getProgramCounter(syncCpu)).toBe(0x0500);
 
         // Execute LDA #$FF
         cycles = await syncCpu.step();
         expect(cycles).toBe(2);
-        expect(await syncCpu.getAccumulator()).toBe(0xff);
+        expect(await await getAccumulator(syncCpu)).toBe(0xff);
 
         // Execute RTS
         cycles = await syncCpu.step();
         expect(cycles).toBe(6);
-        expect(await syncCpu.getProgramCounter()).toBe(0x0403);
+        expect(await await getProgramCounter(syncCpu)).toBe(0x0403);
 
         // Execute INX
         cycles = await syncCpu.step();
         expect(cycles).toBe(2);
-        expect(await syncCpu.getXRegister()).toBe(1);
+        expect(await await getXRegister(syncCpu)).toBe(1);
 
         // We successfully executed the program with JSR/RTS, which means both CPUs handle stack operations correctly
     });
@@ -111,7 +112,7 @@ describe("SyncCPU", () => {
         // Execute ADC #$80
         await syncCpu.step();
         // 0x80 + 0x80 = 0x00 with carry and overflow
-        expect(await syncCpu.getAccumulator()).toBe(0x00);
+        expect(await await getAccumulator(syncCpu)).toBe(0x00);
         expect(((await syncCpu.getState()).p & CARRY) !== 0).toBe(true);
         expect(((await syncCpu.getState()).p & ZERO) !== 0).toBe(true);
         expect(((await syncCpu.getState()).p & OVERFLOW) !== 0).toBe(true);

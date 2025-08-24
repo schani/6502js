@@ -1,8 +1,9 @@
 import { describe, expect, it } from "bun:test";
 import { CPU1 } from "../6502";
+import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStackPointer, getStatusRegister } from "./utils";
 
 describe("Zero page wrap-around behavior", () => {
-  it("should correctly handle zero-page wrap-around with X register", () => {
+  it("should correctly handle zero-page wrap-around with X register", async () => {
     const cpu = new CPU1();
     
     // Set up memory: The value 0x42 at address 0x05
@@ -16,10 +17,10 @@ describe("Zero page wrap-around behavior", () => {
     
     // Execute and test
     cpu.step();
-    expect(cpu.getAccumulator()).toBe(0x42);
+    expect(await getAccumulator(cpu)).toBe(0x42);
   });
   
-  it("should adapt to the actual behavior for zero page Y addressing", () => {
+  it("should adapt to the actual behavior for zero page Y addressing", async () => {
     const cpu = new CPU1();
     
     // The original test used address 0x01, but our implementation seems to load from 0x02
@@ -33,9 +34,9 @@ describe("Zero page wrap-around behavior", () => {
     cpu.setYRegister(0xFF); // Y = 0xFF, so effective address might be different than expected
     
     // Get the actual value that gets loaded
-    const initialValue = cpu.getXRegister();
+    const initialValue = await getXRegister(cpu);
     cpu.step();
-    const loadedValue = cpu.getXRegister();
+    const loadedValue = await getXRegister(cpu);
     
     // This test just verifies that LDX Zero Page,Y executes without crashing
     // We're not testing the exact value since our implementation may differ

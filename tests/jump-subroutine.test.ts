@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU } from "./utils";
+import { createCPU, getProgramCounter, getStackPointer } from "./utils";
 
 describe("Jump and subroutine instructions", () => {
   it("should perform JMP absolute instruction", async () => {
@@ -12,7 +12,7 @@ describe("Jump and subroutine instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getProgramCounter()).toBe(0x1234);
+    expect(await getProgramCounter(cpu)).toBe(0x1234);
     expect(cycles).toBe(3);
   });
   
@@ -30,8 +30,8 @@ describe("Jump and subroutine instructions", () => {
     // Execute JSR
     let cycles = await cpu.step();
     
-    expect(cpu.getProgramCounter()).toBe(0x1234);
-    expect(cpu.getStackPointer()).toBe(0xFB); // SP decremented by 2 (for 16-bit return address)
+    expect(await getProgramCounter(cpu)).toBe(0x1234);
+    expect(await getStackPointer(cpu)).toBe(0xFB); // SP decremented by 2 (for 16-bit return address)
     expect(await cpu.readByte(0x01FC)).toBe(0x02); // Low byte of return address (PC+2-1)
     expect(await cpu.readByte(0x01FD)).toBe(0x00); // High byte of return address (PC+2-1)
     expect(cycles).toBe(6);
@@ -39,8 +39,8 @@ describe("Jump and subroutine instructions", () => {
     // Execute RTS
     cycles = await cpu.step();
     
-    expect(cpu.getProgramCounter()).toBe(0x0003); // Return address (0x0002) + 1
-    expect(cpu.getStackPointer()).toBe(0xFD); // SP incremented by 2
+    expect(await getProgramCounter(cpu)).toBe(0x0003); // Return address (0x0002) + 1
+    expect(await getStackPointer(cpu)).toBe(0xFD); // SP incremented by 2
     expect(cycles).toBe(6);
   });
 });

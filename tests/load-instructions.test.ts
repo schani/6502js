@@ -1,35 +1,34 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU, ZERO, NEGATIVE } from "./utils";
-
+import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStatusRegister, createCPU, ZERO, NEGATIVE } from "./utils";
 describe("Load instructions", async () => {
   it("should perform LDA immediate instruction", async () => {
     const cpu = createCPU();
     
     // LDA #$42 - Load accumulator with value 0x42
     await cpu.loadByte(0, 0xA9); // LDA immediate
-    cpu.loadByte(1, 0x42); // Value to load
+    await cpu.loadByte(1, 0x42); // Value to load
 
-    const cycles = await await cpu.step();
+    const cycles = await cpu.step();
     
-    expect(cpu.getAccumulator()).toBe(0x42);
-    expect(cpu.getProgramCounter()).toBe(2);  // PC should advance by 2 bytes
+    expect(await getAccumulator(cpu)).toBe(0x42);
+    expect(await getProgramCounter(cpu)).toBe(2);  // PC should advance by 2 bytes
     expect(cycles).toBe(2);  // LDA immediate takes 2 cycles
-    expect(cpu.getStatusRegister() & ZERO).toBe(0); // Zero flag should be clear
-    expect(cpu.getStatusRegister() & NEGATIVE).toBe(0); // Negative flag should be clear
+    expect(await getStatusRegister(cpu) & ZERO).toBe(0); // Zero flag should be clear
+    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0); // Negative flag should be clear
     
     // Test zero flag
     await cpu.setProgramCounter(0);
     cpu.loadByte(1, 0x00);
     await cpu.step();
-    expect(cpu.getAccumulator()).toBe(0);
-    expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // Zero flag should be set
+    expect(await getAccumulator(cpu)).toBe(0);
+    expect(await getStatusRegister(cpu) & ZERO).toBe(ZERO); // Zero flag should be set
     
     // Test negative flag
     await cpu.setProgramCounter(0);
     cpu.loadByte(1, 0x80);
     await cpu.step();
-    expect(cpu.getAccumulator()).toBe(0x80);
-    expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Negative flag should be set
+    expect(await getAccumulator(cpu)).toBe(0x80);
+    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(NEGATIVE); // Negative flag should be set
   });
 
   it("should perform LDX immediate instruction", async () => {
@@ -39,13 +38,13 @@ describe("Load instructions", async () => {
     cpu.loadByte(0, 0xA2); // LDX immediate
     cpu.loadByte(1, 0x42); // Value to load
 
-    const cycles = await await cpu.step();
+    const cycles = await cpu.step();
     
-    expect(cpu.getXRegister()).toBe(0x42);
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getXRegister(cpu)).toBe(0x42);
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(2);
-    expect(cpu.getStatusRegister() & ZERO).toBe(0);
-    expect(cpu.getStatusRegister() & NEGATIVE).toBe(0);
+    expect(await getStatusRegister(cpu) & ZERO).toBe(0);
+    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0);
   });
 
   it("should perform LDY immediate instruction", async () => {
@@ -55,13 +54,13 @@ describe("Load instructions", async () => {
     cpu.loadByte(0, 0xA0); // LDY immediate
     cpu.loadByte(1, 0x42); // Value to load
 
-    const cycles = await await cpu.step();
+    const cycles = await cpu.step();
     
-    expect(cpu.getYRegister()).toBe(0x42);
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getYRegister(cpu)).toBe(0x42);
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(2);
-    expect(cpu.getStatusRegister() & ZERO).toBe(0);
-    expect(cpu.getStatusRegister() & NEGATIVE).toBe(0);
+    expect(await getStatusRegister(cpu) & ZERO).toBe(0);
+    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0);
   });
 
   it("should perform LDA zero page instruction", async () => {
@@ -72,10 +71,10 @@ describe("Load instructions", async () => {
     cpu.loadByte(1, 0x42); // Zero page address
     cpu.loadByte(0x42, 0x37); // Value at zero page address
     
-    const cycles = await await cpu.step();
+    const cycles = await cpu.step();
     
-    expect(cpu.getAccumulator()).toBe(0x37);
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getAccumulator(cpu)).toBe(0x37);
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(3);
   });
 
@@ -87,10 +86,10 @@ describe("Load instructions", async () => {
     cpu.loadByte(1, 0x42); // Zero page address
     cpu.loadByte(0x42, 0x37); // Value at zero page address
     
-    const cycles = await await cpu.step();
+    const cycles = await cpu.step();
     
-    expect(cpu.getXRegister()).toBe(0x37);
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getXRegister(cpu)).toBe(0x37);
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(3);
   });
   
@@ -106,10 +105,10 @@ describe("Load instructions", async () => {
     cpu.loadByte(1, 0x20); // Zero page address
     cpu.loadByte(0x25, 0x42); // Value at (zero page address + X)
     
-    const cycles = await await cpu.step();
+    const cycles = await cpu.step();
     
-    expect(cpu.getAccumulator()).toBe(0x42);
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getAccumulator(cpu)).toBe(0x42);
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(4);
   });
   
@@ -124,10 +123,10 @@ describe("Load instructions", async () => {
     cpu.loadByte(1, 0x80); // Zero page address
     cpu.loadByte(0x7F, 0x42); // Value at (0x80 + 0xFF) & 0xFF = 0x7F (wrap around)
     
-    const cycles = await await cpu.step();
+    const cycles = await cpu.step();
     
-    expect(cpu.getAccumulator()).toBe(0x42);
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getAccumulator(cpu)).toBe(0x42);
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(4);
   });
   
@@ -142,10 +141,10 @@ describe("Load instructions", async () => {
     cpu.loadByte(1, 0x20); // Zero page address
     cpu.loadByte(0x25, 0x42); // Value at (zero page address + Y)
     
-    const cycles = await await cpu.step();
+    const cycles = await cpu.step();
     
-    expect(cpu.getXRegister()).toBe(0x42);
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getXRegister(cpu)).toBe(0x42);
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(4);
   });
   
@@ -159,10 +158,10 @@ describe("Load instructions", async () => {
     cpu.loadByte(2, 0x12); // High byte of address
     cpu.loadByte(0x1234, 0x42); // Value at absolute address
     
-    const cycles = await await cpu.step();
+    const cycles = await cpu.step();
     
-    expect(cpu.getAccumulator()).toBe(0x42);
-    expect(cpu.getProgramCounter()).toBe(3);
+    expect(await getAccumulator(cpu)).toBe(0x42);
+    expect(await getProgramCounter(cpu)).toBe(3);
     expect(cycles).toBe(4);
   });
   
@@ -178,10 +177,10 @@ describe("Load instructions", async () => {
     cpu.loadByte(2, 0x12); // High byte of address
     cpu.loadByte(0x1239, 0x42); // Value at (absolute address + X)
     
-    const cycles = await await cpu.step();
+    const cycles = await cpu.step();
     
-    expect(cpu.getAccumulator()).toBe(0x42);
-    expect(cpu.getProgramCounter()).toBe(3);
+    expect(await getAccumulator(cpu)).toBe(0x42);
+    expect(await getProgramCounter(cpu)).toBe(3);
     expect(cycles).toBe(4);
   });
   
@@ -197,10 +196,10 @@ describe("Load instructions", async () => {
     cpu.loadByte(2, 0x12); // High byte of address
     cpu.loadByte(0x1300, 0x42); // Value at (0x1201 + 0xFF) = 0x1300 (page boundary crossed)
     
-    const cycles = await await cpu.step();
+    const cycles = await cpu.step();
     
-    expect(cpu.getAccumulator()).toBe(0x42);
-    expect(cpu.getProgramCounter()).toBe(3);
+    expect(await getAccumulator(cpu)).toBe(0x42);
+    expect(await getProgramCounter(cpu)).toBe(3);
     expect(cycles).toBe(5); // Extra cycle for page boundary crossing
   });
   
@@ -216,10 +215,10 @@ describe("Load instructions", async () => {
     cpu.loadByte(2, 0x12); // High byte of address
     cpu.loadByte(0x1239, 0x42); // Value at (absolute address + Y)
     
-    const cycles = await await cpu.step();
+    const cycles = await cpu.step();
     
-    expect(cpu.getAccumulator()).toBe(0x42);
-    expect(cpu.getProgramCounter()).toBe(3);
+    expect(await getAccumulator(cpu)).toBe(0x42);
+    expect(await getProgramCounter(cpu)).toBe(3);
     expect(cycles).toBe(4);
   });
 });

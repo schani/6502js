@@ -1,6 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { type CPU, createCPU, CARRY, ZERO, INTERRUPT, DECIMAL, BREAK, UNUSED, OVERFLOW, NEGATIVE } from "./utils";
-
+import { getAccumulator, getProgramCounter, createCPU, type CPU, CARRY, ZERO, NEGATIVE, OVERFLOW, INTERRUPT, DECIMAL, BREAK, UNUSED } from "./utils";
 describe("Full coverage tests", () => {
   it("should test readByte edge case with undefined memory", async () => {
     const cpu = createCPU();
@@ -17,8 +16,8 @@ describe("Full coverage tests", () => {
     
     // Verify
     expect(cycles).toBe(2);
-    expect(await cpu.getAccumulator()).toBe(0); // Should read 0 from uninitialized memory
-    expect(await cpu.getProgramCounter()).toBe(0xF002);
+    expect(await await getAccumulator(cpu)).toBe(0); // Should read 0 from uninitialized memory
+    expect(await await getProgramCounter(cpu)).toBe(0xF002);
     expect((((await cpu.getState()).p & ZERO) !== 0)).toBe(true); // Result is zero
   });
   

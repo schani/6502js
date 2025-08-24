@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { ZERO, NEGATIVE } from "../6502";
-import { createCPU } from "./utils";
+import { createCPU, getYRegister } from "./utils";
 
 describe("LDY with different addressing modes", async () => {
   it("should perform LDY Zero Page,X instruction", async () => {
@@ -19,7 +19,7 @@ describe("LDY with different addressing modes", async () => {
     
     // Verify
     expect(cycles).toBe(4);
-    expect(await cpu.getYRegister()).toBe(0x42);
+    expect(await await getYRegister(cpu)).toBe(0x42);
     expect(((await cpu.getState()).p & ZERO) === 0).toBe(true); // Result is not zero
     expect(((await cpu.getState()).p & NEGATIVE) === 0).toBe(true); // Result is not negative
   });
@@ -40,7 +40,7 @@ describe("LDY with different addressing modes", async () => {
     
     // Verify
     expect(cycles).toBe(4);
-    expect(await cpu.getYRegister()).toBe(0x80);
+    expect(await await getYRegister(cpu)).toBe(0x80);
     expect(((await cpu.getState()).p & ZERO) === 0).toBe(true); // Result is not zero
     expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Result is negative (bit 7 set)
   });
@@ -62,7 +62,7 @@ describe("LDY with different addressing modes", async () => {
     
     // Verify
     expect(cycles).toBe(4); // No page boundary crossed
-    expect(await cpu.getYRegister()).toBe(0x00);
+    expect(await await getYRegister(cpu)).toBe(0x00);
     expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Result is zero
     expect(((await cpu.getState()).p & NEGATIVE) === 0).toBe(true); // Result is not negative
   });
@@ -84,7 +84,7 @@ describe("LDY with different addressing modes", async () => {
     
     // Verify
     expect(cycles).toBe(5); // +1 cycle for page boundary crossing
-    expect(await cpu.getYRegister()).toBe(0xFF);
+    expect(await await getYRegister(cpu)).toBe(0xFF);
     expect(((await cpu.getState()).p & ZERO) === 0).toBe(true); // Result is not zero
     expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Result is negative (bit 7 set)
   });

@@ -13,22 +13,22 @@ export function createCompatWrapper(cpu: CPU): any {
         get(target, prop) {
             // Handle accessing properties that existed in the old CPU state
             if (prop === 'a') {
-                return target.getAccumulator();
+                return target.getState().then(state => state.a);
             }
             if (prop === 'x') {
-                return target.getXRegister();
+                return target.getState().then(state => state.x);
             }
             if (prop === 'y') {
-                return target.getYRegister();
+                return target.getState().then(state => state.y);
             }
             if (prop === 'pc') {
-                return target.getProgramCounter();
+                return target.getState().then(state => state.pc);
             }
             if (prop === 'sp') {
-                return target.getStackPointer();
+                return target.getState().then(state => state.sp);
             }
             if (prop === 'p') {
-                return target.getStatusRegister();
+                return target.getState().then(state => state.p);
             }
             if (prop === 'mem') {
                 // Return a proxy array that translates array access to CPU.readByte/loadByte

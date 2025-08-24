@@ -1,7 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { CARRY, ZERO, NEGATIVE, OVERFLOW } from "../6502";
-import { createCPU } from "./utils";
-
+import { getAccumulator, getProgramCounter, createCPU } from "./utils";
 describe("Addressing modes", () => {
   // This test will verify various addressing modes, focusing on instructions
   // and addressing mode combinations that might not be fully covered elsewhere
@@ -24,8 +23,8 @@ describe("Addressing modes", () => {
     
     // Verify results
     expect(cycles).toBe(5); // 4+1 cycles (page boundary crossed)
-    expect(await cpu.getAccumulator()).toBe(0xC1); // 0xF5 & 0xC3 = 0xC1
-    expect(await cpu.getProgramCounter()).toBe(3);
+    expect(await await getAccumulator(cpu)).toBe(0xC1); // 0xF5 & 0xC3 = 0xC1
+    expect(await await getProgramCounter(cpu)).toBe(3);
     
     // Test ORA Absolute,X with page crossing
     await cpu.loadByte(3, 0x1D); // ORA Absolute,X
@@ -39,7 +38,7 @@ describe("Addressing modes", () => {
     cycles = await cpu.step();
     
     expect(cycles).toBe(5); // 4+1 cycles (page boundary crossed)
-    expect(await cpu.getAccumulator()).toBe(0x0F); // 0x03 | 0x0C = 0x0F
+    expect(await await getAccumulator(cpu)).toBe(0x0F); // 0x03 | 0x0C = 0x0F
     
     // Test EOR Absolute,X with page crossing
     await cpu.loadByte(6, 0x5D); // EOR Absolute,X
@@ -53,7 +52,7 @@ describe("Addressing modes", () => {
     cycles = await cpu.step();
     
     expect(cycles).toBe(5); // 4+1 cycles (page boundary crossed)
-    expect(await cpu.getAccumulator()).toBe(0x66); // 0x55 ^ 0x33 = 0x66
+    expect(await await getAccumulator(cpu)).toBe(0x66); // 0x55 ^ 0x33 = 0x66
   });
 
   it("should perform AND/ORA/EOR with absolute,Y addressing and page crossing", async () => {
@@ -74,7 +73,7 @@ describe("Addressing modes", () => {
     
     // Verify results
     expect(cycles).toBe(5); // 4+1 cycles (page boundary crossed)
-    expect(await cpu.getAccumulator()).toBe(0xAA); // 0xFF & 0xAA = 0xAA
+    expect(await await getAccumulator(cpu)).toBe(0xAA); // 0xFF & 0xAA = 0xAA
     
     // Test ORA Absolute,Y with page crossing
     await cpu.loadByte(3, 0x19); // ORA Absolute,Y
@@ -88,7 +87,7 @@ describe("Addressing modes", () => {
     cycles = await cpu.step();
     
     expect(cycles).toBe(5); // 4+1 cycles (page boundary crossed)
-    expect(await cpu.getAccumulator()).toBe(0x3F); // 0x0C | 0x33 = 0x3F
+    expect(await await getAccumulator(cpu)).toBe(0x3F); // 0x0C | 0x33 = 0x3F
     
     // Test EOR Absolute,Y with page crossing
     await cpu.loadByte(6, 0x59); // EOR Absolute,Y
@@ -102,7 +101,7 @@ describe("Addressing modes", () => {
     cycles = await cpu.step();
     
     expect(cycles).toBe(5); // 4+1 cycles (page boundary crossed)
-    expect(await cpu.getAccumulator()).toBe(0xFF); // 0x0F ^ 0xF0 = 0xFF
+    expect(await await getAccumulator(cpu)).toBe(0xFF); // 0x0F ^ 0xF0 = 0xFF
   });
 
   it("should perform AND/ORA/EOR with zero page,X addressing", async () => {
@@ -122,7 +121,7 @@ describe("Addressing modes", () => {
     
     // Verify results
     expect(cycles).toBe(4);
-    expect(await cpu.getAccumulator()).toBe(0x55); // 0xFF & 0x55 = 0x55
+    expect(await await getAccumulator(cpu)).toBe(0x55); // 0xFF & 0x55 = 0x55
     
     // Test ORA Zero Page,X
     await cpu.loadByte(2, 0x15); // ORA Zero Page,X
@@ -135,7 +134,7 @@ describe("Addressing modes", () => {
     cycles = await cpu.step();
     
     expect(cycles).toBe(4);
-    expect(await cpu.getAccumulator()).toBe(0x0F); // 0x05 | 0x0A = 0x0F
+    expect(await await getAccumulator(cpu)).toBe(0x0F); // 0x05 | 0x0A = 0x0F
     
     // Test EOR Zero Page,X
     await cpu.loadByte(4, 0x55); // EOR Zero Page,X
@@ -148,7 +147,7 @@ describe("Addressing modes", () => {
     cycles = await cpu.step();
     
     expect(cycles).toBe(4);
-    expect(await cpu.getAccumulator()).toBe(0xFF); // 0x55 ^ 0xAA = 0xFF
+    expect(await await getAccumulator(cpu)).toBe(0xFF); // 0x55 ^ 0xAA = 0xFF
   });
 
   it("should perform AND/ORA/EOR with (Indirect,X) addressing", async () => {
@@ -170,7 +169,7 @@ describe("Addressing modes", () => {
     
     // Verify results
     expect(cycles).toBe(6);
-    expect(await cpu.getAccumulator()).toBe(0x33); // 0xFF & 0x33 = 0x33
+    expect(await await getAccumulator(cpu)).toBe(0x33); // 0xFF & 0x33 = 0x33
     
     // Test ORA (Indirect,X)
     await cpu.loadByte(2, 0x01); // ORA (Indirect,X)
@@ -182,7 +181,7 @@ describe("Addressing modes", () => {
     cycles = await cpu.step();
     
     expect(cycles).toBe(6);
-    expect(await cpu.getAccumulator()).toBe(0x3F); // 0x0C | 0x33 = 0x3F
+    expect(await await getAccumulator(cpu)).toBe(0x3F); // 0x0C | 0x33 = 0x3F
     
     // Test EOR (Indirect,X)
     await cpu.loadByte(4, 0x41); // EOR (Indirect,X)
@@ -194,7 +193,7 @@ describe("Addressing modes", () => {
     cycles = await cpu.step();
     
     expect(cycles).toBe(6);
-    expect(await cpu.getAccumulator()).toBe(0x66); // 0x55 ^ 0x33 = 0x66
+    expect(await await getAccumulator(cpu)).toBe(0x66); // 0x55 ^ 0x33 = 0x66
   });
 
   it("should perform AND/ORA/EOR with (Indirect),Y addressing and page crossing", async () => {
@@ -216,7 +215,7 @@ describe("Addressing modes", () => {
     
     // Verify results
     expect(cycles).toBe(6); // 5+1 cycles (page boundary crossed)
-    expect(await cpu.getAccumulator()).toBe(0xC3); // 0xFF & 0xC3 = 0xC3
+    expect(await await getAccumulator(cpu)).toBe(0xC3); // 0xFF & 0xC3 = 0xC3
     
     // Test ORA (Indirect),Y with page crossing
     await cpu.loadByte(2, 0x11); // ORA (Indirect),Y
@@ -228,7 +227,7 @@ describe("Addressing modes", () => {
     cycles = await cpu.step();
     
     expect(cycles).toBe(6); // 5+1 cycles (page boundary crossed)
-    expect(await cpu.getAccumulator()).toBe(0xCF); // 0x0C | 0xC3 = 0xCF
+    expect(await await getAccumulator(cpu)).toBe(0xCF); // 0x0C | 0xC3 = 0xCF
     
     // Test EOR (Indirect),Y with page crossing
     await cpu.loadByte(4, 0x51); // EOR (Indirect),Y
@@ -240,7 +239,7 @@ describe("Addressing modes", () => {
     cycles = await cpu.step();
     
     expect(cycles).toBe(6); // 5+1 cycles (page boundary crossed)
-    expect(await cpu.getAccumulator()).toBe(0x96); // 0x55 ^ 0xC3 = 0x96
+    expect(await await getAccumulator(cpu)).toBe(0x96); // 0x55 ^ 0xC3 = 0x96
   });
 
   it("should perform CMP/CPX/CPY with various addressing modes", async () => {
@@ -509,7 +508,7 @@ describe("Addressing modes", () => {
     
     // Verify results
     expect(cycles).toBe(3);
-    expect(await cpu.getProgramCounter()).toBe(0x12); // 0x02 (PC after opcode+operand) + 0x10 (offset)
+    expect(await await getProgramCounter(cpu)).toBe(0x12); // 0x02 (PC after opcode+operand) + 0x10 (offset)
     
     // Test BNE when Z=0
     await cpu.loadByte(0x12, 0xD0); // BNE
@@ -520,7 +519,7 @@ describe("Addressing modes", () => {
     cycles = await cpu.step();
     
     expect(cycles).toBe(3);
-    expect(await cpu.getProgramCounter()).toBe(0x12); // 0x14 (PC after opcode+operand) - 2 (negative offset)
+    expect(await await getProgramCounter(cpu)).toBe(0x12); // 0x14 (PC after opcode+operand) - 2 (negative offset)
     
     // Test BMI when N=1
     await cpu.loadByte(0x12, 0x30); // BMI
@@ -531,7 +530,7 @@ describe("Addressing modes", () => {
     cycles = await cpu.step();
     
     expect(cycles).toBe(4); // 3+1 (page boundary crossed)
-    expect(await cpu.getProgramCounter()).toBe(0xFF94); // 0x14 (PC after opcode+operand) - 128 (negative offset) = 0xFF94
+    expect(await await getProgramCounter(cpu)).toBe(0xFF94); // 0x14 (PC after opcode+operand) - 128 (negative offset) = 0xFF94
     
     // Test BPL when N=0
     await cpu.loadByte(0xFF94, 0x10); // BPL
@@ -543,7 +542,7 @@ describe("Addressing modes", () => {
     cycles = await cpu.step();
     
     expect(cycles).toBe(4); // 3+1 (page boundary crossed)
-    expect(await cpu.getProgramCounter()).toBe(0x01); // 0xFF96 (PC after opcode+operand) + 0x6B (offset) = 0x01 (wraps around)
+    expect(await await getProgramCounter(cpu)).toBe(0x01); // 0xFF96 (PC after opcode+operand) + 0x6B (offset) = 0x01 (wraps around)
     
     // Test BVS when V=1
     await cpu.loadByte(0x01, 0x70); // BVS
@@ -554,7 +553,7 @@ describe("Addressing modes", () => {
     cycles = await cpu.step();
     
     expect(cycles).toBe(3);
-    expect(await cpu.getProgramCounter()).toBe(0x13); // 0x03 (PC after opcode+operand) + 0x10 (offset)
+    expect(await await getProgramCounter(cpu)).toBe(0x13); // 0x03 (PC after opcode+operand) + 0x10 (offset)
     
     // Test BVC when V=0
     await cpu.loadByte(0x13, 0x50); // BVC
@@ -566,6 +565,6 @@ describe("Addressing modes", () => {
     cycles = await cpu.step();
     
     expect(cycles).toBe(3);
-    expect(await cpu.getProgramCounter()).toBe(0x25); // 0x15 (PC after opcode+operand) + 0x10 (offset)
+    expect(await await getProgramCounter(cpu)).toBe(0x25); // 0x15 (PC after opcode+operand) + 0x10 (offset)
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU } from "./utils";
+import { getAccumulator, getXRegister, getStatusRegister, createCPU } from "./utils";
 import { ZERO, NEGATIVE, CARRY, OVERFLOW, UNUSED } from "../6502";
 
 describe("Final coverage tests", () => {
@@ -44,8 +44,8 @@ describe("Final coverage tests", () => {
     
     // Execute LDX Absolute,Y
     await cpu.step();
-    expect(cpu.getXRegister()).toBe(0x00);
-    expect((cpu.getStatusRegister() & ZERO) !== 0).toBe(true);
+    expect(await getXRegister(cpu)).toBe(0x00);
+    expect((await getStatusRegister(cpu) & ZERO) !== 0).toBe(true);
     
     // Test LDX Absolute,Y with negative result and no page crossing
     await cpu.setProgramCounter(0);
@@ -57,8 +57,8 @@ describe("Final coverage tests", () => {
     
     // Execute LDX Absolute,Y
     await cpu.step();
-    expect(cpu.getXRegister()).toBe(0x80);
-    expect((cpu.getStatusRegister() & NEGATIVE) !== 0).toBe(true);
+    expect(await getXRegister(cpu)).toBe(0x80);
+    expect((await getStatusRegister(cpu) & NEGATIVE) !== 0).toBe(true);
   });
   
   // Test various instruction combinations with memory operations
@@ -88,7 +88,7 @@ describe("Final coverage tests", () => {
       
       // Execute LDA Absolute
       await cpu.step();
-      expect(cpu.getAccumulator()).toBe(0x42);
+      expect(await getAccumulator(cpu)).toBe(0x42);
     }
   });
   
@@ -105,9 +105,9 @@ describe("Final coverage tests", () => {
     
     // Execute ADC
     await cpu.step();
-    expect(cpu.getAccumulator()).toBe(0x03); // 0x81 + 0x81 + 1 = 0x103 (with carry)
-    expect((cpu.getStatusRegister() & OVERFLOW) !== 0).toBe(true); // Should have overflow
-    expect((cpu.getStatusRegister() & CARRY) !== 0).toBe(true);    // Should have carry
+    expect(await getAccumulator(cpu)).toBe(0x03); // 0x81 + 0x81 + 1 = 0x103 (with carry)
+    expect((await getStatusRegister(cpu) & OVERFLOW) !== 0).toBe(true); // Should have overflow
+    expect((await getStatusRegister(cpu) & CARRY) !== 0).toBe(true);    // Should have carry
     
     // Test SBC with positive - negative = negative (overflow)
     await cpu.setProgramCounter(0);
@@ -118,9 +118,9 @@ describe("Final coverage tests", () => {
     
     // Execute SBC
     await cpu.step();
-    expect(cpu.getAccumulator()).toBe(0x80); // 0x01 - 0x81 = 0x80
-    expect((cpu.getStatusRegister() & OVERFLOW) !== 0).toBe(true); // Should have overflow
-    expect((cpu.getStatusRegister() & NEGATIVE) !== 0).toBe(true); // Should be negative
+    expect(await getAccumulator(cpu)).toBe(0x80); // 0x01 - 0x81 = 0x80
+    expect((await getStatusRegister(cpu) & OVERFLOW) !== 0).toBe(true); // Should have overflow
+    expect((await getStatusRegister(cpu) & NEGATIVE) !== 0).toBe(true); // Should be negative
   });
   
   // Test all shift/rotate instructions with specific inputs
@@ -134,9 +134,9 @@ describe("Final coverage tests", () => {
     
     // Execute ASL
     await cpu.step();
-    expect(cpu.getAccumulator()).toBe(0x00);
-    expect((cpu.getStatusRegister() & CARRY) !== 0).toBe(true);
-    expect((cpu.getStatusRegister() & ZERO) !== 0).toBe(true);
+    expect(await getAccumulator(cpu)).toBe(0x00);
+    expect((await getStatusRegister(cpu) & CARRY) !== 0).toBe(true);
+    expect((await getStatusRegister(cpu) & ZERO) !== 0).toBe(true);
     
     // Test LSR with 0x01 input (sets carry, clears accumulator, sets Z flag)
     await cpu.setProgramCounter(0);
@@ -145,9 +145,9 @@ describe("Final coverage tests", () => {
     
     // Execute LSR
     await cpu.step();
-    expect(cpu.getAccumulator()).toBe(0x00);
-    expect((cpu.getStatusRegister() & CARRY) !== 0).toBe(true);
-    expect((cpu.getStatusRegister() & ZERO) !== 0).toBe(true);
+    expect(await getAccumulator(cpu)).toBe(0x00);
+    expect((await getStatusRegister(cpu) & CARRY) !== 0).toBe(true);
+    expect((await getStatusRegister(cpu) & ZERO) !== 0).toBe(true);
     
     // Test ROL with 0x80 input and carry set
     // (rotates 1 into bit 0, sets carry from bit 7)
@@ -158,9 +158,9 @@ describe("Final coverage tests", () => {
     
     // Execute ROL
     await cpu.step();
-    expect(cpu.getAccumulator()).toBe(0x01);
-    expect((cpu.getStatusRegister() & CARRY) !== 0).toBe(true);
-    expect((cpu.getStatusRegister() & ZERO) !== 0).toBe(false);
+    expect(await getAccumulator(cpu)).toBe(0x01);
+    expect((await getStatusRegister(cpu) & CARRY) !== 0).toBe(true);
+    expect((await getStatusRegister(cpu) & ZERO) !== 0).toBe(false);
     
     // Test ROR with 0x01 input and carry set
     // (rotates 1 into bit 7, sets carry from bit 0)
@@ -171,9 +171,9 @@ describe("Final coverage tests", () => {
     
     // Execute ROR
     await cpu.step();
-    expect(cpu.getAccumulator()).toBe(0x80);
-    expect((cpu.getStatusRegister() & CARRY) !== 0).toBe(true);
-    expect((cpu.getStatusRegister() & NEGATIVE) !== 0).toBe(true);
+    expect(await getAccumulator(cpu)).toBe(0x80);
+    expect((await getStatusRegister(cpu) & CARRY) !== 0).toBe(true);
+    expect((await getStatusRegister(cpu) & NEGATIVE) !== 0).toBe(true);
   });
   
   // Test zero-page memory access with wrapping behavior
@@ -191,7 +191,7 @@ describe("Final coverage tests", () => {
     
     // Execute LDA Zero Page,X
     await cpu.step();
-    expect(cpu.getAccumulator()).toBe(0x42);
+    expect(await getAccumulator(cpu)).toBe(0x42);
     
     // Test zero page Y addressing with wrap-around
     // Create a completely fresh CPU to avoid any side effects
@@ -203,7 +203,7 @@ describe("Final coverage tests", () => {
     }
     
     // Save initial X value
-    const initialX = freshCpu.getXRegister();
+    const initialX = await getXRegister(freshCpu);
     
     freshCpu.setProgramCounter(0);
     freshCpu.loadByte(0, 0xB6); // LDX Zero Page,Y
@@ -214,10 +214,10 @@ describe("Final coverage tests", () => {
     freshCpu.step();
     
     // Just verify the instruction ran and changed the X register
-    expect(freshCpu.getXRegister()).not.toBe(initialX);
+    expect(await getXRegister(freshCpu)).not.toBe(initialX);
     
     // Based on our debugging, we know our CPU implementation loads from address 0x02
     // Let's adapt the test to the actual behavior
-    expect(freshCpu.getXRegister()).toBe(2);
+    expect(await getXRegister(freshCpu)).toBe(2);
   });
 });

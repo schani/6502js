@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU } from "./utils";
+import { createCPU, getXRegister, getAccumulator, getStackPointer, getProgramCounter } from "./utils";
 import { CARRY, ZERO, NEGATIVE, OVERFLOW, BREAK, UNUSED, INTERRUPT } from "../6502";
 
 describe("Comprehensive coverage tests", () => {
@@ -59,7 +59,7 @@ describe("Comprehensive coverage tests", () => {
     
     // Check if crossing page boundary costs an extra cycle
     expect(cycles).toBe(5); // 4 + 1 for page cross
-    expect(await cpu.getXRegister()).toBe(0x42);
+    expect(await await getXRegister(cpu)).toBe(0x42);
   });
 
   // Test ROL, ROR, ASL, LSR instructions with specific conditions
@@ -73,7 +73,7 @@ describe("Comprehensive coverage tests", () => {
     await cpu.setStatusFlag(CARRY);     // Carry flag set
     
     await cpu.step();
-    expect(await cpu.getAccumulator()).toBe(0x01); // Result should be 0x01 (carry rotated in)
+    expect(await await getAccumulator(cpu)).toBe(0x01); // Result should be 0x01 (carry rotated in)
     expect((((await cpu.getState()).p & CARRY) !== 0)).toBe(false); // Carry flag should be cleared
     expect((((await cpu.getState()).p & ZERO) !== 0)).toBe(false);  // Zero flag should be cleared
     expect((((await cpu.getState()).p & NEGATIVE) !== 0)).toBe(false); // Negative flag should be cleared
@@ -85,7 +85,7 @@ describe("Comprehensive coverage tests", () => {
     await cpu.setStatusFlag(CARRY);     // Carry flag set
     
     await cpu.step();
-    expect(await cpu.getAccumulator()).toBe(0x80); // Result should be 0x80 (carry rotated to bit 7)
+    expect(await await getAccumulator(cpu)).toBe(0x80); // Result should be 0x80 (carry rotated to bit 7)
     expect((((await cpu.getState()).p & CARRY) !== 0)).toBe(false); // Carry flag should be cleared
     expect((((await cpu.getState()).p & ZERO) !== 0)).toBe(false);  // Zero flag should be cleared
     expect((((await cpu.getState()).p & NEGATIVE) !== 0)).toBe(true); // Negative flag should be set
@@ -96,7 +96,7 @@ describe("Comprehensive coverage tests", () => {
     await cpu.setAccumulator(0x00);      // Accumulator = 0
     
     await cpu.step();
-    expect(await cpu.getAccumulator()).toBe(0x00); // Result should be 0
+    expect(await await getAccumulator(cpu)).toBe(0x00); // Result should be 0
     expect((((await cpu.getState()).p & CARRY) !== 0)).toBe(false); // Carry flag should be cleared
     expect((((await cpu.getState()).p & ZERO) !== 0)).toBe(true);  // Zero flag should be set
     
@@ -106,7 +106,7 @@ describe("Comprehensive coverage tests", () => {
     await cpu.setAccumulator(0x01);      // Accumulator = 1
     
     await cpu.step();
-    expect(await cpu.getAccumulator()).toBe(0x00); // Result should be 0
+    expect(await await getAccumulator(cpu)).toBe(0x00); // Result should be 0
     expect((((await cpu.getState()).p & CARRY) !== 0)).toBe(true); // Carry flag should be set
     expect((((await cpu.getState()).p & ZERO) !== 0)).toBe(true);   // Zero flag should be set
   });
@@ -228,10 +228,10 @@ describe("Comprehensive coverage tests", () => {
     await cpu.step();
     
     // Remember current stack pointer after BRK
-    const stackPointerAfterBRK = await cpu.getStackPointer();
+    const stackPointerAfterBRK = await await getStackPointer(cpu);
     
     // Check if processor is at the interrupt handler
-    expect(await cpu.getProgramCounter()).toBe(0x2000);
+    expect(await await getProgramCounter(cpu)).toBe(0x2000);
     
     // After BRK, stack should have:
     // SP+1: status flags with B set
@@ -253,7 +253,7 @@ describe("Comprehensive coverage tests", () => {
     await cpu.step();
     
     // Check if PC was restored correctly
-    expect(cpu.getProgramCounter()).toBe(0x1002);
+    expect(await getProgramCounter(cpu)).toBe(0x1002);
     
     // Check if status flags were restored (with B flag cleared)
     expect((((await cpu.getState()).p & ZERO) !== 0)).toBe(true);
@@ -275,7 +275,7 @@ describe("Comprehensive coverage tests", () => {
     await cpu.setStatusFlag(CARRY);     // Carry flag set
     
     await cpu.step();
-    expect(await cpu.getAccumulator()).toBe(0xE1); // 0x70 + 0x70 + 1 = 0xE1
+    expect(await await getAccumulator(cpu)).toBe(0xE1); // 0x70 + 0x70 + 1 = 0xE1
     expect((((await cpu.getState()).p & OVERFLOW) !== 0)).toBe(true); // Overflow flag should be set
     expect((((await cpu.getState()).p & NEGATIVE) !== 0)).toBe(true); // Negative flag should be set
     
@@ -287,7 +287,7 @@ describe("Comprehensive coverage tests", () => {
     await cpu.setStatusFlag(CARRY);     // Carry flag set (no borrow)
     
     await cpu.step();
-    expect(await cpu.getAccumulator()).toBe(0x20); // 0x90 - 0x70 = 0x20
+    expect(await await getAccumulator(cpu)).toBe(0x20); // 0x90 - 0x70 = 0x20
     expect((((await cpu.getState()).p & OVERFLOW) !== 0)).toBe(true); // Overflow flag should be set
     expect((((await cpu.getState()).p & NEGATIVE) !== 0)).toBe(false); // Negative flag should be cleared
   });
@@ -306,7 +306,7 @@ describe("Comprehensive coverage tests", () => {
     
     const cycles = await cpu.step();
     expect(cycles).toBe(4); // No page crossing
-    expect(await cpu.getXRegister()).toBe(0xFF);
+    expect(await await getXRegister(cpu)).toBe(0xFF);
     expect((((await cpu.getState()).p & NEGATIVE) !== 0)).toBe(true); // Negative flag should be set
     
     // Test LDX Absolute,Y with zero result
@@ -318,7 +318,7 @@ describe("Comprehensive coverage tests", () => {
     await cpu.loadByte(0x0085, 0x00); // Value to load (zero)
     
     await cpu.step();
-    expect(await cpu.getXRegister()).toBe(0x00);
+    expect(await await getXRegister(cpu)).toBe(0x00);
     expect((((await cpu.getState()).p & ZERO) !== 0)).toBe(true); // Zero flag should be set
   });
 

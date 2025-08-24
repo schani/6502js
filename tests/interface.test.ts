@@ -3,7 +3,7 @@ import type { CPU } from "../cpu";
 import { CPU1, CPU2 } from "../cpu";
 
 describe("CPU Interface Implementation", () => {
-  it("should allow CPU1 and CPU2 to be used interchangeably", () => {
+  it("should allow CPU1 and CPU2 to be used interchangeably", async () => {
     // Test that both CPU implementations satisfy the interface
     const cpu1: CPU = new CPU1();
     const cpu2: CPU = new CPU2();
@@ -18,8 +18,8 @@ describe("CPU Interface Implementation", () => {
     expect(typeof cpu2.reset).toBe("function");
     
     // Test that both CPUs initialize with the same default state
-    const state1 = cpu1.getState();
-    const state2 = cpu2.getState();
+    const state1 = await cpu1.getState();
+    const state2 = await cpu2.getState();
     
     expect(state1.a).toBe(state2.a);
     expect(state1.x).toBe(state2.x);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { BREAK, CARRY, DECIMAL, INTERRUPT, NEGATIVE, OVERFLOW, UNUSED, ZERO, defined } from "../6502";
-import { createCPU } from "./utils";
+import { createCPU, getStackPointer, getStatusRegister } from "./utils";
 
 describe("System instructions", () => {
   it("should perform BRK instruction", async () => {
@@ -68,10 +68,10 @@ describe("System instructions", () => {
     expect((await cpu.getState()).pc).toBe(0x1002);
     
     // Check status was restored (B flag should be ignored)
-    expect(cpu.getStatusRegister()).toBe(UNUSED); // Just UNUSED bit
+    expect(await getStatusRegister(cpu)).toBe(UNUSED); // Just UNUSED bit
     
     // Stack pointer should be incremented by 3
-    expect(cpu.getStackPointer()).toBe(0xFD);
+    expect(await getStackPointer(cpu)).toBe(0xFD);
   });
   
   it("should properly handle status flags with BRK/RTI", async () => {
@@ -111,6 +111,6 @@ describe("System instructions", () => {
     expect((await cpu.getState()).pc).toBe(0x3002);
     
     // Status should be restored (except B flag, which is not a real flag)
-    expect(cpu.getStatusRegister()).toBe(UNUSED | CARRY | ZERO | NEGATIVE | OVERFLOW | DECIMAL);
+    expect(await getStatusRegister(cpu)).toBe(UNUSED | CARRY | ZERO | NEGATIVE | OVERFLOW | DECIMAL);
   });
 });

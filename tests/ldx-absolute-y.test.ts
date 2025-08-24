@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU } from "./utils";
+import { createCPU, getXRegister, getProgramCounter } from "./utils";
 import { ZERO, NEGATIVE } from "../6502";
 
 describe("LDX Absolute,Y addressing mode", () => {
@@ -23,10 +23,10 @@ describe("LDX Absolute,Y addressing mode", () => {
     expect(cycles).toBe(5);
     
     // Check if X register was loaded with the value
-    expect(await cpu.getXRegister()).toBe(0x42);
+    expect(await await getXRegister(cpu)).toBe(0x42);
     
     // Check PC was incremented correctly
-    expect(await cpu.getProgramCounter()).toBe(0x1003);
+    expect(await await getProgramCounter(cpu)).toBe(0x1003);
     
     // Now test without page crossing
     await cpu.setProgramCounter(0x1000);
@@ -45,7 +45,7 @@ describe("LDX Absolute,Y addressing mode", () => {
     expect(cyclesNoPageCross).toBe(4);
     
     // Check if X register was loaded with the value
-    expect(await cpu.getXRegister()).toBe(0x84);
+    expect(await await getXRegister(cpu)).toBe(0x84);
     
     // Check if negative flag was set
     expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true);
@@ -64,7 +64,7 @@ describe("LDX Absolute,Y addressing mode", () => {
     await cpu.step();
     
     // Check if X register was loaded with the value
-    expect(await cpu.getXRegister()).toBe(0x00);
+    expect(await await getXRegister(cpu)).toBe(0x00);
     
     // Check if zero flag was set
     expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true);

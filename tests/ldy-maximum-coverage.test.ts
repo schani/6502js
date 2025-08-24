@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { ZERO, NEGATIVE } from "../6502";
-import { createCPU } from "./utils";
+import { createCPU, getYRegister, getProgramCounter } from "./utils";
 
 describe("Maximum LDY instruction coverage", () => {
   // This test specifically targets the remaining uncovered lines in cpu.ts
@@ -18,10 +18,10 @@ describe("Maximum LDY instruction coverage", () => {
     let cycles = await cpu.step();
     
     expect(cycles).toBe(4);
-    expect(await cpu.getYRegister()).toBe(0xFF); // Reading from the last byte of memory
+    expect(await await getYRegister(cpu)).toBe(0xFF); // Reading from the last byte of memory
     // PC will be 0 because it's wrapped around to the start
     // However, due to how the emulator works, this might be represented as 0xFFFF + 3 = 0x10002 (65538)
-    const pc = await cpu.getProgramCounter();
+    const pc = await await getProgramCounter(cpu);
     expect(pc > 0xFF00 || pc < 0x0010).toBe(true);
     
     // Test with Absolute,X and page crossing at boundary
@@ -36,8 +36,8 @@ describe("Maximum LDY instruction coverage", () => {
     cycles = await cpu.step();
     
     expect(cycles).toBe(5); // 4 + 1 for page boundary crossing
-    expect(await cpu.getYRegister()).toBe(0x55);
-    expect(cpu.getProgramCounter()).toBe(0x2003);
+    expect(await await getYRegister(cpu)).toBe(0x55);
+    expect(await getProgramCounter(cpu)).toBe(0x2003);
   });
   
   // This test covers additional zero page operations
@@ -54,8 +54,8 @@ describe("Maximum LDY instruction coverage", () => {
     let cycles = await cpu.step();
     
     expect(cycles).toBe(3);
-    expect(await cpu.getYRegister()).toBe(0x77);
-    expect(cpu.getProgramCounter()).toBe(0x1002);
+    expect(await await getYRegister(cpu)).toBe(0x77);
+    expect(await getProgramCounter(cpu)).toBe(0x1002);
     
     // Test with Zero Page,X that wraps around
     await cpu.loadByte(0x1002, 0xB4); // LDY Zero Page,X
@@ -68,7 +68,7 @@ describe("Maximum LDY instruction coverage", () => {
     cycles = await cpu.step();
     
     expect(cycles).toBe(4);
-    expect(await cpu.getYRegister()).toBe(0x66);
-    expect(cpu.getProgramCounter()).toBe(0x1004);
+    expect(await await getYRegister(cpu)).toBe(0x66);
+    expect(await getProgramCounter(cpu)).toBe(0x1004);
   });
 });

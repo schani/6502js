@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { CPU1 } from "../6502";
+import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStackPointer, getStatusRegister } from "./utils";
 
 describe("Store instructions", () => {
   it("should perform STA zero page instruction", async () => {
@@ -15,7 +16,7 @@ describe("Store instructions", () => {
     const cycles = await cpu.step();
     
     expect(await cpu.readByte(0x30)).toBe(0x42);
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(3);
   });
   
@@ -33,7 +34,7 @@ describe("Store instructions", () => {
     const cycles = await cpu.step();
     
     expect(await cpu.readByte(0x35)).toBe(0x42); // Value at address 0x30 + 0x05
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(4);
   });
   
@@ -51,7 +52,7 @@ describe("Store instructions", () => {
     const cycles = await cpu.step();
     
     expect(await cpu.readByte(0x1234)).toBe(0x42);
-    expect(cpu.getProgramCounter()).toBe(3);
+    expect(await getProgramCounter(cpu)).toBe(3);
     expect(cycles).toBe(4);
   });
   
@@ -70,7 +71,7 @@ describe("Store instructions", () => {
     const cycles = await cpu.step();
     
     expect(await cpu.readByte(0x1239)).toBe(0x42); // Value at address 0x1234 + 0x05
-    expect(cpu.getProgramCounter()).toBe(3);
+    expect(await getProgramCounter(cpu)).toBe(3);
     expect(cycles).toBe(5); // Always 5 cycles, regardless of page crossing
   });
   
@@ -89,7 +90,7 @@ describe("Store instructions", () => {
     const cycles = await cpu.step();
     
     expect(await cpu.readByte(0x1239)).toBe(0x42); // Value at address 0x1234 + 0x05
-    expect(cpu.getProgramCounter()).toBe(3);
+    expect(await getProgramCounter(cpu)).toBe(3);
     expect(cycles).toBe(5); // Always 5 cycles, regardless of page crossing
   });
   
@@ -111,7 +112,7 @@ describe("Store instructions", () => {
     const cycles = await cpu.step();
     
     expect(await cpu.readByte(0x2074)).toBe(0x42); // Value at effective address
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(6);
   });
   
@@ -133,7 +134,7 @@ describe("Store instructions", () => {
     const cycles = await cpu.step();
     
     expect(await cpu.readByte(0x2084)).toBe(0x42); // Value at (base address + Y)
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(6); // Always 6 cycles, regardless of page crossing
   });
   
@@ -150,7 +151,7 @@ describe("Store instructions", () => {
     const cycles = await cpu.step();
     
     expect(await cpu.readByte(0x30)).toBe(0x42);
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(3);
   });
   
@@ -168,7 +169,7 @@ describe("Store instructions", () => {
     const cycles = await cpu.step();
     
     expect(await cpu.readByte(0x35)).toBe(0x42); // Value at address 0x30 + 0x05
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(4);
   });
   
@@ -186,7 +187,7 @@ describe("Store instructions", () => {
     const cycles = await cpu.step();
     
     expect(await cpu.readByte(0x1234)).toBe(0x42);
-    expect(cpu.getProgramCounter()).toBe(3);
+    expect(await getProgramCounter(cpu)).toBe(3);
     expect(cycles).toBe(4);
   });
   
@@ -203,7 +204,7 @@ describe("Store instructions", () => {
     const cycles = await cpu.step();
     
     expect(await cpu.readByte(0x30)).toBe(0x42);
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(3);
   });
   
@@ -221,7 +222,7 @@ describe("Store instructions", () => {
     const cycles = await cpu.step();
     
     expect(await cpu.readByte(0x35)).toBe(0x42); // Value at address 0x30 + 0x05
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(4);
   });
   
@@ -239,7 +240,7 @@ describe("Store instructions", () => {
     const cycles = await cpu.step();
     
     expect(await cpu.readByte(0x1234)).toBe(0x42);
-    expect(cpu.getProgramCounter()).toBe(3);
+    expect(await getProgramCounter(cpu)).toBe(3);
     expect(cycles).toBe(4);
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { CARRY, ZERO, INTERRUPT, DECIMAL, BREAK, UNUSED, OVERFLOW, NEGATIVE, defined } from "../6502";
-import { type CPU, createCPU } from "./utils";
+import { type CPU, createCPU, getYRegister } from "./utils";
 
 describe("Edge cases and boundary conditions", () => {
   it("should test writeWord at memory boundaries", async () => {
@@ -35,7 +35,7 @@ describe("Edge cases and boundary conditions", () => {
     let cycles = await cpu.step();
     
     expect(cycles).toBe(3);
-    expect(await cpu.getYRegister()).toBe(0x00);
+    expect(await await getYRegister(cpu)).toBe(0x00);
     expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
     expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(false); // Negative flag should be clear
     
@@ -53,7 +53,7 @@ describe("Edge cases and boundary conditions", () => {
     cycles = await cpu.step();
     
     expect(cycles).toBe(4);
-    expect(await cpu.getYRegister()).toBe(0x80);
+    expect(await await getYRegister(cpu)).toBe(0x80);
     expect(((await cpu.getState()).p & ZERO) !== 0).toBe(false); // Zero flag should be clear
     expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Negative flag should be set
   });

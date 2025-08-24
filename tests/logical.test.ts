@@ -1,6 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU, ZERO, NEGATIVE, OVERFLOW } from "./utils";
-
+import { getAccumulator, getProgramCounter, getStatusRegister, createCPU, ZERO, NEGATIVE, OVERFLOW } from "./utils";
 describe("Logical operations", () => {
   it("should perform AND immediate instruction", async () => {
     const cpu = createCPU();
@@ -14,10 +13,10 @@ describe("Logical operations", () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getAccumulator()).toBe(0x00); // 0xF0 & 0x0F = 0x00
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getAccumulator(cpu)).toBe(0x00); // 0xF0 & 0x0F = 0x00
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(2);
-    expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // Zero flag should be set
+    expect(await getStatusRegister(cpu) & ZERO).toBe(ZERO); // Zero flag should be set
   });
   
   it("should perform AND zero page instruction", async () => {
@@ -33,10 +32,10 @@ describe("Logical operations", () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getAccumulator()).toBe(0x00); // 0xF0 & 0x0F = 0x00
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getAccumulator(cpu)).toBe(0x00); // 0xF0 & 0x0F = 0x00
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(3);
-    expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // Zero flag should be set
+    expect(await getStatusRegister(cpu) & ZERO).toBe(ZERO); // Zero flag should be set
   });
 
   it("should perform AND zero page,X instruction", async () => {
@@ -53,10 +52,10 @@ describe("Logical operations", () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getAccumulator()).toBe(0x00); // 0xF0 & 0x0F = 0x00
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getAccumulator(cpu)).toBe(0x00); // 0xF0 & 0x0F = 0x00
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(4);
-    expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // Zero flag should be set
+    expect(await getStatusRegister(cpu) & ZERO).toBe(ZERO); // Zero flag should be set
   });
 
   it("should perform AND absolute instruction", async () => {
@@ -73,10 +72,10 @@ describe("Logical operations", () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getAccumulator()).toBe(0x00); // 0xF0 & 0x0F = 0x00
-    expect(cpu.getProgramCounter()).toBe(3);
+    expect(await getAccumulator(cpu)).toBe(0x00); // 0xF0 & 0x0F = 0x00
+    expect(await getProgramCounter(cpu)).toBe(3);
     expect(cycles).toBe(4);
-    expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // Zero flag should be set
+    expect(await getStatusRegister(cpu) & ZERO).toBe(ZERO); // Zero flag should be set
   });
   
   it("should perform ORA immediate instruction", async () => {
@@ -91,10 +90,10 @@ describe("Logical operations", () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getAccumulator()).toBe(0xFF); // 0xF0 | 0x0F = 0xFF
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getAccumulator(cpu)).toBe(0xFF); // 0xF0 | 0x0F = 0xFF
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(2);
-    expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Negative flag should be set
+    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(NEGATIVE); // Negative flag should be set
   });
   
   it("should perform ORA zero page instruction", async () => {
@@ -110,10 +109,10 @@ describe("Logical operations", () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getAccumulator()).toBe(0xFF); // 0xF0 | 0x0F = 0xFF
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getAccumulator(cpu)).toBe(0xFF); // 0xF0 | 0x0F = 0xFF
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(3);
-    expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Negative flag should be set
+    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(NEGATIVE); // Negative flag should be set
   });
   
   it("should perform ORA absolute instruction", async () => {
@@ -130,10 +129,10 @@ describe("Logical operations", () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getAccumulator()).toBe(0xFF); // 0xF0 | 0x0F = 0xFF
-    expect(cpu.getProgramCounter()).toBe(3);
+    expect(await getAccumulator(cpu)).toBe(0xFF); // 0xF0 | 0x0F = 0xFF
+    expect(await getProgramCounter(cpu)).toBe(3);
     expect(cycles).toBe(4);
-    expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Negative flag should be set
+    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(NEGATIVE); // Negative flag should be set
   });
   
   it("should perform EOR immediate instruction", async () => {
@@ -148,8 +147,8 @@ describe("Logical operations", () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getAccumulator()).toBe(0x0F); // 0xFF ^ 0xF0 = 0x0F
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getAccumulator(cpu)).toBe(0x0F); // 0xFF ^ 0xF0 = 0x0F
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(2);
   });
   
@@ -166,8 +165,8 @@ describe("Logical operations", () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getAccumulator()).toBe(0x0F); // 0xFF ^ 0xF0 = 0x0F
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getAccumulator(cpu)).toBe(0x0F); // 0xFF ^ 0xF0 = 0x0F
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(3);
   });
   
@@ -185,8 +184,8 @@ describe("Logical operations", () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getAccumulator()).toBe(0x0F); // 0xFF ^ 0xF0 = 0x0F
-    expect(cpu.getProgramCounter()).toBe(3);
+    expect(await getAccumulator(cpu)).toBe(0x0F); // 0xFF ^ 0xF0 = 0x0F
+    expect(await getProgramCounter(cpu)).toBe(3);
     expect(cycles).toBe(4);
   });
   
@@ -205,15 +204,15 @@ describe("Logical operations", () => {
     const cycles = await cpu.step();
     
     // BIT sets N and V from bits 7 and 6 of memory
-    expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Bit 7 of memory -> N flag
-    expect(cpu.getStatusRegister() & OVERFLOW).toBe(OVERFLOW); // Bit 6 of memory -> V flag
+    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(NEGATIVE); // Bit 7 of memory -> N flag
+    expect(await getStatusRegister(cpu) & OVERFLOW).toBe(OVERFLOW); // Bit 6 of memory -> V flag
     
     // BIT sets Z based on AND result
-    expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // 0x0F & 0xC0 = 0, so Z flag is set
+    expect(await getStatusRegister(cpu) & ZERO).toBe(ZERO); // 0x0F & 0xC0 = 0, so Z flag is set
     
     // Accumulator should not be modified
-    expect(cpu.getAccumulator()).toBe(0x0F);
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getAccumulator(cpu)).toBe(0x0F);
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(3);
   });
   
@@ -233,15 +232,15 @@ describe("Logical operations", () => {
     const cycles = await cpu.step();
     
     // BIT sets N and V from bits 7 and 6 of memory
-    expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Bit 7 of memory -> N flag
-    expect(cpu.getStatusRegister() & OVERFLOW).toBe(OVERFLOW); // Bit 6 of memory -> V flag
+    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(NEGATIVE); // Bit 7 of memory -> N flag
+    expect(await getStatusRegister(cpu) & OVERFLOW).toBe(OVERFLOW); // Bit 6 of memory -> V flag
     
     // BIT sets Z based on AND result
-    expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // 0x0F & 0xC0 = 0, so Z flag is set
+    expect(await getStatusRegister(cpu) & ZERO).toBe(ZERO); // 0x0F & 0xC0 = 0, so Z flag is set
     
     // Accumulator should not be modified
-    expect(cpu.getAccumulator()).toBe(0x0F);
-    expect(cpu.getProgramCounter()).toBe(3);
+    expect(await getAccumulator(cpu)).toBe(0x0F);
+    expect(await getProgramCounter(cpu)).toBe(3);
     expect(cycles).toBe(4);
   });
   
@@ -260,15 +259,15 @@ describe("Logical operations", () => {
     const cycles = await cpu.step();
     
     // BIT sets N and V from bits 7 and 6 of memory
-    expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Bit 7 of memory -> N flag
-    expect(cpu.getStatusRegister() & OVERFLOW).toBe(OVERFLOW); // Bit 6 of memory -> V flag
+    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(NEGATIVE); // Bit 7 of memory -> N flag
+    expect(await getStatusRegister(cpu) & OVERFLOW).toBe(OVERFLOW); // Bit 6 of memory -> V flag
     
     // BIT sets Z based on AND result
-    expect(cpu.getStatusRegister() & ZERO).toBe(0); // 0xC0 & 0xC0 = 0xC0, so Z flag should be clear
+    expect(await getStatusRegister(cpu) & ZERO).toBe(0); // 0xC0 & 0xC0 = 0xC0, so Z flag should be clear
     
     // Accumulator should not be modified
-    expect(cpu.getAccumulator()).toBe(0xC0);
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getAccumulator(cpu)).toBe(0xC0);
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(3);
   });
 });

@@ -1,5 +1,4 @@
-// Minimal sync reader, decoupled from async CPU interface
-interface CPU { readByte(addr: number): number; readWord(addr: number): number; }
+import type { CPU } from "./cpu-interface";
 
 // Addressing modes
 enum AddressingMode {
@@ -231,11 +230,11 @@ const INSTRUCTIONS: { [opcode: number]: Instruction } = {
  * @param addr The address to disassemble from
  * @returns A tuple of [disassembled instruction string, instruction length in bytes]
  */
-export function disassemble(
+export async function disassemble(
   cpu: CPU,
   addr: number,
-): [asm: string, len: number] {
-  const opcode = cpu.readByte(addr);
+): Promise<[asm: string, len: number]> {
+  const opcode = await cpu.readByte(addr);
   const instruction = INSTRUCTIONS[opcode];
 
   if (!instruction) {
@@ -254,7 +253,7 @@ export function disassemble(
       break;
 
     case AddressingMode.IMMEDIATE:
-      operandValue = cpu.readByte(addr + 1);
+      operandValue = await cpu.readByte(addr + 1);
       break;
 
     case AddressingMode.ZERO_PAGE:
@@ -262,18 +261,18 @@ export function disassemble(
     case AddressingMode.ZERO_PAGE_Y:
     case AddressingMode.INDEXED_INDIRECT:
     case AddressingMode.INDIRECT_INDEXED:
-      operandValue = cpu.readByte(addr + 1);
+      operandValue = await cpu.readByte(addr + 1);
       break;
 
     case AddressingMode.ABSOLUTE:
     case AddressingMode.ABSOLUTE_X:
     case AddressingMode.ABSOLUTE_Y:
     case AddressingMode.INDIRECT:
-      operandValue = cpu.readWord(addr + 1);
+      operandValue = await cpu.readWord(addr + 1);
       break;
 
     case AddressingMode.RELATIVE:
-      operandValue = cpu.readByte(addr + 1);
+      operandValue = await cpu.readByte(addr + 1);
       // Calculate target address (PC + 2 + signed offset)
       if (operandValue & 0x80) {
         // Negative offset

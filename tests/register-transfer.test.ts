@@ -1,6 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU, ZERO, NEGATIVE, INTERRUPT, UNUSED } from "./utils";
-
+import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStackPointer, getStatusRegister, createCPU, ZERO, NEGATIVE, INTERRUPT, UNUSED } from "./utils";
 describe("Register transfer instructions", () => {
   it("should perform TAX instruction", async () => {
     const cpu = createCPU();
@@ -13,25 +12,25 @@ describe("Register transfer instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect(await cpu.getXRegister()).toBe(0x42);
-    expect(await cpu.getProgramCounter()).toBe(1);
+    expect(await await getXRegister(cpu)).toBe(0x42);
+    expect(await await getProgramCounter(cpu)).toBe(1);
     expect(cycles).toBe(2);
-    expect((await cpu.getStatusRegister()) & ZERO).toBe(0);
-    expect((await cpu.getStatusRegister()) & NEGATIVE).toBe(0);
+    expect((await await getStatusRegister(cpu)) & ZERO).toBe(0);
+    expect((await await getStatusRegister(cpu)) & NEGATIVE).toBe(0);
     
     // Test zero flag
     await cpu.setProgramCounter(0);
     await cpu.setAccumulator(0);
     await cpu.step();
-    expect(await cpu.getXRegister()).toBe(0);
-    expect((await cpu.getStatusRegister()) & ZERO).toBe(ZERO);
+    expect(await await getXRegister(cpu)).toBe(0);
+    expect((await await getStatusRegister(cpu)) & ZERO).toBe(ZERO);
     
     // Test negative flag
     await cpu.setProgramCounter(0);
     await cpu.setAccumulator(0x80);
     await cpu.step();
-    expect(cpu.getXRegister()).toBe(0x80);
-    expect((await cpu.getStatusRegister()) & NEGATIVE).toBe(NEGATIVE);
+    expect(await getXRegister(cpu)).toBe(0x80);
+    expect((await await getStatusRegister(cpu)) & NEGATIVE).toBe(NEGATIVE);
   });
   
   it("should perform TAY instruction", async () => {
@@ -45,8 +44,8 @@ describe("Register transfer instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect(await cpu.getYRegister()).toBe(0x42);
-    expect(await cpu.getProgramCounter()).toBe(1);
+    expect(await await getYRegister(cpu)).toBe(0x42);
+    expect(await await getProgramCounter(cpu)).toBe(1);
     expect(cycles).toBe(2);
   });
   
@@ -61,8 +60,8 @@ describe("Register transfer instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect(await cpu.getAccumulator()).toBe(0x42);
-    expect(await cpu.getProgramCounter()).toBe(1);
+    expect(await await getAccumulator(cpu)).toBe(0x42);
+    expect(await await getProgramCounter(cpu)).toBe(1);
     expect(cycles).toBe(2);
   });
   
@@ -77,8 +76,8 @@ describe("Register transfer instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect(await cpu.getAccumulator()).toBe(0x42);
-    expect(await cpu.getProgramCounter()).toBe(1);
+    expect(await await getAccumulator(cpu)).toBe(0x42);
+    expect(await await getProgramCounter(cpu)).toBe(1);
     expect(cycles).toBe(2);
   });
   
@@ -93,11 +92,11 @@ describe("Register transfer instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect(await cpu.getXRegister()).toBe(0x42);
-    expect(await cpu.getProgramCounter()).toBe(1);
+    expect(await await getXRegister(cpu)).toBe(0x42);
+    expect(await await getProgramCounter(cpu)).toBe(1);
     expect(cycles).toBe(2);
-    expect((await cpu.getStatusRegister()) & ZERO).toBe(0); // Result is not zero
-    expect((await cpu.getStatusRegister()) & NEGATIVE).toBe(0); // Result is not negative
+    expect((await await getStatusRegister(cpu)) & ZERO).toBe(0); // Result is not zero
+    expect((await await getStatusRegister(cpu)) & NEGATIVE).toBe(0); // Result is not negative
   });
   
   it("should perform TXS instruction", async () => {
@@ -111,10 +110,10 @@ describe("Register transfer instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect(await cpu.getStackPointer()).toBe(0x42);
-    expect(await cpu.getProgramCounter()).toBe(1);
+    expect(await await getStackPointer(cpu)).toBe(0x42);
+    expect(await await getProgramCounter(cpu)).toBe(1);
     expect(cycles).toBe(2);
     // TXS does not affect any flags
-    expect(await cpu.getStatusRegister()).toBe(INTERRUPT | UNUSED); // Original status
+    expect(await await getStatusRegister(cpu)).toBe(INTERRUPT | UNUSED); // Original status
   });
 });

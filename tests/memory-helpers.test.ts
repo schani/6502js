@@ -1,6 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU } from "./utils";
-
+import { getAccumulator, getProgramCounter, createCPU } from "./utils";
 describe("Memory helper functions", () => {
   it("should handle edge cases in readByte and writeByte", async () => {
     const cpu = createCPU();
@@ -20,7 +19,7 @@ describe("Memory helper functions", () => {
     
     // Verify the result
     expect(cycles).toBe(4);
-    expect(cpu.getAccumulator()).toBe(0x42);
+    expect(await getAccumulator(cpu)).toBe(0x42);
     
     // Test boundary by writing to 0xFFFF
     await cpu.loadByte(3, 0x8D); // STA Absolute
@@ -53,7 +52,7 @@ describe("Memory helper functions", () => {
     
     // JSR pushes return address (PC+2-1) to stack and jumps to target address
     expect(cycles).toBe(6);
-    expect(cpu.getProgramCounter()).toBe(0xFFFF);
+    expect(await getProgramCounter(cpu)).toBe(0xFFFF);
     
     // Pull the address from the stack to verify it was stored correctly
     await cpu.loadByte(0xFFFF, 0x60); // RTS
@@ -63,7 +62,7 @@ describe("Memory helper functions", () => {
     
     // RTS pulls address from stack, adds 1, and sets PC
     expect(cycles2).toBe(6);
-    expect(cpu.getProgramCounter()).toBe(3); // Since JSR saves PC+2-1=2, RTS adds 1 to get 3
+    expect(await getProgramCounter(cpu)).toBe(3); // Since JSR saves PC+2-1=2, RTS adds 1 to get 3
   });
   
 });

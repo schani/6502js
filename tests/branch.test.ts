@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU, CARRY, ZERO, NEGATIVE, OVERFLOW } from "./utils";
+import { createCPU, CARRY, ZERO, NEGATIVE, OVERFLOW, getProgramCounter } from "./utils";
 
 describe("Branch instructions", async () => {
   it("should perform BCC instruction (branch taken)", async () => {
@@ -14,7 +14,7 @@ describe("Branch instructions", async () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getProgramCounter()).toBe(0x12); // 0x02 + 0x10 = 0x12
+    expect(await getProgramCounter(cpu)).toBe(0x12); // 0x02 + 0x10 = 0x12
     expect(cycles).toBe(3); // Base cycles (2) + branch taken (1)
   });
   
@@ -30,7 +30,7 @@ describe("Branch instructions", async () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getProgramCounter()).toBe(0x02); // PC advances past the branch instruction
+    expect(await getProgramCounter(cpu)).toBe(0x02); // PC advances past the branch instruction
     expect(cycles).toBe(2); // Base cycles (2) only
   });
   
@@ -47,7 +47,7 @@ describe("Branch instructions", async () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getProgramCounter()).toBe(0x0112); // 0x00F2 + 0x20 = 0x0112 (crosses page boundary)
+    expect(await getProgramCounter(cpu)).toBe(0x0112); // 0x00F2 + 0x20 = 0x0112 (crosses page boundary)
     expect(cycles).toBe(4); // Base cycles (2) + branch taken (1) + page boundary (1)
   });
 
@@ -64,7 +64,7 @@ describe("Branch instructions", async () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getProgramCounter()).toBe(0x0080); // 0x0082 - 2 = 0x0080 (branch back to the BCC instruction)
+    expect(await getProgramCounter(cpu)).toBe(0x0080); // 0x0082 - 2 = 0x0080 (branch back to the BCC instruction)
     expect(cycles).toBe(3); // Base cycles (2) + branch taken (1)
   });
   
@@ -78,7 +78,7 @@ describe("Branch instructions", async () => {
     await cpu.loadByte(1, 0x10); // Branch offset
     
     let cycles = await cpu.step();
-    expect(cpu.getProgramCounter()).toBe(0x12); // Should branch
+    expect(await getProgramCounter(cpu)).toBe(0x12); // Should branch
     expect(cycles).toBe(3);
     
     // Test BEQ (Branch if Equal/Zero Set)
@@ -87,7 +87,7 @@ describe("Branch instructions", async () => {
     await cpu.loadByte(0, 0xF0); // BEQ
     
     cycles = await cpu.step();
-    expect(cpu.getProgramCounter()).toBe(0x12); // Should branch
+    expect(await getProgramCounter(cpu)).toBe(0x12); // Should branch
     expect(cycles).toBe(3);
     
     // Test BNE (Branch if Not Equal/Zero Clear)
@@ -96,7 +96,7 @@ describe("Branch instructions", async () => {
     await cpu.loadByte(0, 0xD0); // BNE
     
     cycles = await cpu.step();
-    expect(cpu.getProgramCounter()).toBe(0x12); // Should branch
+    expect(await getProgramCounter(cpu)).toBe(0x12); // Should branch
     expect(cycles).toBe(3);
     
     // Test BMI (Branch if Minus/Negative Set)
@@ -105,7 +105,7 @@ describe("Branch instructions", async () => {
     await cpu.loadByte(0, 0x30); // BMI
     
     cycles = await cpu.step();
-    expect(cpu.getProgramCounter()).toBe(0x12); // Should branch
+    expect(await getProgramCounter(cpu)).toBe(0x12); // Should branch
     expect(cycles).toBe(3);
     
     // Test BPL (Branch if Plus/Negative Clear)
@@ -114,7 +114,7 @@ describe("Branch instructions", async () => {
     await cpu.loadByte(0, 0x10); // BPL
     
     cycles = await cpu.step();
-    expect(cpu.getProgramCounter()).toBe(0x12); // Should branch
+    expect(await getProgramCounter(cpu)).toBe(0x12); // Should branch
     expect(cycles).toBe(3);
     
     // Test BVC (Branch if Overflow Clear)
@@ -123,7 +123,7 @@ describe("Branch instructions", async () => {
     await cpu.loadByte(0, 0x50); // BVC
     
     cycles = await cpu.step();
-    expect(cpu.getProgramCounter()).toBe(0x12); // Should branch
+    expect(await getProgramCounter(cpu)).toBe(0x12); // Should branch
     expect(cycles).toBe(3);
     
     // Test BVS (Branch if Overflow Set)
@@ -132,7 +132,7 @@ describe("Branch instructions", async () => {
     await cpu.loadByte(0, 0x70); // BVS
     
     cycles = await cpu.step();
-    expect(cpu.getProgramCounter()).toBe(0x12); // Should branch
+    expect(await getProgramCounter(cpu)).toBe(0x12); // Should branch
     expect(cycles).toBe(3);
   });
 });

@@ -1,8 +1,9 @@
 import { describe, expect, it } from "bun:test";
 import { CPU1 } from "../6502";
+import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStackPointer, getStatusRegister } from "./utils";
 
 describe("CPU trace functionality", () => {
-  it("should log operations when trace is enabled", () => {
+  it("should log operations when trace is enabled", async () => {
     const cpu = new CPU1();
     
     // Save the original console.log
@@ -16,18 +17,18 @@ describe("CPU trace functionality", () => {
     
     try {
       // Setup a simple program with a few instructions
-      cpu.loadByte(0, 0xA9); // LDA Immediate
-      cpu.loadByte(1, 0x42); // with value 0x42
-      cpu.loadByte(2, 0xAA); // TAX (Transfer A to X)
-      cpu.loadByte(3, 0xEA); // NOP
+      await cpu.loadByte(0, 0xA9); // LDA Immediate
+      await cpu.loadByte(1, 0x42); // with value 0x42
+      await cpu.loadByte(2, 0xAA); // TAX (Transfer A to X)
+      await cpu.loadByte(3, 0xEA); // NOP
       
       // Set PC to 0 to start execution
-      cpu.setProgramCounter(0);
+      await cpu.setProgramCounter(0);
       
       // Execute each instruction with trace enabled
-      cpu.step(true); // LDA
-      cpu.step(true); // TAX
-      cpu.step(true); // NOP
+      await cpu.step(true); // LDA
+      await cpu.step(true); // TAX
+      await cpu.step(true); // NOP
       
       // Verify that trace messages were logged
       expect(logCalls.length).toBe(3);
@@ -45,9 +46,9 @@ describe("CPU trace functionality", () => {
       expect(logCalls[2]).toContain('NOP');
       
       // Verify the CPU state is correct after execution
-      expect(cpu.getAccumulator()).toBe(0x42);
-      expect(cpu.getXRegister()).toBe(0x42);
-      expect(cpu.getProgramCounter()).toBe(4);
+      expect(await getAccumulator(cpu)).toBe(0x42);
+      expect(await getXRegister(cpu)).toBe(0x42);
+      expect(await getProgramCounter(cpu)).toBe(4);
     } finally {
       // Restore the original console.log
       console.log = originalConsoleLog;

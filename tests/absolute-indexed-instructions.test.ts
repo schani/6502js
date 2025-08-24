@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU } from "./utils";
+import { createCPU, getAccumulator } from "./utils";
 import { CARRY, ZERO, NEGATIVE } from "../6502";
 
 describe("Absolute Indexed Addressing Instructions", async () => {
@@ -148,7 +148,7 @@ describe("Absolute Indexed Addressing Instructions", async () => {
     expect(cycles).toBe(5);
     
     // Check if A register was loaded with the value
-    expect(cpu.getAccumulator()).toBe(0x42);
+    expect(await getAccumulator(cpu)).toBe(0x42);
   });
   
   // Test LDA Absolute,Y with page crossing
@@ -170,6 +170,6 @@ describe("Absolute Indexed Addressing Instructions", async () => {
     expect(cycles).toBe(5);
     
     // Check if A register was loaded with the value
-    expect(cpu.getAccumulator()).toBe(0x42);
+    expect(await getAccumulator(cpu)).toBe(0x42);
   });
 });

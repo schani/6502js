@@ -1,3 +1,4 @@
+import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStackPointer, getStatusRegister } from "./tests/utils";
 /**
  * dsl-runner.ts — Minimal line-based DSL to drive Microsoft BASIC
  * on the JS 6502 core for debugging program entry/storage issues.
@@ -40,13 +41,13 @@ function buildCPU(): CPU {
   return new CPU1();
 }
 
-function pop16(cpu: CPU): number {
-  const sp1 = (cpu.getStackPointer() + 1) & 0xff;
-  cpu.setStackPointer(sp1);
-  const lo = cpu.readByte(0x0100 + cpu.getStackPointer());
-  const sp2 = (cpu.getStackPointer() + 1) & 0xff;
-  cpu.setStackPointer(sp2);
-  const hi = cpu.readByte(0x0100 + cpu.getStackPointer());
+async function pop16(cpu: CPU): Promise<number> {
+  const sp1 = (await getStackPointer(cpu) + 1) & 0xff;
+  await cpu.setStackPointer(sp1);
+  const lo = await cpu.readByte(0x0100 + await getStackPointer(cpu));
+  const sp2 = (await getStackPointer(cpu) + 1) & 0xff;
+  await cpu.setStackPointer(sp2);
+  const hi = await cpu.readByte(0x0100 + await getStackPointer(cpu));
   return (hi << 8) | lo;
 }
 
@@ -60,7 +61,7 @@ class BasicHarness {
     this.cpu = buildCPU();
   }
 
-  init(): void {
+  async init(): Promise<void> {
     // Load ROM
     let rom: Buffer;
     try {
@@ -72,30 +73,30 @@ class BasicHarness {
     for (let i = 0; i < rom.length; i++) {
       const b = rom[i];
       if (b === undefined) break;
-      this.cpu.loadByte((ROM_ADDR + i) & 0xffff, b);
+      await this.cpu.loadByte((ROM_ADDR + i) & 0xffff, b);
     }
     // Reset machine state, jump to cold start
-    this.cpu.setAccumulator(0);
-    this.cpu.setXRegister(0);
-    this.cpu.setYRegister(0);
-    this.cpu.setStackPointer(0xfd);
-    this.cpu.setStatusRegister(0x24);
-    this.cpu.setProgramCounter(COLD_START);
+    await this.cpu.setAccumulator(0);
+    await this.cpu.setXRegister(0);
+    await this.cpu.setYRegister(0);
+    await this.cpu.setStackPointer(0xfd);
+    await this.cpu.setStatusRegister(0x24);
+    await this.cpu.setProgramCounter(COLD_START);
   }
 
   // Run until BASIC requests input at MONRDKEY.
   // Returns true if it stopped because input is needed; false if stopped for other reasons (unlikely here).
-  runUntilInputRequested(maxInstr = 5_000_000): boolean {
+  async runUntilInputRequested(maxInstr = 5_000_000): Promise<boolean> {
     for (let i = 0; i < maxInstr; i++) {
-      const pc = this.cpu.getProgramCounter();
+      const pc = await getProgramCounter(this.cpu);
       if (
         pc === MONRDKEY || pc === MONCOUT || pc === ISCNTC || pc === LOAD || pc === SAVE
       ) {
-        const ret = (pop16(this.cpu) + 1) & 0xffff;
+        const ret = (await pop16(this.cpu) + 1) & 0xffff;
         if (pc === MONCOUT) {
-          const c = this.cpu.getAccumulator() & 0xff;
+          const c = await getAccumulator(this.cpu) & 0xff;
           this.output += String.fromCharCode(c);
-          this.cpu.setProgramCounter(ret);
+          await this.cpu.setProgramCounter(ret);
           continue;
         }
         if (pc === MONRDKEY) {
@@ -104,16 +105,16 @@ class BasicHarness {
             return true; // waiting for input
           }
           const c = this.inputBuf.shift()!;
-          this.cpu.setAccumulator(c & 0xff);
-          this.cpu.setProgramCounter(ret);
+          await this.cpu.setAccumulator(c & 0xff);
+          await this.cpu.setProgramCounter(ret);
           continue;
         }
         // Other stubs (ISCNTC/LOAD/SAVE): do nothing, just return
-        this.cpu.setProgramCounter(ret);
+        await this.cpu.setProgramCounter(ret);
         continue;
       }
 
-      this.cpu.step(this.trace);
+      await this.cpu.step(this.trace);
     }
     return false;
   }
@@ -187,7 +188,7 @@ function parseDSL(src: string): Command[] {
   return cmds;
 }
 
-function main() {
+async function main() {
   const script = process.argv.find(a => a.endsWith(".dsl") || a.endsWith(".txt"));
   if (!script) {
     console.error("Usage: bun run dsl-runner.ts path/to/script.dsl [--cpu1|--cpu2|--sync]");
@@ -197,7 +198,7 @@ function main() {
   const cmds = parseDSL(src);
 
   const h = new BasicHarness();
-  h.init();
+  await h.init();
 
   for (const c of cmds) {
     switch (c.kind) {
@@ -210,7 +211,7 @@ function main() {
         console.log(`INPUT ${JSON.stringify(c.text)}`);
         break;
       case "wait": {
-        const waiting = h.runUntilInputRequested();
+        const waiting = await h.runUntilInputRequested();
         if (!waiting) console.log("WAIT done (no input needed)");
         else console.log("WAIT: BASIC requests input");
         break;

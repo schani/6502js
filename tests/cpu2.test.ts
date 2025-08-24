@@ -1,8 +1,9 @@
 import { describe, expect, it } from "bun:test";
 import { CPU2 } from "../cpu2";
+import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStackPointer, getStatusRegister } from "./utils";
 
 describe("CPU2 Implementation", () => {
-  it("should perform basic operations", () => {
+  it("should perform basic operations", async () => {
     const cpu = new CPU2();
     
     // Initialize memory with simple program
@@ -21,16 +22,16 @@ describe("CPU2 Implementation", () => {
     
     // Step through each instruction
     cpu.step(); // LDA #42
-    expect(cpu.getAccumulator()).toBe(0x2A); // A should be 42
+    expect(await getAccumulator(cpu)).toBe(0x2A); // A should be 42
     
     cpu.step(); // TAX
-    expect(cpu.getXRegister()).toBe(0x2A); // X should be 42
+    expect(await getXRegister(cpu)).toBe(0x2A); // X should be 42
     
     cpu.step(); // INX
-    expect(cpu.getXRegister()).toBe(0x2B); // X should be 43
+    expect(await getXRegister(cpu)).toBe(0x2B); // X should be 43
   });
   
-  it("should reset the CPU state", () => {
+  it("should reset the CPU state", async () => {
     const cpu = new CPU2();
     
     // Change some values
@@ -42,9 +43,9 @@ describe("CPU2 Implementation", () => {
     cpu.reset();
     
     // Verify default values are restored
-    expect(cpu.getAccumulator()).toBe(0);
-    expect(cpu.getXRegister()).toBe(0);
-    expect(cpu.getProgramCounter()).toBe(0);
-    expect(cpu.getStackPointer()).toBe(0xFD);
+    expect(await getAccumulator(cpu)).toBe(0);
+    expect(await getXRegister(cpu)).toBe(0);
+    expect(await getProgramCounter(cpu)).toBe(0);
+    expect(await getStackPointer(cpu)).toBe(0xFD);
   });
 });

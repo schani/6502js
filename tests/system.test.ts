@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU } from "./utils";
+import { createCPU, getProgramCounter } from "./utils";
 
 describe("System functions", () => {
   it("should perform NOP instruction", async () => {
@@ -10,7 +10,7 @@ describe("System functions", () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getProgramCounter()).toBe(1);
+    expect(await getProgramCounter(cpu)).toBe(1);
     expect(cycles).toBe(2);
     // NOP should not affect any registers or flags
   });
@@ -24,7 +24,7 @@ describe("System functions", () => {
     // With trace logging enabled
     const cycles = await cpu.step(true);
     
-    expect(cpu.getProgramCounter()).toBe(1);
+    expect(await getProgramCounter(cpu)).toBe(1);
     expect(cycles).toBe(2);
   });
 

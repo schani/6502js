@@ -1,6 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU, ZERO } from "./utils";
-
+import { getAccumulator, getProgramCounter, createCPU, ZERO } from "./utils";
 describe("Indirect addressing modes", () => {
   it("should perform LDA indirect,X instruction", async () => {
     const cpu = createCPU();
@@ -21,8 +20,8 @@ describe("Indirect addressing modes", () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getAccumulator()).toBe(0x42);
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getAccumulator(cpu)).toBe(0x42);
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(6);
   });
   
@@ -45,8 +44,8 @@ describe("Indirect addressing modes", () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getAccumulator()).toBe(0x42);
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getAccumulator(cpu)).toBe(0x42);
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(5);
   });
   
@@ -69,8 +68,8 @@ describe("Indirect addressing modes", () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getAccumulator()).toBe(0x42);
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getAccumulator(cpu)).toBe(0x42);
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(6); // Extra cycle for page boundary crossing
   });
   
@@ -88,7 +87,7 @@ describe("Indirect addressing modes", () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getProgramCounter()).toBe(0x5040); // PC should be set to target address
+    expect(await getProgramCounter(cpu)).toBe(0x5040); // PC should be set to target address
     expect(cycles).toBe(5);
   });
   
@@ -107,7 +106,7 @@ describe("Indirect addressing modes", () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getProgramCounter()).toBe(0x5040); // PC should be set to target address with bug behavior
+    expect(await getProgramCounter(cpu)).toBe(0x5040); // PC should be set to target address with bug behavior
     expect(cycles).toBe(5);
   });
 });

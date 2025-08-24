@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createCPU, ZERO, NEGATIVE } from "./utils";
+import { createCPU, ZERO, NEGATIVE, getXRegister, getYRegister, getProgramCounter, getStatusRegister } from "./utils";
 
 describe("Increment and decrement operations", async () => {
   it("should perform INX instruction", async () => {
@@ -13,10 +13,10 @@ describe("Increment and decrement operations", async () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getXRegister()).toBe(0x42);
-    expect(cpu.getStatusRegister() & ZERO).toBe(0); // Result is not zero
-    expect(cpu.getStatusRegister() & NEGATIVE).toBe(0); // Result is not negative
-    expect(cpu.getProgramCounter()).toBe(1);
+    expect(await getXRegister(cpu)).toBe(0x42);
+    expect(await getStatusRegister(cpu) & ZERO).toBe(0); // Result is not zero
+    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0); // Result is not negative
+    expect(await getProgramCounter(cpu)).toBe(1);
     expect(cycles).toBe(2);
     
     // Test wrapping from 0xFF to 0x00
@@ -25,8 +25,8 @@ describe("Increment and decrement operations", async () => {
     
     await cpu.step();
     
-    expect(cpu.getXRegister()).toBe(0x00);
-    expect(cpu.getStatusRegister() & ZERO).toBe(ZERO); // Result is zero
+    expect(await getXRegister(cpu)).toBe(0x00);
+    expect(await getStatusRegister(cpu) & ZERO).toBe(ZERO); // Result is zero
   });
   
   it("should perform INY instruction", async () => {
@@ -40,10 +40,10 @@ describe("Increment and decrement operations", async () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getYRegister()).toBe(0x42);
-    expect(cpu.getStatusRegister() & ZERO).toBe(0); // Result is not zero
-    expect(cpu.getStatusRegister() & NEGATIVE).toBe(0); // Result is not negative
-    expect(cpu.getProgramCounter()).toBe(1);
+    expect(await getYRegister(cpu)).toBe(0x42);
+    expect(await getStatusRegister(cpu) & ZERO).toBe(0); // Result is not zero
+    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0); // Result is not negative
+    expect(await getProgramCounter(cpu)).toBe(1);
     expect(cycles).toBe(2);
   });
   
@@ -58,10 +58,10 @@ describe("Increment and decrement operations", async () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getXRegister()).toBe(0x42);
-    expect(cpu.getStatusRegister() & ZERO).toBe(0); // Result is not zero
-    expect(cpu.getStatusRegister() & NEGATIVE).toBe(0); // Result is not negative
-    expect(cpu.getProgramCounter()).toBe(1);
+    expect(await getXRegister(cpu)).toBe(0x42);
+    expect(await getStatusRegister(cpu) & ZERO).toBe(0); // Result is not zero
+    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0); // Result is not negative
+    expect(await getProgramCounter(cpu)).toBe(1);
     expect(cycles).toBe(2);
     
     // Test wrapping from 0x00 to 0xFF
@@ -70,8 +70,8 @@ describe("Increment and decrement operations", async () => {
     
     await cpu.step();
     
-    expect(cpu.getXRegister()).toBe(0xFF);
-    expect(cpu.getStatusRegister() & NEGATIVE).toBe(NEGATIVE); // Result is negative
+    expect(await getXRegister(cpu)).toBe(0xFF);
+    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(NEGATIVE); // Result is negative
   });
   
   it("should perform DEY instruction", async () => {
@@ -85,10 +85,10 @@ describe("Increment and decrement operations", async () => {
     
     const cycles = await cpu.step();
     
-    expect(cpu.getYRegister()).toBe(0x42);
-    expect(cpu.getStatusRegister() & ZERO).toBe(0); // Result is not zero
-    expect(cpu.getStatusRegister() & NEGATIVE).toBe(0); // Result is not negative
-    expect(cpu.getProgramCounter()).toBe(1);
+    expect(await getYRegister(cpu)).toBe(0x42);
+    expect(await getStatusRegister(cpu) & ZERO).toBe(0); // Result is not zero
+    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0); // Result is not negative
+    expect(await getProgramCounter(cpu)).toBe(1);
     expect(cycles).toBe(2);
   });
   
@@ -103,9 +103,9 @@ describe("Increment and decrement operations", async () => {
     const cycles = await cpu.step();
     
     expect(await cpu.readByte(0x20)).toBe(0x42);
-    expect(cpu.getStatusRegister() & ZERO).toBe(0); // Result is not zero
-    expect(cpu.getStatusRegister() & NEGATIVE).toBe(0); // Result is not negative
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getStatusRegister(cpu) & ZERO).toBe(0); // Result is not zero
+    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0); // Result is not negative
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(5);
   });
   
@@ -120,9 +120,9 @@ describe("Increment and decrement operations", async () => {
     const cycles = await cpu.step();
     
     expect(await cpu.readByte(0x20)).toBe(0x42);
-    expect(cpu.getStatusRegister() & ZERO).toBe(0); // Result is not zero
-    expect(cpu.getStatusRegister() & NEGATIVE).toBe(0); // Result is not negative
-    expect(cpu.getProgramCounter()).toBe(2);
+    expect(await getStatusRegister(cpu) & ZERO).toBe(0); // Result is not zero
+    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0); // Result is not negative
+    expect(await getProgramCounter(cpu)).toBe(2);
     expect(cycles).toBe(5);
   });
 });

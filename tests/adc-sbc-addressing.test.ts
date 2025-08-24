@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { CARRY, ZERO, INTERRUPT, DECIMAL, BREAK, UNUSED, OVERFLOW, NEGATIVE } from "../6502";
-import { createCPU } from "./utils";
+import { getAccumulator, createCPU } from "./utils";
 
 describe("ADC and SBC with different addressing modes", async () => {
   // Test ADC with all addressing modes
@@ -21,7 +21,7 @@ describe("ADC and SBC with different addressing modes", async () => {
     
     // Verify
     expect(cycles).toBe(3);
-    expect(await cpu.getAccumulator()).toBe(0x52); // 0x10 + 0x42 = 0x52
+    expect(await await getAccumulator(cpu)).toBe(0x52); // 0x10 + 0x42 = 0x52
     expect((((await cpu.getState()).p & CARRY) !== 0)).toBe(false); // No carry out
     expect((((await cpu.getState()).p & ZERO) !== 0)).toBe(false); // Result is not zero
     expect((((await cpu.getState()).p & OVERFLOW) !== 0)).toBe(false); // No signed overflow
@@ -46,7 +46,7 @@ describe("ADC and SBC with different addressing modes", async () => {
     
     // Verify
     expect(cycles).toBe(4);
-    expect(await cpu.getAccumulator()).toBe(0x53); // 0x10 + 0x42 + 0x01 (carry) = 0x53
+    expect(await await getAccumulator(cpu)).toBe(0x53); // 0x10 + 0x42 + 0x01 (carry) = 0x53
     expect((((await cpu.getState()).p & CARRY) !== 0)).toBe(false); // No carry out
     expect((((await cpu.getState()).p & ZERO) !== 0)).toBe(false); // Result is not zero
     expect((((await cpu.getState()).p & OVERFLOW) !== 0)).toBe(false); // No signed overflow
@@ -71,7 +71,7 @@ describe("ADC and SBC with different addressing modes", async () => {
     
     // Verify
     expect(cycles).toBe(4);
-    expect(await cpu.getAccumulator()).toBe(0xE0); // 0x10 + 0xD0 = 0xE0
+    expect(await await getAccumulator(cpu)).toBe(0xE0); // 0x10 + 0xD0 = 0xE0
     expect((((await cpu.getState()).p & CARRY) !== 0)).toBe(false); // No carry out
     expect((((await cpu.getState()).p & ZERO) !== 0)).toBe(false); // Result is not zero
     expect((((await cpu.getState()).p & OVERFLOW) !== 0)).toBe(false); // No signed overflow
@@ -97,7 +97,7 @@ describe("ADC and SBC with different addressing modes", async () => {
     
     // Verify
     expect(cycles).toBe(4); // No page boundary crossed
-    expect(await cpu.getAccumulator()).toBe(0x50); // 0x10 + 0x40 = 0x50
+    expect(await await getAccumulator(cpu)).toBe(0x50); // 0x10 + 0x40 = 0x50
     expect((((await cpu.getState()).p & CARRY) !== 0)).toBe(false); // No carry out
   });
   
@@ -120,7 +120,7 @@ describe("ADC and SBC with different addressing modes", async () => {
     
     // Verify
     expect(cycles).toBe(5); // +1 cycle for page boundary crossing
-    expect(await cpu.getAccumulator()).toBe(0x50); // 0x10 + 0x40 = 0x50
+    expect(await await getAccumulator(cpu)).toBe(0x50); // 0x10 + 0x40 = 0x50
   });
   
   it("should perform ADC with absolute,Y addressing", async () => {
@@ -142,7 +142,7 @@ describe("ADC and SBC with different addressing modes", async () => {
     
     // Verify
     expect(cycles).toBe(4); // No page boundary crossed
-    expect(await cpu.getAccumulator()).toBe(0x80); // 0x10 + 0x70 = 0x80
+    expect(await await getAccumulator(cpu)).toBe(0x80); // 0x10 + 0x70 = 0x80
     expect((((await cpu.getState()).p & NEGATIVE) !== 0)).toBe(true); // Result is negative (bit 7 set)
   });
   
@@ -166,7 +166,7 @@ describe("ADC and SBC with different addressing modes", async () => {
     
     // Verify
     expect(cycles).toBe(6);
-    expect(await cpu.getAccumulator()).toBe(0x45); // 0x10 + 0x35 = 0x45
+    expect(await await getAccumulator(cpu)).toBe(0x45); // 0x10 + 0x35 = 0x45
   });
   
   it("should perform ADC with (Indirect),Y addressing", async () => {
@@ -189,7 +189,7 @@ describe("ADC and SBC with different addressing modes", async () => {
     
     // Verify
     expect(cycles).toBe(5); // No page boundary crossed
-    expect(await cpu.getAccumulator()).toBe(0x35); // 0x10 + 0x25 = 0x35
+    expect(await await getAccumulator(cpu)).toBe(0x35); // 0x10 + 0x25 = 0x35
   });
   
   it("should perform ADC with (Indirect),Y addressing and page crossing", async () => {
@@ -212,7 +212,7 @@ describe("ADC and SBC with different addressing modes", async () => {
     
     // Verify
     expect(cycles).toBe(6); // +1 cycle for page boundary crossing
-    expect(await cpu.getAccumulator()).toBe(0x35); // 0x10 + 0x25 = 0x35
+    expect(await await getAccumulator(cpu)).toBe(0x35); // 0x10 + 0x25 = 0x35
   });
   
   // Test SBC with all addressing modes
@@ -233,7 +233,7 @@ describe("ADC and SBC with different addressing modes", async () => {
     
     // Verify
     expect(cycles).toBe(3);
-    expect(await cpu.getAccumulator()).toBe(0x30); // 0x50 - 0x20 = 0x30
+    expect(await await getAccumulator(cpu)).toBe(0x30); // 0x50 - 0x20 = 0x30
     expect((((await cpu.getState()).p & CARRY) !== 0)).toBe(true); // No borrow (carry set)
     expect((((await cpu.getState()).p & ZERO) !== 0)).toBe(false); // Result is not zero
     expect((((await cpu.getState()).p & OVERFLOW) !== 0)).toBe(false); // No signed overflow
@@ -258,7 +258,7 @@ describe("ADC and SBC with different addressing modes", async () => {
     
     // Verify
     expect(cycles).toBe(4);
-    expect(await cpu.getAccumulator()).toBe(0x2F); // 0x50 - 0x20 - 0x01 (borrow) = 0x2F
+    expect(await await getAccumulator(cpu)).toBe(0x2F); // 0x50 - 0x20 - 0x01 (borrow) = 0x2F
     expect((((await cpu.getState()).p & CARRY) !== 0)).toBe(true); // No borrow out (carry set after operation)
   });
   
@@ -280,7 +280,7 @@ describe("ADC and SBC with different addressing modes", async () => {
     
     // Verify
     expect(cycles).toBe(4);
-    expect(await cpu.getAccumulator()).toBe(0xE0); // 0x40 - 0x60 = 0xE0
+    expect(await await getAccumulator(cpu)).toBe(0xE0); // 0x40 - 0x60 = 0xE0
     expect((((await cpu.getState()).p & CARRY) !== 0)).toBe(false); // Borrow out (carry clear)
     expect((((await cpu.getState()).p & NEGATIVE) !== 0)).toBe(true); // Result is negative
   });
@@ -304,7 +304,7 @@ describe("ADC and SBC with different addressing modes", async () => {
     
     // Verify
     expect(cycles).toBe(4); // No page boundary crossed
-    expect(await cpu.getAccumulator()).toBe(0x30); // 0x50 - 0x20 = 0x30
+    expect(await await getAccumulator(cpu)).toBe(0x30); // 0x50 - 0x20 = 0x30
     expect((((await cpu.getState()).p & CARRY) !== 0)).toBe(true); // No borrow out (carry set)
   });
   
@@ -327,7 +327,7 @@ describe("ADC and SBC with different addressing modes", async () => {
     
     // Verify
     expect(cycles).toBe(5); // +1 cycle for page boundary crossing
-    expect(await cpu.getAccumulator()).toBe(0x30); // 0x50 - 0x20 = 0x30
+    expect(await await getAccumulator(cpu)).toBe(0x30); // 0x50 - 0x20 = 0x30
   });
   
   it("should perform SBC with absolute,Y addressing", async () => {
@@ -349,7 +349,7 @@ describe("ADC and SBC with different addressing modes", async () => {
     
     // Verify
     expect(cycles).toBe(4); // No page boundary crossed
-    expect(await cpu.getAccumulator()).toBe(0x30); // 0x50 - 0x20 = 0x30
+    expect(await await getAccumulator(cpu)).toBe(0x30); // 0x50 - 0x20 = 0x30
   });
   
   it("should perform SBC with (Indirect,X) addressing", async () => {
@@ -372,7 +372,7 @@ describe("ADC and SBC with different addressing modes", async () => {
     
     // Verify
     expect(cycles).toBe(6);
-    expect(await cpu.getAccumulator()).toBe(0x2B); // 0x50 - 0x25 = 0x2B
+    expect(await await getAccumulator(cpu)).toBe(0x2B); // 0x50 - 0x25 = 0x2B
     expect((((await cpu.getState()).p & CARRY) !== 0)).toBe(true); // No borrow out (carry set)
   });
   
@@ -396,7 +396,7 @@ describe("ADC and SBC with different addressing modes", async () => {
     
     // Verify
     expect(cycles).toBe(5); // No page boundary crossed
-    expect(await cpu.getAccumulator()).toBe(0x40); // 0x50 - 0x10 = 0x40
+    expect(await await getAccumulator(cpu)).toBe(0x40); // 0x50 - 0x10 = 0x40
   });
   
   it("should perform SBC with (Indirect),Y addressing and page crossing", async () => {
@@ -419,6 +419,6 @@ describe("ADC and SBC with different addressing modes", async () => {
     
     // Verify
     expect(cycles).toBe(6); // +1 cycle for page boundary crossing
-    expect(await cpu.getAccumulator()).toBe(0x40); // 0x50 - 0x10 = 0x40
+    expect(await await getAccumulator(cpu)).toBe(0x40); // 0x50 - 0x10 = 0x40
   });
 });

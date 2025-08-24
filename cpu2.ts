@@ -40,7 +40,7 @@ export class CPU2 implements CPU {
      * @returns Number of clock cycles consumed by the instruction
      */
     async step(trace = false): Promise<number> {
-        return step6502(this.state, this.mem, trace);
+        return await step6502(this.state, this.mem, this, trace);
     }
 
     /**
@@ -350,21 +350,18 @@ const shiftMem2 = (
 
 /* ─────────────────── one-instruction executor ─────────────────── */
 
-export function step6502(
+export async function step6502(
     s: CPUState,
     mem: Uint8Array,
+    cpuInterface: CPU | null,
     trace = false,
-): number /* cycles (approx) */ {
+): Promise<number /* cycles (approx) */> {
     CURRENT_MEM_CPU2 = mem;
     const opPC = s.pc;
     const op = rd(s, s.pc++);
 
-    if (trace) {
-        const reader = {
-            readByte: (addr: number) => rd(s, addr),
-            readWord: (addr: number) => rd16(s, addr),
-        } as unknown as CPU;
-        const [text] = disassemble(reader, opPC);
+    if (trace && cpuInterface) {
+        const [text] = await disassemble(cpuInterface, opPC);
         console.log(
             opPC.toString(16).padStart(4, "0"),
             op.toString(16).padStart(2, "0"),
