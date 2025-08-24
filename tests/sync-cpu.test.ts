@@ -2,8 +2,15 @@ import { expect, test, describe } from "bun:test";
 import { SyncCPU } from "../sync-cpu";
 import { CPU1 } from "../cpu1";
 import { CPU2 } from "../cpu2";
-import { CARRY, ZERO, OVERFLOW, NEGATIVE } from "../6502";
-import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStackPointer, getStatusRegister } from "./utils";
+import { CARRY, ZERO, OVERFLOW, NEGATIVE } from "../constants";
+import {
+    getAccumulator,
+    getXRegister,
+    getYRegister,
+    getProgramCounter,
+    getStackPointer,
+    getStatusRegister,
+} from "./utils";
 
 describe("SyncCPU", () => {
     test("correctly synchronizes CPU states for basic operations", async () => {
