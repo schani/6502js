@@ -3,7 +3,7 @@
 
 import type { CPU, CPUState } from "./cpu-interface";
 import { createCPUState } from "./cpu-interface";
-import { defined } from "./6502";
+import { defined } from "@glideapps/ts-necessities";
 import { disassemble } from "./disasm";
 
 /**
@@ -193,7 +193,6 @@ export class CPU2 implements CPU {
     getStatusRegister(): number {
         return this.state.p;
     }
-
 }
 
 /* status-flag bit masks */
@@ -361,7 +360,10 @@ export function step6502(
     const op = rd(s, s.pc++);
 
     if (trace) {
-        const reader = { readByte: (addr: number) => rd(s, addr), readWord: (addr: number) => rd16(s, addr) } as unknown as CPU;
+        const reader = {
+            readByte: (addr: number) => rd(s, addr),
+            readWord: (addr: number) => rd16(s, addr),
+        } as unknown as CPU;
         const [text] = disassemble(reader, opPC);
         console.log(
             opPC.toString(16).padStart(4, "0"),
@@ -765,126 +767,150 @@ export function step6502(
         }
 
         /* ---------- AND instructions (Logical AND with Accumulator) ---------- */
-        case 0x29: {  // AND immediate
+        case 0x29: {
+            // AND immediate
             const value = imm8(s);
             s.a = setZN(s, s.a & value);
             return 2;
         }
-        case 0x25: {  // AND zero page
+        case 0x25: {
+            // AND zero page
             const addr = zp(s);
             s.a = setZN(s, s.a & rd(s, addr));
             return 3;
         }
-        case 0x35: {  // AND zero page,X
+        case 0x35: {
+            // AND zero page,X
             const addr = zpx(s);
             s.a = setZN(s, s.a & rd(s, addr));
             return 4;
         }
-        case 0x2d: {  // AND absolute
+        case 0x2d: {
+            // AND absolute
             const addr = abs16(s);
             s.a = setZN(s, s.a & rd(s, addr));
             return 4;
         }
-        case 0x3d: {  // AND absolute,X
+        case 0x3d: {
+            // AND absolute,X
             const addr = absx(s);
             s.a = setZN(s, s.a & rd(s, addr));
             return 4;
         }
-        case 0x39: {  // AND absolute,Y
+        case 0x39: {
+            // AND absolute,Y
             const addr = absy(s);
             s.a = setZN(s, s.a & rd(s, addr));
             return 4;
         }
-        case 0x21: {  // AND (indirect,X)
+        case 0x21: {
+            // AND (indirect,X)
             const addr = indx(s);
             s.a = setZN(s, s.a & rd(s, addr));
             return 6;
         }
-        case 0x31: {  // AND (indirect),Y
+        case 0x31: {
+            // AND (indirect),Y
             const addr = indy(s);
             s.a = setZN(s, s.a & rd(s, addr));
             return 5;
         }
 
         /* ---------- ORA instructions (Logical OR with Accumulator) ---------- */
-        case 0x09: {  // ORA immediate
+        case 0x09: {
+            // ORA immediate
             const value = imm8(s);
             s.a = setZN(s, s.a | value);
             return 2;
         }
-        case 0x05: {  // ORA zero page
+        case 0x05: {
+            // ORA zero page
             const addr = zp(s);
             s.a = setZN(s, s.a | rd(s, addr));
             return 3;
         }
-        case 0x15: {  // ORA zero page,X
+        case 0x15: {
+            // ORA zero page,X
             const addr = zpx(s);
             s.a = setZN(s, s.a | rd(s, addr));
             return 4;
         }
-        case 0x0d: {  // ORA absolute
+        case 0x0d: {
+            // ORA absolute
             const addr = abs16(s);
             s.a = setZN(s, s.a | rd(s, addr));
             return 4;
         }
-        case 0x1d: {  // ORA absolute,X
+        case 0x1d: {
+            // ORA absolute,X
             const addr = absx(s);
             s.a = setZN(s, s.a | rd(s, addr));
             return 4;
         }
-        case 0x19: {  // ORA absolute,Y
+        case 0x19: {
+            // ORA absolute,Y
             const addr = absy(s);
             s.a = setZN(s, s.a | rd(s, addr));
             return 4;
         }
-        case 0x01: {  // ORA (indirect,X)
+        case 0x01: {
+            // ORA (indirect,X)
             const addr = indx(s);
             s.a = setZN(s, s.a | rd(s, addr));
             return 6;
         }
-        case 0x11: {  // ORA (indirect),Y
+        case 0x11: {
+            // ORA (indirect),Y
             const addr = indy(s);
             s.a = setZN(s, s.a | rd(s, addr));
             return 5;
         }
 
         /* ---------- EOR instructions (Logical Exclusive OR with Accumulator) ---------- */
-        case 0x49: {  // EOR immediate
+        case 0x49: {
+            // EOR immediate
             const value = imm8(s);
             s.a = setZN(s, s.a ^ value);
             return 2;
         }
-        case 0x45: {  // EOR zero page
+        case 0x45: {
+            // EOR zero page
             const addr = zp(s);
             s.a = setZN(s, s.a ^ rd(s, addr));
             return 3;
         }
-        case 0x55: {  // EOR zero page,X
+        case 0x55: {
+            // EOR zero page,X
             const addr = zpx(s);
             s.a = setZN(s, s.a ^ rd(s, addr));
             return 4;
         }
-        case 0x4d: {  // EOR absolute
+        case 0x4d: {
+            // EOR absolute
             const addr = abs16(s);
             s.a = setZN(s, s.a ^ rd(s, addr));
             return 4;
         }
-        case 0x5d: {  // EOR absolute,X
+        case 0x5d: {
+            // EOR absolute,X
             const addr = absx(s);
             s.a = setZN(s, s.a ^ rd(s, addr));
             return 4;
         }
-        case 0x59: {  // EOR absolute,Y
+        case 0x59: {
+            // EOR absolute,Y
             const addr = absy(s);
             s.a = setZN(s, s.a ^ rd(s, addr));
             return 4;
         }
-        case 0x41: {  // EOR (indirect,X)
+        case 0x41: {
+            // EOR (indirect,X)
             const addr = indx(s);
             s.a = setZN(s, s.a ^ rd(s, addr));
             return 6;
         }
-        case 0x51: {  // EOR (indirect),Y
+        case 0x51: {
+            // EOR (indirect),Y
             const addr = indy(s);
             s.a = setZN(s, s.a ^ rd(s, addr));
             return 5;
@@ -1221,17 +1247,17 @@ export function step6502(
             // According to 6502 spec, JSR pushes PC+2-1 to stack (next instruction address - 1)
             // Save original PC before it's modified
             const oldPC = s.pc;
-            
+
             // Get the target address (this advances PC by 2 internally)
             const targetAddress = abs16(s);
-            
+
             // Calculate return address exactly as in CPU1
             const returnAddress = oldPC + 2 - 1;
-            
+
             // Push high byte first, then low byte
-            push(s, (returnAddress >> 8) & 0xff);  // High byte
-            push(s, returnAddress & 0xff);         // Low byte
-            
+            push(s, (returnAddress >> 8) & 0xff); // High byte
+            push(s, returnAddress & 0xff); // Low byte
+
             // Jump to the target address
             s.pc = targetAddress;
             return 6;
@@ -1241,7 +1267,7 @@ export function step6502(
             // Pull 16-bit address from stack (low byte first, then high byte)
             const lo = pop(s);
             const hi = pop(s);
-            
+
             // Set PC to the address plus 1 (per 6502 spec)
             // This corresponds to the original PC+2 value when JSR was called
             s.pc = ((hi << 8) | lo) + 1;
