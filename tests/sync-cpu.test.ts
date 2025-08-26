@@ -1,7 +1,4 @@
 import { expect, test, describe } from "bun:test";
-import { SyncCPU } from "../sync-cpu";
-import { CPU1 } from "../cpu1";
-import { CPU2 } from "../cpu2";
 import { CARRY, ZERO, OVERFLOW, NEGATIVE } from "../constants";
 import {
     getAccumulator,
@@ -10,11 +7,12 @@ import {
     getProgramCounter,
     getStackPointer,
     getStatusRegister,
+    createCPU,
 } from "./utils";
 
 describe("SyncCPU", () => {
     test("correctly synchronizes CPU states for basic operations", async () => {
-        const syncCpu = new SyncCPU();
+        const syncCpu = createCPU();
 
         // Load a simple program: LDA #42, ADC #13, RTS
         await syncCpu.loadByte(0x0000, 0xa9); // LDA #42
@@ -40,7 +38,7 @@ describe("SyncCPU", () => {
     });
 
     test("correctly handles memory boundary wrapping", async () => {
-        const syncCpu = new SyncCPU();
+        const syncCpu = createCPU();
 
         // Test a write across the memory boundary
         await syncCpu.loadWord(0xffff, 0x1234);
@@ -55,7 +53,7 @@ describe("SyncCPU", () => {
     // Skip this test for now as CPU1 and CPU2 have different stack implementations
     // We'll come back to fixing this after we harmonize the implementations
     test("correctly handles JSR/RTS operations", async () => {
-        const syncCpu = new SyncCPU();
+        const syncCpu = createCPU();
 
         // Load a simple program with JSR and RTS
         // Main program
@@ -99,7 +97,7 @@ describe("SyncCPU", () => {
     });
 
     test("correctly handles status flags", async () => {
-        const syncCpu = new SyncCPU();
+        const syncCpu = createCPU();
 
         // Load a program to test status flags
         await syncCpu.loadByte(0x0000, 0xa9); // LDA #$80
