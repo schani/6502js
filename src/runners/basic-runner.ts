@@ -25,6 +25,7 @@ import type { CPU } from "../core/cpu-interface.ts";
 import { CPU1 } from "../core/cpu1.ts";
 import { CPU2 } from "../core/cpu2.ts";
 import { SyncCPU } from "../core/sync-cpu.ts";
+import { PGCPU } from "../core/pgcpu.ts";
 import { defined } from "@glideapps/ts-necessities";
 
 // Command line flags
@@ -32,6 +33,7 @@ const TRACE = process.argv.includes("--trace");
 const DEBUG = process.argv.includes("--debug");
 const USE_CPU1 = process.argv.includes("--cpu1");
 const USE_CPU2 = process.argv.includes("--cpu2");
+const USE_PGCPU = process.argv.includes("--pgcpu");
 const USE_SYNC = process.argv.includes("--sync") || DEBUG; // --debug implies --sync
 
 // ---------------------------------------------------------------------------
@@ -88,6 +90,8 @@ async function buildCPU(): Promise<CPU> {
 
     if (USE_SYNC) {
         cpu = new SyncCPU();
+    } else if (USE_PGCPU) {
+        cpu = new PGCPU();
     } else if (USE_CPU2) {
         cpu = new CPU2();
     } else {
@@ -264,6 +268,12 @@ async function main() {
             "Will exit immediately on any CPU implementation divergence",
         );
         console.log("");
+    } else if (USE_PGCPU) {
+        console.log("Running MS-BASIC with PGCPU (PostgreSQL-based)");
+        console.log(
+            "Use --sync flag to run with SyncCPU and detect implementation divergences.",
+        );
+        console.log("");
     } else if (USE_CPU2) {
         console.log("Running MS-BASIC with CPU2");
         console.log(
@@ -276,6 +286,7 @@ async function main() {
         console.log("Available options:");
         console.log("  --cpu1            Use CPU1 implementation (default)");
         console.log("  --cpu2            Use CPU2 implementation");
+        console.log("  --pgcpu           Use PGCPU implementation (PostgreSQL-based)");
         console.log(
             "  --sync            Use SyncCPU (runs both CPU1 and CPU2 in parallel)",
         );
