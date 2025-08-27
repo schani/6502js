@@ -1,5 +1,6 @@
-import { describe, expect, it } from "bun:test";
-import { getAccumulator, getProgramCounter, createCPU, type CPU, CARRY, ZERO, NEGATIVE, OVERFLOW, INTERRUPT, DECIMAL, BREAK, UNUSED } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { getAccumulator, getProgramCounter, createCPU, type CPU, CARRY, ZERO, NEGATIVE, OVERFLOW, INTERRUPT, DECIMAL, BREAK, UNUSED } from "./utils.ts";
 describe("Full coverage tests", () => {
   it("should test readByte edge case with undefined memory", async () => {
     const cpu = createCPU();
@@ -15,10 +16,10 @@ describe("Full coverage tests", () => {
     const cycles = await cpu.step();
     
     // Verify
-    expect(cycles).toBe(2);
-    expect(await await getAccumulator(cpu)).toBe(0); // Should read 0 from uninitialized memory
-    expect(await await getProgramCounter(cpu)).toBe(0xF002);
-    expect((((await cpu.getState()).p & ZERO) !== 0)).toBe(true); // Result is zero
+    assert.strictEqual(cycles, 2);
+    assert.strictEqual(await await getAccumulator(cpu), 0); // Should read 0 from uninitialized memory
+    assert.strictEqual(await await getProgramCounter(cpu), 0xF002);
+    assert.strictEqual((((await cpu.getState()).p & ZERO) !== 0), true); // Result is zero
   });
   
   it("should test writeWord functionality directly", async () => {
@@ -28,8 +29,8 @@ describe("Full coverage tests", () => {
     await cpu.loadWord(0xFFFF, 0x1234);
     
     // Verify the write
-    expect(await cpu.readByte(0xFFFF)).toBe(0x34); // Low byte
-    expect(await cpu.readByte(0x0000)).toBe(0x12); // High byte wraps around
+    assert.strictEqual(await cpu.readByte(0xFFFF), 0x34); // Low byte
+    assert.strictEqual(await cpu.readByte(0x0000), 0x12); // High byte wraps around
   });
   
   // Test for bit 6 of BIT instruction to set overflow flag
@@ -50,10 +51,10 @@ describe("Full coverage tests", () => {
     const cycles = await cpu.step();
     
     // Verify
-    expect(cycles).toBe(3);
-    expect((((await cpu.getState()).p & OVERFLOW) !== 0)).toBe(true); // Overflow should be set from bit 6
-    expect((((await cpu.getState()).p & NEGATIVE) !== 0)).toBe(false); // Negative should be clear since bit 7 is clear
-    expect((((await cpu.getState()).p & ZERO) !== 0)).toBe(false); // Zero should be clear since A & mem is non-zero
+    assert.strictEqual(cycles, 3);
+    assert.strictEqual((((await cpu.getState()).p & OVERFLOW) !== 0), true); // Overflow should be set from bit 6
+    assert.strictEqual((((await cpu.getState()).p & NEGATIVE) !== 0), false); // Negative should be clear since bit 7 is clear
+    assert.strictEqual((((await cpu.getState()).p & ZERO) !== 0), false); // Zero should be clear since A & mem is non-zero
   });
   
   // Test for bit 7 of BIT instruction to set negative flag
@@ -75,10 +76,10 @@ describe("Full coverage tests", () => {
     const cycles = await cpu.step();
     
     // Verify
-    expect(cycles).toBe(4);
-    expect((((await cpu.getState()).p & OVERFLOW) !== 0)).toBe(false); // Overflow should be clear since bit 6 is clear
-    expect((((await cpu.getState()).p & NEGATIVE) !== 0)).toBe(true); // Negative should be set from bit 7
-    expect((((await cpu.getState()).p & ZERO) !== 0)).toBe(false); // Zero should be clear since A & mem is non-zero
+    assert.strictEqual(cycles, 4);
+    assert.strictEqual((((await cpu.getState()).p & OVERFLOW) !== 0), false); // Overflow should be clear since bit 6 is clear
+    assert.strictEqual((((await cpu.getState()).p & NEGATIVE) !== 0), true); // Negative should be set from bit 7
+    assert.strictEqual((((await cpu.getState()).p & ZERO) !== 0), false); // Zero should be clear since A & mem is non-zero
   });
   
   // Test for BIT instruction setting zero flag when A & memory is zero
@@ -98,7 +99,7 @@ describe("Full coverage tests", () => {
     const cycles = await cpu.step();
     
     // Verify
-    expect(cycles).toBe(3);
-    expect((((await cpu.getState()).p & ZERO) !== 0)).toBe(true); // Zero should be set since A & mem = 0
+    assert.strictEqual(cycles, 3);
+    assert.strictEqual((((await cpu.getState()).p & ZERO) !== 0), true); // Zero should be set since A & mem = 0
   });
 });

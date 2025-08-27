@@ -1,6 +1,6 @@
-import type { CPU } from "../constants";
-import { CPU1 } from "../constants";
-import { disassemble } from "../disasm";
+import type { CPU } from "../constants.ts";
+import { CPU1 } from "../constants.ts";
+import { disassemble } from "../disasm.ts";
 
 // BASIC ROM (OSI)
 const ROM_PATH = "./osi.bin";

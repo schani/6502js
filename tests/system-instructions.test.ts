@@ -1,4 +1,5 @@
-import { describe, expect, it } from "bun:test";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 import {
     BREAK,
     CARRY,
@@ -8,8 +9,8 @@ import {
     OVERFLOW,
     UNUSED,
     ZERO,
-} from "../constants";
-import { createCPU, getStackPointer, getStatusRegister } from "./utils";
+} from "../constants.ts";
+import { createCPU, getStackPointer, getStatusRegister } from "./utils.ts";
 import { defined } from "@glideapps/ts-necessities";
 
 describe("System instructions", () => {
@@ -32,24 +33,24 @@ describe("System instructions", () => {
         const cycles = await cpu.step();
 
         // Check cycles
-        expect(cycles).toBe(7);
+        assert.strictEqual(cycles, 7);
 
         // Check PC was set to IRQ/BRK vector
-        expect((await cpu.getState()).pc).toBe(0x2000);
+        assert.strictEqual((await cpu.getState()).pc, 0x2000);
 
         // Check stack has status and return address pushed correctly
         // BRK pushes the address of the next instruction (PC+2)
         // Stack grows downward, so we need to check values above the current SP
         const sp = (await cpu.getState()).sp;
-        expect(await cpu.readByte(0x0100 + sp + 1)).toBe(UNUSED | BREAK); // Status with B flag set
-        expect(await cpu.readByte(0x0100 + sp + 2)).toBe(0x02); // Low byte of PC+2
-        expect(await cpu.readByte(0x0100 + sp + 3)).toBe(0x10); // High byte of PC+2
+        assert.strictEqual(await cpu.readByte(0x0100 + sp + 1), UNUSED | BREAK); // Status with B flag set
+        assert.strictEqual(await cpu.readByte(0x0100 + sp + 2), 0x02); // Low byte of PC+2
+        assert.strictEqual(await cpu.readByte(0x0100 + sp + 3), 0x10); // High byte of PC+2
 
         // Stack pointer should be decremented by 3
-        expect(sp).toBe(0xfa); // 0xFD - 3
+        assert.strictEqual(sp, 0xfa); // 0xFD - 3
 
         // Interrupt flag should be set
-        expect(((await cpu.getState()).p & INTERRUPT) !== 0).toBe(true);
+        assert.strictEqual(((await cpu.getState()).p & INTERRUPT) !== 0, true);
     });
 
     it("should perform RTI instruction", async () => {
@@ -72,16 +73,16 @@ describe("System instructions", () => {
         const cycles = await cpu.step();
 
         // Check cycles
-        expect(cycles).toBe(6);
+        assert.strictEqual(cycles, 6);
 
         // Check PC was restored correctly
-        expect((await cpu.getState()).pc).toBe(0x1002);
+        assert.strictEqual((await cpu.getState()).pc, 0x1002);
 
         // Check status was restored (B flag should be ignored)
-        expect(await getStatusRegister(cpu)).toBe(UNUSED); // Just UNUSED bit
+        assert.strictEqual(await getStatusRegister(cpu), UNUSED); // Just UNUSED bit
 
         // Stack pointer should be incremented by 3
-        expect(await getStackPointer(cpu)).toBe(0xfd);
+        assert.strictEqual(await getStackPointer(cpu), 0xfd);
     });
 
     it("should properly handle status flags with BRK/RTI", async () => {
@@ -105,27 +106,27 @@ describe("System instructions", () => {
         await cpu.step();
 
         // PC should now be at 0x4000
-        expect((await cpu.getState()).pc).toBe(0x4000);
+        assert.strictEqual((await cpu.getState()).pc, 0x4000);
 
         // Original status should be on stack with B flag set
         const sp = (await cpu.getState()).sp;
         const pushedStatus = defined(await cpu.readByte(0x0100 + sp + 1));
-        expect(
+        assert.strictEqual(
             pushedStatus &
                 (UNUSED | CARRY | ZERO | NEGATIVE | OVERFLOW | DECIMAL | BREAK),
-        ).toBe(UNUSED | CARRY | ZERO | NEGATIVE | OVERFLOW | DECIMAL | BREAK);
+            UNUSED | CARRY | ZERO | NEGATIVE | OVERFLOW | DECIMAL | BREAK);
 
         // I flag should be set in current processor status
-        expect(((await cpu.getState()).p & INTERRUPT) !== 0).toBe(true);
+        assert.strictEqual(((await cpu.getState()).p & INTERRUPT) !== 0, true);
 
         // Execute RTI
         await cpu.step();
 
         // PC should be back at 0x3002 (BRK + 2)
-        expect((await cpu.getState()).pc).toBe(0x3002);
+        assert.strictEqual((await cpu.getState()).pc, 0x3002);
 
         // Status should be restored (except B flag, which is not a real flag)
-        expect(await getStatusRegister(cpu)).toBe(
+        assert.strictEqual(await getStatusRegister(cpu), 
             UNUSED | CARRY | ZERO | NEGATIVE | OVERFLOW | DECIMAL,
         );
     });

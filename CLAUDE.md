@@ -14,7 +14,12 @@ correct.
 - If you learn anything interesting, or went down a wrong path that you don't want to repeat, write it down in `DEV-LOG.md`
 
 ## Build/Test Commands
-- Build/typecheck: `bun run typecheck`
-- Run tests: `bun test --coverage`
-- Run specific test: `bun test <test-file-name>`
+- Build/typecheck: `npm run typecheck`
+- Run tests: `npm test`
+- Run tests with coverage: `npm run test:coverage`
+- Run specific test: `node --experimental-strip-types --test <test-file-path>`
+- Run basic-runner: `npm run basic`
 - Run with tracing: Set `trace=true` in CPU step function
+
+Note: Node's `--experimental-strip-types` has limitations (e.g., no support for const enums). 
+The codebase currently uses const enums which prevents direct execution with this flag.

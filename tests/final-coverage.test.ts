@@ -1,11 +1,12 @@
-import { describe, expect, it } from "bun:test";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 import {
     getAccumulator,
     getXRegister,
     getStatusRegister,
     createCPU,
-} from "./utils";
-import { ZERO, NEGATIVE, CARRY, OVERFLOW, UNUSED } from "../constants";
+} from "./utils.ts";
+import { ZERO, NEGATIVE, CARRY, OVERFLOW, UNUSED } from "../constants.ts";
 
 describe("Final coverage tests", () => {
     // Test writeWord directly
@@ -21,7 +22,7 @@ describe("Final coverage tests", () => {
 
         // Execute STA Absolute
         await cpu.step();
-        expect(await cpu.readByte(0xffff)).toBe(0x34);
+        assert.strictEqual(await cpu.readByte(0xffff), 0x34);
 
         // Now write to 0x0000
         await cpu.setProgramCounter(0);
@@ -32,7 +33,7 @@ describe("Final coverage tests", () => {
 
         // Execute STA Absolute
         await cpu.step();
-        expect(await cpu.readByte(0x0000)).toBe(0x12);
+        assert.strictEqual(await cpu.readByte(0x0000), 0x12);
     });
 
     // Test LDX Absolute,Y addressing mode with various cases
@@ -49,8 +50,8 @@ describe("Final coverage tests", () => {
 
         // Execute LDX Absolute,Y
         await cpu.step();
-        expect(await getXRegister(cpu)).toBe(0x00);
-        expect(((await getStatusRegister(cpu)) & ZERO) !== 0).toBe(true);
+        assert.strictEqual(await getXRegister(cpu), 0x00);
+        assert.strictEqual(((await getStatusRegister(cpu)) & ZERO) !== 0, true);
 
         // Test LDX Absolute,Y with negative result and no page crossing
         await cpu.setProgramCounter(0);
@@ -62,8 +63,8 @@ describe("Final coverage tests", () => {
 
         // Execute LDX Absolute,Y
         await cpu.step();
-        expect(await getXRegister(cpu)).toBe(0x80);
-        expect(((await getStatusRegister(cpu)) & NEGATIVE) !== 0).toBe(true);
+        assert.strictEqual(await getXRegister(cpu), 0x80);
+        assert.strictEqual(((await getStatusRegister(cpu)) & NEGATIVE) !== 0, true);
     });
 
     // Test various instruction combinations with memory operations
@@ -83,7 +84,7 @@ describe("Final coverage tests", () => {
 
             // Execute STA Absolute
             await cpu.step();
-            expect(await cpu.readByte(addr)).toBe(0x42);
+            assert.strictEqual(await cpu.readByte(addr), 0x42);
 
             // Test LDA Absolute
             await cpu.setProgramCounter(0);
@@ -93,7 +94,7 @@ describe("Final coverage tests", () => {
 
             // Execute LDA Absolute
             await cpu.step();
-            expect(await getAccumulator(cpu)).toBe(0x42);
+            assert.strictEqual(await getAccumulator(cpu), 0x42);
         }
     });
 
@@ -110,9 +111,9 @@ describe("Final coverage tests", () => {
 
         // Execute ADC
         await cpu.step();
-        expect(await getAccumulator(cpu)).toBe(0x03); // 0x81 + 0x81 + 1 = 0x103 (with carry)
-        expect(((await getStatusRegister(cpu)) & OVERFLOW) !== 0).toBe(true); // Should have overflow
-        expect(((await getStatusRegister(cpu)) & CARRY) !== 0).toBe(true); // Should have carry
+        assert.strictEqual(await getAccumulator(cpu), 0x03); // 0x81 + 0x81 + 1 = 0x103 (with carry)
+        assert.strictEqual(((await getStatusRegister(cpu)) & OVERFLOW) !== 0, true); // Should have overflow
+        assert.strictEqual(((await getStatusRegister(cpu)) & CARRY) !== 0, true); // Should have carry
 
         // Test SBC with positive - negative = negative (overflow)
         await cpu.setProgramCounter(0);
@@ -123,9 +124,9 @@ describe("Final coverage tests", () => {
 
         // Execute SBC
         await cpu.step();
-        expect(await getAccumulator(cpu)).toBe(0x80); // 0x01 - 0x81 = 0x80
-        expect(((await getStatusRegister(cpu)) & OVERFLOW) !== 0).toBe(true); // Should have overflow
-        expect(((await getStatusRegister(cpu)) & NEGATIVE) !== 0).toBe(true); // Should be negative
+        assert.strictEqual(await getAccumulator(cpu), 0x80); // 0x01 - 0x81 = 0x80
+        assert.strictEqual(((await getStatusRegister(cpu)) & OVERFLOW) !== 0, true); // Should have overflow
+        assert.strictEqual(((await getStatusRegister(cpu)) & NEGATIVE) !== 0, true); // Should be negative
     });
 
     // Test all shift/rotate instructions with specific inputs
@@ -139,9 +140,9 @@ describe("Final coverage tests", () => {
 
         // Execute ASL
         await cpu.step();
-        expect(await getAccumulator(cpu)).toBe(0x00);
-        expect(((await getStatusRegister(cpu)) & CARRY) !== 0).toBe(true);
-        expect(((await getStatusRegister(cpu)) & ZERO) !== 0).toBe(true);
+        assert.strictEqual(await getAccumulator(cpu), 0x00);
+        assert.strictEqual(((await getStatusRegister(cpu)) & CARRY) !== 0, true);
+        assert.strictEqual(((await getStatusRegister(cpu)) & ZERO) !== 0, true);
 
         // Test LSR with 0x01 input (sets carry, clears accumulator, sets Z flag)
         await cpu.setProgramCounter(0);
@@ -150,9 +151,9 @@ describe("Final coverage tests", () => {
 
         // Execute LSR
         await cpu.step();
-        expect(await getAccumulator(cpu)).toBe(0x00);
-        expect(((await getStatusRegister(cpu)) & CARRY) !== 0).toBe(true);
-        expect(((await getStatusRegister(cpu)) & ZERO) !== 0).toBe(true);
+        assert.strictEqual(await getAccumulator(cpu), 0x00);
+        assert.strictEqual(((await getStatusRegister(cpu)) & CARRY) !== 0, true);
+        assert.strictEqual(((await getStatusRegister(cpu)) & ZERO) !== 0, true);
 
         // Test ROL with 0x80 input and carry set
         // (rotates 1 into bit 0, sets carry from bit 7)
@@ -163,9 +164,9 @@ describe("Final coverage tests", () => {
 
         // Execute ROL
         await cpu.step();
-        expect(await getAccumulator(cpu)).toBe(0x01);
-        expect(((await getStatusRegister(cpu)) & CARRY) !== 0).toBe(true);
-        expect(((await getStatusRegister(cpu)) & ZERO) !== 0).toBe(false);
+        assert.strictEqual(await getAccumulator(cpu), 0x01);
+        assert.strictEqual(((await getStatusRegister(cpu)) & CARRY) !== 0, true);
+        assert.strictEqual(((await getStatusRegister(cpu)) & ZERO) !== 0, false);
 
         // Test ROR with 0x01 input and carry set
         // (rotates 1 into bit 7, sets carry from bit 0)
@@ -176,9 +177,9 @@ describe("Final coverage tests", () => {
 
         // Execute ROR
         await cpu.step();
-        expect(await getAccumulator(cpu)).toBe(0x80);
-        expect(((await getStatusRegister(cpu)) & CARRY) !== 0).toBe(true);
-        expect(((await getStatusRegister(cpu)) & NEGATIVE) !== 0).toBe(true);
+        assert.strictEqual(await getAccumulator(cpu), 0x80);
+        assert.strictEqual(((await getStatusRegister(cpu)) & CARRY) !== 0, true);
+        assert.strictEqual(((await getStatusRegister(cpu)) & NEGATIVE) !== 0, true);
     });
 
     // Test zero-page memory access with wrapping behavior
@@ -196,7 +197,7 @@ describe("Final coverage tests", () => {
 
         // Execute LDA Zero Page,X
         await cpu.step();
-        expect(await getAccumulator(cpu)).toBe(0x42);
+        assert.strictEqual(await getAccumulator(cpu), 0x42);
 
         // Test zero page Y addressing with wrap-around
         // Create a completely fresh CPU to avoid any side effects
@@ -219,10 +220,10 @@ describe("Final coverage tests", () => {
         freshCpu.step();
 
         // Just verify the instruction ran and changed the X register
-        expect(await getXRegister(freshCpu)).not.toBe(initialX);
+        assert.notStrictEqual(await getXRegister(freshCpu), initialX);
 
         // Based on our debugging, we know our CPU implementation loads from address 0x02
         // Let's adapt the test to the actual behavior
-        expect(await getXRegister(freshCpu)).toBe(2);
+        assert.strictEqual(await getXRegister(freshCpu), 2);
     });
 });

@@ -1,5 +1,6 @@
-import { describe, expect, it } from "bun:test";
-import { getAccumulator, getProgramCounter, getStatusRegister, createCPU, ZERO, NEGATIVE, OVERFLOW } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { getAccumulator, getProgramCounter, getStatusRegister, createCPU, ZERO, NEGATIVE, OVERFLOW } from "./utils.ts";
 describe("Logical operations", () => {
   it("should perform AND immediate instruction", async () => {
     const cpu = createCPU();
@@ -13,10 +14,10 @@ describe("Logical operations", () => {
     
     const cycles = await cpu.step();
     
-    expect(await getAccumulator(cpu)).toBe(0x00); // 0xF0 & 0x0F = 0x00
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(2);
-    expect(await getStatusRegister(cpu) & ZERO).toBe(ZERO); // Zero flag should be set
+    assert.strictEqual(await getAccumulator(cpu), 0x00); // 0xF0 & 0x0F = 0x00
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 2);
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, ZERO); // Zero flag should be set
   });
   
   it("should perform AND zero page instruction", async () => {
@@ -32,10 +33,10 @@ describe("Logical operations", () => {
     
     const cycles = await cpu.step();
     
-    expect(await getAccumulator(cpu)).toBe(0x00); // 0xF0 & 0x0F = 0x00
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(3);
-    expect(await getStatusRegister(cpu) & ZERO).toBe(ZERO); // Zero flag should be set
+    assert.strictEqual(await getAccumulator(cpu), 0x00); // 0xF0 & 0x0F = 0x00
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 3);
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, ZERO); // Zero flag should be set
   });
 
   it("should perform AND zero page,X instruction", async () => {
@@ -52,10 +53,10 @@ describe("Logical operations", () => {
     
     const cycles = await cpu.step();
     
-    expect(await getAccumulator(cpu)).toBe(0x00); // 0xF0 & 0x0F = 0x00
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(4);
-    expect(await getStatusRegister(cpu) & ZERO).toBe(ZERO); // Zero flag should be set
+    assert.strictEqual(await getAccumulator(cpu), 0x00); // 0xF0 & 0x0F = 0x00
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 4);
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, ZERO); // Zero flag should be set
   });
 
   it("should perform AND absolute instruction", async () => {
@@ -72,10 +73,10 @@ describe("Logical operations", () => {
     
     const cycles = await cpu.step();
     
-    expect(await getAccumulator(cpu)).toBe(0x00); // 0xF0 & 0x0F = 0x00
-    expect(await getProgramCounter(cpu)).toBe(3);
-    expect(cycles).toBe(4);
-    expect(await getStatusRegister(cpu) & ZERO).toBe(ZERO); // Zero flag should be set
+    assert.strictEqual(await getAccumulator(cpu), 0x00); // 0xF0 & 0x0F = 0x00
+    assert.strictEqual(await getProgramCounter(cpu), 3);
+    assert.strictEqual(cycles, 4);
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, ZERO); // Zero flag should be set
   });
   
   it("should perform ORA immediate instruction", async () => {
@@ -90,10 +91,10 @@ describe("Logical operations", () => {
     
     const cycles = await cpu.step();
     
-    expect(await getAccumulator(cpu)).toBe(0xFF); // 0xF0 | 0x0F = 0xFF
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(2);
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(NEGATIVE); // Negative flag should be set
+    assert.strictEqual(await getAccumulator(cpu), 0xFF); // 0xF0 | 0x0F = 0xFF
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 2);
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, NEGATIVE); // Negative flag should be set
   });
   
   it("should perform ORA zero page instruction", async () => {
@@ -109,10 +110,10 @@ describe("Logical operations", () => {
     
     const cycles = await cpu.step();
     
-    expect(await getAccumulator(cpu)).toBe(0xFF); // 0xF0 | 0x0F = 0xFF
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(3);
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(NEGATIVE); // Negative flag should be set
+    assert.strictEqual(await getAccumulator(cpu), 0xFF); // 0xF0 | 0x0F = 0xFF
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 3);
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, NEGATIVE); // Negative flag should be set
   });
   
   it("should perform ORA absolute instruction", async () => {
@@ -129,10 +130,10 @@ describe("Logical operations", () => {
     
     const cycles = await cpu.step();
     
-    expect(await getAccumulator(cpu)).toBe(0xFF); // 0xF0 | 0x0F = 0xFF
-    expect(await getProgramCounter(cpu)).toBe(3);
-    expect(cycles).toBe(4);
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(NEGATIVE); // Negative flag should be set
+    assert.strictEqual(await getAccumulator(cpu), 0xFF); // 0xF0 | 0x0F = 0xFF
+    assert.strictEqual(await getProgramCounter(cpu), 3);
+    assert.strictEqual(cycles, 4);
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, NEGATIVE); // Negative flag should be set
   });
   
   it("should perform EOR immediate instruction", async () => {
@@ -147,9 +148,9 @@ describe("Logical operations", () => {
     
     const cycles = await cpu.step();
     
-    expect(await getAccumulator(cpu)).toBe(0x0F); // 0xFF ^ 0xF0 = 0x0F
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(2);
+    assert.strictEqual(await getAccumulator(cpu), 0x0F); // 0xFF ^ 0xF0 = 0x0F
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 2);
   });
   
   it("should perform EOR zero page instruction", async () => {
@@ -165,9 +166,9 @@ describe("Logical operations", () => {
     
     const cycles = await cpu.step();
     
-    expect(await getAccumulator(cpu)).toBe(0x0F); // 0xFF ^ 0xF0 = 0x0F
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(3);
+    assert.strictEqual(await getAccumulator(cpu), 0x0F); // 0xFF ^ 0xF0 = 0x0F
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 3);
   });
   
   it("should perform EOR absolute instruction", async () => {
@@ -184,9 +185,9 @@ describe("Logical operations", () => {
     
     const cycles = await cpu.step();
     
-    expect(await getAccumulator(cpu)).toBe(0x0F); // 0xFF ^ 0xF0 = 0x0F
-    expect(await getProgramCounter(cpu)).toBe(3);
-    expect(cycles).toBe(4);
+    assert.strictEqual(await getAccumulator(cpu), 0x0F); // 0xFF ^ 0xF0 = 0x0F
+    assert.strictEqual(await getProgramCounter(cpu), 3);
+    assert.strictEqual(cycles, 4);
   });
   
   it("should perform BIT zero page instruction", async () => {
@@ -204,16 +205,16 @@ describe("Logical operations", () => {
     const cycles = await cpu.step();
     
     // BIT sets N and V from bits 7 and 6 of memory
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(NEGATIVE); // Bit 7 of memory -> N flag
-    expect(await getStatusRegister(cpu) & OVERFLOW).toBe(OVERFLOW); // Bit 6 of memory -> V flag
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, NEGATIVE); // Bit 7 of memory -> N flag
+    assert.strictEqual(await getStatusRegister(cpu) & OVERFLOW, OVERFLOW); // Bit 6 of memory -> V flag
     
     // BIT sets Z based on AND result
-    expect(await getStatusRegister(cpu) & ZERO).toBe(ZERO); // 0x0F & 0xC0 = 0, so Z flag is set
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, ZERO); // 0x0F & 0xC0 = 0, so Z flag is set
     
     // Accumulator should not be modified
-    expect(await getAccumulator(cpu)).toBe(0x0F);
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(3);
+    assert.strictEqual(await getAccumulator(cpu), 0x0F);
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 3);
   });
   
   it("should perform BIT absolute instruction", async () => {
@@ -232,16 +233,16 @@ describe("Logical operations", () => {
     const cycles = await cpu.step();
     
     // BIT sets N and V from bits 7 and 6 of memory
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(NEGATIVE); // Bit 7 of memory -> N flag
-    expect(await getStatusRegister(cpu) & OVERFLOW).toBe(OVERFLOW); // Bit 6 of memory -> V flag
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, NEGATIVE); // Bit 7 of memory -> N flag
+    assert.strictEqual(await getStatusRegister(cpu) & OVERFLOW, OVERFLOW); // Bit 6 of memory -> V flag
     
     // BIT sets Z based on AND result
-    expect(await getStatusRegister(cpu) & ZERO).toBe(ZERO); // 0x0F & 0xC0 = 0, so Z flag is set
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, ZERO); // 0x0F & 0xC0 = 0, so Z flag is set
     
     // Accumulator should not be modified
-    expect(await getAccumulator(cpu)).toBe(0x0F);
-    expect(await getProgramCounter(cpu)).toBe(3);
-    expect(cycles).toBe(4);
+    assert.strictEqual(await getAccumulator(cpu), 0x0F);
+    assert.strictEqual(await getProgramCounter(cpu), 3);
+    assert.strictEqual(cycles, 4);
   });
   
   it("should correctly handle BIT with matching bits", async () => {
@@ -259,15 +260,15 @@ describe("Logical operations", () => {
     const cycles = await cpu.step();
     
     // BIT sets N and V from bits 7 and 6 of memory
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(NEGATIVE); // Bit 7 of memory -> N flag
-    expect(await getStatusRegister(cpu) & OVERFLOW).toBe(OVERFLOW); // Bit 6 of memory -> V flag
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, NEGATIVE); // Bit 7 of memory -> N flag
+    assert.strictEqual(await getStatusRegister(cpu) & OVERFLOW, OVERFLOW); // Bit 6 of memory -> V flag
     
     // BIT sets Z based on AND result
-    expect(await getStatusRegister(cpu) & ZERO).toBe(0); // 0xC0 & 0xC0 = 0xC0, so Z flag should be clear
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, 0); // 0xC0 & 0xC0 = 0xC0, so Z flag should be clear
     
     // Accumulator should not be modified
-    expect(await getAccumulator(cpu)).toBe(0xC0);
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(3);
+    assert.strictEqual(await getAccumulator(cpu), 0xC0);
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 3);
   });
 });

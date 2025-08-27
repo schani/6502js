@@ -1,4 +1,5 @@
-import { describe, expect, it } from "bun:test";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 import {
     CARRY,
     ZERO,
@@ -8,8 +9,8 @@ import {
     UNUSED,
     OVERFLOW,
     NEGATIVE,
-} from "../constants";
-import { type CPU, createCPU, getYRegister } from "./utils";
+} from "../constants.ts";
+import { type CPU, createCPU, getYRegister } from "./utils.ts";
 
 describe("Edge cases and boundary conditions", () => {
     it("should test writeWord at memory boundaries", async () => {
@@ -19,12 +20,12 @@ describe("Edge cases and boundary conditions", () => {
         await cpu.loadWord(0xffff, 0xabcd);
 
         // Verify that the low byte is at 0xFFFF and high byte wraps to 0x0000
-        expect(await cpu.readByte(0xffff)).toBe(0xcd);
-        expect(await cpu.readByte(0x0000)).toBe(0xab);
+        assert.strictEqual(await cpu.readByte(0xffff), 0xcd);
+        assert.strictEqual(await cpu.readByte(0x0000), 0xab);
 
         // Try reading from the same address
         const value = await cpu.readWord(0xffff);
-        expect(value).toBe(0xabcd);
+        assert.strictEqual(value, 0xabcd);
     });
 
     // Test missing LDY cases
@@ -43,10 +44,10 @@ describe("Edge cases and boundary conditions", () => {
 
         let cycles = await cpu.step();
 
-        expect(cycles).toBe(3);
-        expect(await await getYRegister(cpu)).toBe(0x00);
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(false); // Negative flag should be clear
+        assert.strictEqual(cycles, 3);
+        assert.strictEqual(await await getYRegister(cpu), 0x00);
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, false); // Negative flag should be clear
 
         // Case 2: LDY Absolute with negative result
         await cpu.loadByte(0x1002, 0xac); // LDY Absolute
@@ -61,9 +62,9 @@ describe("Edge cases and boundary conditions", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(4);
-        expect(await await getYRegister(cpu)).toBe(0x80);
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(false); // Zero flag should be clear
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Negative flag should be set
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(await await getYRegister(cpu), 0x80);
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // Zero flag should be clear
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Negative flag should be set
     });
 });

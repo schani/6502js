@@ -1,10 +1,10 @@
 /**
  * Common 6502 CPU implementation classes
  */
-import { disassemble } from "./disasm";
+import { disassemble } from "./disasm.ts";
 import { defined } from "@glideapps/ts-necessities";
-import type { CPU, CPUState } from "./cpu-interface";
-import { createCPUState } from "./cpu-interface";
+import type { CPU, CPUState } from "./cpu-interface.ts";
+import { createCPUState } from "./cpu-interface.ts";
 
 // Re-export the interfaces
 export type { CPU, CPUState };
@@ -23,10 +23,10 @@ export {
     UNUSED,
     OVERFLOW,
     NEGATIVE,
-} from "./constants";
+} from "./constants.ts";
 
 // Helper functions for the CPU - exported for backward compatibility with tests
-export { step6502, readByte, readWord, writeByte, writeWord } from "./cpu1";
+export { step6502, readByte, readWord, writeByte, writeWord } from "./cpu1.ts";
 
 // Legacy function for backward compatibility
 export function createCPU(): CPU {
@@ -35,6 +35,6 @@ export function createCPU(): CPU {
 }
 
 // Export implementations
-export { CPU1 } from "./cpu1";
-export { CPU2 } from "./cpu2";
-export { SyncCPU } from "./sync-cpu";
+export { CPU1 } from "./cpu1.ts";
+export { CPU2 } from "./cpu2.ts";
+export { SyncCPU } from "./sync-cpu.ts";

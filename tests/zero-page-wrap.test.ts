@@ -1,5 +1,6 @@
-import { describe, expect, it } from "bun:test";
-import { createCPU } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { createCPU } from "./utils.ts";
 import {
     getAccumulator,
     getXRegister,
@@ -7,7 +8,7 @@ import {
     getProgramCounter,
     getStackPointer,
     getStatusRegister,
-} from "./utils";
+} from "./utils.ts";
 
 describe("Zero page wrap-around behavior", () => {
     it("should correctly handle zero-page wrap-around with X register", async () => {
@@ -24,7 +25,7 @@ describe("Zero page wrap-around behavior", () => {
 
         // Execute and test
         cpu.step();
-        expect(await getAccumulator(cpu)).toBe(0x42);
+        assert.strictEqual(await getAccumulator(cpu), 0x42);
     });
 
     it("should adapt to the actual behavior for zero page Y addressing", async () => {
@@ -47,6 +48,6 @@ describe("Zero page wrap-around behavior", () => {
 
         // This test just verifies that LDX Zero Page,Y executes without crashing
         // We're not testing the exact value since our implementation may differ
-        expect(loadedValue).not.toBe(initialValue); // Value has changed from the initial X value
+        assert.notStrictEqual(loadedValue, initialValue); // Value has changed from the initial X value
     });
 });

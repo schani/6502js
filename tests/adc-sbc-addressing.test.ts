@@ -1,4 +1,5 @@
-import { describe, expect, it } from "bun:test";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 import {
     CARRY,
     ZERO,
@@ -8,8 +9,8 @@ import {
     UNUSED,
     OVERFLOW,
     NEGATIVE,
-} from "../constants";
-import { getAccumulator, createCPU } from "./utils";
+} from "../constants.ts";
+import { getAccumulator, createCPU } from "./utils.ts";
 
 describe("ADC and SBC with different addressing modes", async () => {
     // Test ADC with all addressing modes
@@ -29,12 +30,12 @@ describe("ADC and SBC with different addressing modes", async () => {
         const cycles = await cpu.step();
 
         // Verify
-        expect(cycles).toBe(3);
-        expect(await await getAccumulator(cpu)).toBe(0x52); // 0x10 + 0x42 = 0x52
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(false); // No carry out
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(false); // Result is not zero
-        expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(false); // No signed overflow
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(false); // Result is positive
+        assert.strictEqual(cycles, 3);
+        assert.strictEqual(await await getAccumulator(cpu), 0x52); // 0x10 + 0x42 = 0x52
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // No carry out
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // Result is not zero
+        assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, false); // No signed overflow
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, false); // Result is positive
     });
 
     it("should perform ADC with zero page,X addressing", async () => {
@@ -54,12 +55,12 @@ describe("ADC and SBC with different addressing modes", async () => {
         const cycles = await cpu.step();
 
         // Verify
-        expect(cycles).toBe(4);
-        expect(await await getAccumulator(cpu)).toBe(0x53); // 0x10 + 0x42 + 0x01 (carry) = 0x53
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(false); // No carry out
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(false); // Result is not zero
-        expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(false); // No signed overflow
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(false); // Result is positive
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(await await getAccumulator(cpu), 0x53); // 0x10 + 0x42 + 0x01 (carry) = 0x53
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // No carry out
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // Result is not zero
+        assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, false); // No signed overflow
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, false); // Result is positive
     });
 
     it("should perform ADC with absolute addressing", async () => {
@@ -79,12 +80,12 @@ describe("ADC and SBC with different addressing modes", async () => {
         const cycles = await cpu.step();
 
         // Verify
-        expect(cycles).toBe(4);
-        expect(await await getAccumulator(cpu)).toBe(0xe0); // 0x10 + 0xD0 = 0xE0
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(false); // No carry out
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(false); // Result is not zero
-        expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(false); // No signed overflow
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Result is negative (bit 7 set)
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(await await getAccumulator(cpu), 0xe0); // 0x10 + 0xD0 = 0xE0
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // No carry out
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // Result is not zero
+        assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, false); // No signed overflow
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result is negative (bit 7 set)
     });
 
     it("should perform ADC with absolute,X addressing", async () => {
@@ -105,9 +106,9 @@ describe("ADC and SBC with different addressing modes", async () => {
         const cycles = await cpu.step();
 
         // Verify
-        expect(cycles).toBe(4); // No page boundary crossed
-        expect(await await getAccumulator(cpu)).toBe(0x50); // 0x10 + 0x40 = 0x50
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(false); // No carry out
+        assert.strictEqual(cycles, 4); // No page boundary crossed
+        assert.strictEqual(await await getAccumulator(cpu), 0x50); // 0x10 + 0x40 = 0x50
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // No carry out
     });
 
     it("should perform ADC with absolute,X addressing and page crossing", async () => {
@@ -128,8 +129,8 @@ describe("ADC and SBC with different addressing modes", async () => {
         const cycles = await cpu.step();
 
         // Verify
-        expect(cycles).toBe(5); // +1 cycle for page boundary crossing
-        expect(await await getAccumulator(cpu)).toBe(0x50); // 0x10 + 0x40 = 0x50
+        assert.strictEqual(cycles, 5); // +1 cycle for page boundary crossing
+        assert.strictEqual(await await getAccumulator(cpu), 0x50); // 0x10 + 0x40 = 0x50
     });
 
     it("should perform ADC with absolute,Y addressing", async () => {
@@ -150,9 +151,9 @@ describe("ADC and SBC with different addressing modes", async () => {
         const cycles = await cpu.step();
 
         // Verify
-        expect(cycles).toBe(4); // No page boundary crossed
-        expect(await await getAccumulator(cpu)).toBe(0x80); // 0x10 + 0x70 = 0x80
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Result is negative (bit 7 set)
+        assert.strictEqual(cycles, 4); // No page boundary crossed
+        assert.strictEqual(await await getAccumulator(cpu), 0x80); // 0x10 + 0x70 = 0x80
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result is negative (bit 7 set)
     });
 
     it("should perform ADC with (Indirect,X) addressing", async () => {
@@ -174,8 +175,8 @@ describe("ADC and SBC with different addressing modes", async () => {
         const cycles = await cpu.step();
 
         // Verify
-        expect(cycles).toBe(6);
-        expect(await await getAccumulator(cpu)).toBe(0x45); // 0x10 + 0x35 = 0x45
+        assert.strictEqual(cycles, 6);
+        assert.strictEqual(await await getAccumulator(cpu), 0x45); // 0x10 + 0x35 = 0x45
     });
 
     it("should perform ADC with (Indirect),Y addressing", async () => {
@@ -197,8 +198,8 @@ describe("ADC and SBC with different addressing modes", async () => {
         const cycles = await cpu.step();
 
         // Verify
-        expect(cycles).toBe(5); // No page boundary crossed
-        expect(await await getAccumulator(cpu)).toBe(0x35); // 0x10 + 0x25 = 0x35
+        assert.strictEqual(cycles, 5); // No page boundary crossed
+        assert.strictEqual(await await getAccumulator(cpu), 0x35); // 0x10 + 0x25 = 0x35
     });
 
     it("should perform ADC with (Indirect),Y addressing and page crossing", async () => {
@@ -220,8 +221,8 @@ describe("ADC and SBC with different addressing modes", async () => {
         const cycles = await cpu.step();
 
         // Verify
-        expect(cycles).toBe(6); // +1 cycle for page boundary crossing
-        expect(await await getAccumulator(cpu)).toBe(0x35); // 0x10 + 0x25 = 0x35
+        assert.strictEqual(cycles, 6); // +1 cycle for page boundary crossing
+        assert.strictEqual(await await getAccumulator(cpu), 0x35); // 0x10 + 0x25 = 0x35
     });
 
     // Test SBC with all addressing modes
@@ -241,12 +242,12 @@ describe("ADC and SBC with different addressing modes", async () => {
         const cycles = await cpu.step();
 
         // Verify
-        expect(cycles).toBe(3);
-        expect(await await getAccumulator(cpu)).toBe(0x30); // 0x50 - 0x20 = 0x30
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // No borrow (carry set)
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(false); // Result is not zero
-        expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(false); // No signed overflow
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(false); // Result is positive
+        assert.strictEqual(cycles, 3);
+        assert.strictEqual(await await getAccumulator(cpu), 0x30); // 0x50 - 0x20 = 0x30
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // No borrow (carry set)
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // Result is not zero
+        assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, false); // No signed overflow
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, false); // Result is positive
     });
 
     it("should perform SBC with zero page,X addressing", async () => {
@@ -266,9 +267,9 @@ describe("ADC and SBC with different addressing modes", async () => {
         const cycles = await cpu.step();
 
         // Verify
-        expect(cycles).toBe(4);
-        expect(await await getAccumulator(cpu)).toBe(0x2f); // 0x50 - 0x20 - 0x01 (borrow) = 0x2F
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // No borrow out (carry set after operation)
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(await await getAccumulator(cpu), 0x2f); // 0x50 - 0x20 - 0x01 (borrow) = 0x2F
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // No borrow out (carry set after operation)
     });
 
     it("should perform SBC with absolute addressing", async () => {
@@ -288,10 +289,10 @@ describe("ADC and SBC with different addressing modes", async () => {
         const cycles = await cpu.step();
 
         // Verify
-        expect(cycles).toBe(4);
-        expect(await await getAccumulator(cpu)).toBe(0xe0); // 0x40 - 0x60 = 0xE0
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(false); // Borrow out (carry clear)
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Result is negative
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(await await getAccumulator(cpu), 0xe0); // 0x40 - 0x60 = 0xE0
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Borrow out (carry clear)
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result is negative
     });
 
     it("should perform SBC with absolute,X addressing", async () => {
@@ -312,9 +313,9 @@ describe("ADC and SBC with different addressing modes", async () => {
         const cycles = await cpu.step();
 
         // Verify
-        expect(cycles).toBe(4); // No page boundary crossed
-        expect(await await getAccumulator(cpu)).toBe(0x30); // 0x50 - 0x20 = 0x30
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // No borrow out (carry set)
+        assert.strictEqual(cycles, 4); // No page boundary crossed
+        assert.strictEqual(await await getAccumulator(cpu), 0x30); // 0x50 - 0x20 = 0x30
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // No borrow out (carry set)
     });
 
     it("should perform SBC with absolute,X addressing and page crossing", async () => {
@@ -335,8 +336,8 @@ describe("ADC and SBC with different addressing modes", async () => {
         const cycles = await cpu.step();
 
         // Verify
-        expect(cycles).toBe(5); // +1 cycle for page boundary crossing
-        expect(await await getAccumulator(cpu)).toBe(0x30); // 0x50 - 0x20 = 0x30
+        assert.strictEqual(cycles, 5); // +1 cycle for page boundary crossing
+        assert.strictEqual(await await getAccumulator(cpu), 0x30); // 0x50 - 0x20 = 0x30
     });
 
     it("should perform SBC with absolute,Y addressing", async () => {
@@ -357,8 +358,8 @@ describe("ADC and SBC with different addressing modes", async () => {
         const cycles = await cpu.step();
 
         // Verify
-        expect(cycles).toBe(4); // No page boundary crossed
-        expect(await await getAccumulator(cpu)).toBe(0x30); // 0x50 - 0x20 = 0x30
+        assert.strictEqual(cycles, 4); // No page boundary crossed
+        assert.strictEqual(await await getAccumulator(cpu), 0x30); // 0x50 - 0x20 = 0x30
     });
 
     it("should perform SBC with (Indirect,X) addressing", async () => {
@@ -380,9 +381,9 @@ describe("ADC and SBC with different addressing modes", async () => {
         const cycles = await cpu.step();
 
         // Verify
-        expect(cycles).toBe(6);
-        expect(await await getAccumulator(cpu)).toBe(0x2b); // 0x50 - 0x25 = 0x2B
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // No borrow out (carry set)
+        assert.strictEqual(cycles, 6);
+        assert.strictEqual(await await getAccumulator(cpu), 0x2b); // 0x50 - 0x25 = 0x2B
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // No borrow out (carry set)
     });
 
     it("should perform SBC with (Indirect),Y addressing", async () => {
@@ -404,8 +405,8 @@ describe("ADC and SBC with different addressing modes", async () => {
         const cycles = await cpu.step();
 
         // Verify
-        expect(cycles).toBe(5); // No page boundary crossed
-        expect(await await getAccumulator(cpu)).toBe(0x40); // 0x50 - 0x10 = 0x40
+        assert.strictEqual(cycles, 5); // No page boundary crossed
+        assert.strictEqual(await await getAccumulator(cpu), 0x40); // 0x50 - 0x10 = 0x40
     });
 
     it("should perform SBC with (Indirect),Y addressing and page crossing", async () => {
@@ -427,7 +428,7 @@ describe("ADC and SBC with different addressing modes", async () => {
         const cycles = await cpu.step();
 
         // Verify
-        expect(cycles).toBe(6); // +1 cycle for page boundary crossing
-        expect(await await getAccumulator(cpu)).toBe(0x40); // 0x50 - 0x10 = 0x40
+        assert.strictEqual(cycles, 6); // +1 cycle for page boundary crossing
+        assert.strictEqual(await await getAccumulator(cpu), 0x40); // 0x50 - 0x10 = 0x40
     });
 });

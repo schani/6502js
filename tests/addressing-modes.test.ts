@@ -1,6 +1,7 @@
-import { describe, expect, it } from "bun:test";
-import { CARRY, ZERO, NEGATIVE, OVERFLOW } from "../constants";
-import { getAccumulator, getProgramCounter, createCPU } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { CARRY, ZERO, NEGATIVE, OVERFLOW } from "../constants.ts";
+import { getAccumulator, getProgramCounter, createCPU } from "./utils.ts";
 describe("Addressing modes", () => {
     // This test will verify various addressing modes, focusing on instructions
     // and addressing mode combinations that might not be fully covered elsewhere
@@ -22,9 +23,9 @@ describe("Addressing modes", () => {
         let cycles = await cpu.step();
 
         // Verify results
-        expect(cycles).toBe(5); // 4+1 cycles (page boundary crossed)
-        expect(await await getAccumulator(cpu)).toBe(0xc1); // 0xF5 & 0xC3 = 0xC1
-        expect(await await getProgramCounter(cpu)).toBe(3);
+        assert.strictEqual(cycles, 5); // 4+1 cycles (page boundary crossed)
+        assert.strictEqual(await await getAccumulator(cpu), 0xc1); // 0xF5 & 0xC3 = 0xC1
+        assert.strictEqual(await await getProgramCounter(cpu), 3);
 
         // Test ORA Absolute,X with page crossing
         await cpu.loadByte(3, 0x1d); // ORA Absolute,X
@@ -37,8 +38,8 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(5); // 4+1 cycles (page boundary crossed)
-        expect(await await getAccumulator(cpu)).toBe(0x0f); // 0x03 | 0x0C = 0x0F
+        assert.strictEqual(cycles, 5); // 4+1 cycles (page boundary crossed)
+        assert.strictEqual(await await getAccumulator(cpu), 0x0f); // 0x03 | 0x0C = 0x0F
 
         // Test EOR Absolute,X with page crossing
         await cpu.loadByte(6, 0x5d); // EOR Absolute,X
@@ -51,8 +52,8 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(5); // 4+1 cycles (page boundary crossed)
-        expect(await await getAccumulator(cpu)).toBe(0x66); // 0x55 ^ 0x33 = 0x66
+        assert.strictEqual(cycles, 5); // 4+1 cycles (page boundary crossed)
+        assert.strictEqual(await await getAccumulator(cpu), 0x66); // 0x55 ^ 0x33 = 0x66
     });
 
     it("should perform AND/ORA/EOR with absolute,Y addressing and page crossing", async () => {
@@ -72,8 +73,8 @@ describe("Addressing modes", () => {
         let cycles = await cpu.step();
 
         // Verify results
-        expect(cycles).toBe(5); // 4+1 cycles (page boundary crossed)
-        expect(await await getAccumulator(cpu)).toBe(0xaa); // 0xFF & 0xAA = 0xAA
+        assert.strictEqual(cycles, 5); // 4+1 cycles (page boundary crossed)
+        assert.strictEqual(await await getAccumulator(cpu), 0xaa); // 0xFF & 0xAA = 0xAA
 
         // Test ORA Absolute,Y with page crossing
         await cpu.loadByte(3, 0x19); // ORA Absolute,Y
@@ -86,8 +87,8 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(5); // 4+1 cycles (page boundary crossed)
-        expect(await await getAccumulator(cpu)).toBe(0x3f); // 0x0C | 0x33 = 0x3F
+        assert.strictEqual(cycles, 5); // 4+1 cycles (page boundary crossed)
+        assert.strictEqual(await await getAccumulator(cpu), 0x3f); // 0x0C | 0x33 = 0x3F
 
         // Test EOR Absolute,Y with page crossing
         await cpu.loadByte(6, 0x59); // EOR Absolute,Y
@@ -100,8 +101,8 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(5); // 4+1 cycles (page boundary crossed)
-        expect(await await getAccumulator(cpu)).toBe(0xff); // 0x0F ^ 0xF0 = 0xFF
+        assert.strictEqual(cycles, 5); // 4+1 cycles (page boundary crossed)
+        assert.strictEqual(await await getAccumulator(cpu), 0xff); // 0x0F ^ 0xF0 = 0xFF
     });
 
     it("should perform AND/ORA/EOR with zero page,X addressing", async () => {
@@ -120,8 +121,8 @@ describe("Addressing modes", () => {
         let cycles = await cpu.step();
 
         // Verify results
-        expect(cycles).toBe(4);
-        expect(await await getAccumulator(cpu)).toBe(0x55); // 0xFF & 0x55 = 0x55
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(await await getAccumulator(cpu), 0x55); // 0xFF & 0x55 = 0x55
 
         // Test ORA Zero Page,X
         await cpu.loadByte(2, 0x15); // ORA Zero Page,X
@@ -133,8 +134,8 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(4);
-        expect(await await getAccumulator(cpu)).toBe(0x0f); // 0x05 | 0x0A = 0x0F
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(await await getAccumulator(cpu), 0x0f); // 0x05 | 0x0A = 0x0F
 
         // Test EOR Zero Page,X
         await cpu.loadByte(4, 0x55); // EOR Zero Page,X
@@ -146,8 +147,8 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(4);
-        expect(await await getAccumulator(cpu)).toBe(0xff); // 0x55 ^ 0xAA = 0xFF
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(await await getAccumulator(cpu), 0xff); // 0x55 ^ 0xAA = 0xFF
     });
 
     it("should perform AND/ORA/EOR with (Indirect,X) addressing", async () => {
@@ -168,8 +169,8 @@ describe("Addressing modes", () => {
         let cycles = await cpu.step();
 
         // Verify results
-        expect(cycles).toBe(6);
-        expect(await await getAccumulator(cpu)).toBe(0x33); // 0xFF & 0x33 = 0x33
+        assert.strictEqual(cycles, 6);
+        assert.strictEqual(await await getAccumulator(cpu), 0x33); // 0xFF & 0x33 = 0x33
 
         // Test ORA (Indirect,X)
         await cpu.loadByte(2, 0x01); // ORA (Indirect,X)
@@ -180,8 +181,8 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(6);
-        expect(await await getAccumulator(cpu)).toBe(0x3f); // 0x0C | 0x33 = 0x3F
+        assert.strictEqual(cycles, 6);
+        assert.strictEqual(await await getAccumulator(cpu), 0x3f); // 0x0C | 0x33 = 0x3F
 
         // Test EOR (Indirect,X)
         await cpu.loadByte(4, 0x41); // EOR (Indirect,X)
@@ -192,8 +193,8 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(6);
-        expect(await await getAccumulator(cpu)).toBe(0x66); // 0x55 ^ 0x33 = 0x66
+        assert.strictEqual(cycles, 6);
+        assert.strictEqual(await await getAccumulator(cpu), 0x66); // 0x55 ^ 0x33 = 0x66
     });
 
     it("should perform AND/ORA/EOR with (Indirect),Y addressing and page crossing", async () => {
@@ -214,8 +215,8 @@ describe("Addressing modes", () => {
         let cycles = await cpu.step();
 
         // Verify results
-        expect(cycles).toBe(6); // 5+1 cycles (page boundary crossed)
-        expect(await await getAccumulator(cpu)).toBe(0xc3); // 0xFF & 0xC3 = 0xC3
+        assert.strictEqual(cycles, 6); // 5+1 cycles (page boundary crossed)
+        assert.strictEqual(await await getAccumulator(cpu), 0xc3); // 0xFF & 0xC3 = 0xC3
 
         // Test ORA (Indirect),Y with page crossing
         await cpu.loadByte(2, 0x11); // ORA (Indirect),Y
@@ -226,8 +227,8 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(6); // 5+1 cycles (page boundary crossed)
-        expect(await await getAccumulator(cpu)).toBe(0xcf); // 0x0C | 0xC3 = 0xCF
+        assert.strictEqual(cycles, 6); // 5+1 cycles (page boundary crossed)
+        assert.strictEqual(await await getAccumulator(cpu), 0xcf); // 0x0C | 0xC3 = 0xCF
 
         // Test EOR (Indirect),Y with page crossing
         await cpu.loadByte(4, 0x51); // EOR (Indirect),Y
@@ -238,8 +239,8 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(6); // 5+1 cycles (page boundary crossed)
-        expect(await await getAccumulator(cpu)).toBe(0x96); // 0x55 ^ 0xC3 = 0x96
+        assert.strictEqual(cycles, 6); // 5+1 cycles (page boundary crossed)
+        assert.strictEqual(await await getAccumulator(cpu), 0x96); // 0x55 ^ 0xC3 = 0x96
     });
 
     it("should perform CMP/CPX/CPY with various addressing modes", async () => {
@@ -258,10 +259,10 @@ describe("Addressing modes", () => {
         let cycles = await cpu.step();
 
         // Verify results
-        expect(cycles).toBe(4);
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry set (A >= M)
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(false); // Zero clear (A != M)
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(false); // Negative clear (result bit 7 clear)
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry set (A >= M)
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // Zero clear (A != M)
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, false); // Negative clear (result bit 7 clear)
 
         // Test CMP with Absolute,X and page crossing
         await cpu.loadByte(2, 0xdd); // CMP Absolute,X
@@ -273,8 +274,8 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(5); // 4+1 cycles (page boundary crossed)
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry set (A >= M)
+        assert.strictEqual(cycles, 5); // 4+1 cycles (page boundary crossed)
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry set (A >= M)
         // Zero flag may not be set as expected due to the comparison result
 
         // Test CMP with Absolute,Y and page crossing
@@ -288,8 +289,8 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(5); // 4+1 cycles (page boundary crossed)
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(false); // Carry clear (A < M)
+        assert.strictEqual(cycles, 5); // 4+1 cycles (page boundary crossed)
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Carry clear (A < M)
         // Note: The negative flag won't be set for every case, so we're not testing it here
 
         // Test CMP with (Indirect,X)
@@ -302,8 +303,8 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(6);
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(false); // Carry clear (A < M)
+        assert.strictEqual(cycles, 6);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Carry clear (A < M)
 
         // Test CMP with (Indirect),Y and page crossing
         await cpu.loadByte(10, 0xd1); // CMP (Indirect),Y
@@ -316,9 +317,9 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(6); // 5+1 cycles (page boundary crossed)
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry set (A >= M)
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero set (A == M)
+        assert.strictEqual(cycles, 6); // 5+1 cycles (page boundary crossed)
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry set (A >= M)
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero set (A == M)
 
         // Test CPX with Zero Page
         await cpu.loadByte(12, 0xe4); // CPX Zero Page
@@ -330,8 +331,8 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(3);
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry set (X >= M)
+        assert.strictEqual(cycles, 3);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry set (X >= M)
 
         // Test CPX with Absolute
         await cpu.loadByte(14, 0xec); // CPX Absolute
@@ -342,8 +343,8 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(4);
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(false); // Carry clear (X < M)
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Carry clear (X < M)
 
         // Test CPY with Zero Page
         await cpu.loadByte(17, 0xc4); // CPY Zero Page
@@ -354,9 +355,9 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(3);
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry set (Y >= M)
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero set (Y == M)
+        assert.strictEqual(cycles, 3);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry set (Y >= M)
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero set (Y == M)
 
         // Test CPY with Absolute
         await cpu.loadByte(19, 0xcc); // CPY Absolute
@@ -367,8 +368,8 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(4);
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(false); // Carry clear (Y < M)
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Carry clear (Y < M)
     });
 
     it("should perform other memory operations with various addressing modes", async () => {
@@ -386,9 +387,9 @@ describe("Addressing modes", () => {
         let cycles = await cpu.step();
 
         // Verify results
-        expect(cycles).toBe(6);
-        expect(await cpu.readByte(0x90)).toBe(0xaa); // 0x55 << 1 = 0xAA
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(false); // Carry clear (bit 7 was 0)
+        assert.strictEqual(cycles, 6);
+        assert.strictEqual(await cpu.readByte(0x90), 0xaa); // 0x55 << 1 = 0xAA
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Carry clear (bit 7 was 0)
 
         // Test ASL Absolute,X
         await cpu.loadByte(2, 0x1e); // ASL Absolute,X
@@ -400,10 +401,10 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(7);
-        expect(await cpu.readByte(0x0310)).toBe(0x00); // 0x80 << 1 = 0x00 (with overflow)
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry set (bit 7 was 1)
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero set (result is 0)
+        assert.strictEqual(cycles, 7);
+        assert.strictEqual(await cpu.readByte(0x0310), 0x00); // 0x80 << 1 = 0x00 (with overflow)
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry set (bit 7 was 1)
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero set (result is 0)
 
         // Test LSR Zero Page,X
         await cpu.loadByte(5, 0x56); // LSR Zero Page,X
@@ -414,9 +415,9 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(6);
-        expect(await cpu.readByte(0x90)).toBe(0x55); // 0xAA >> 1 = 0x55
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(false); // Carry clear (bit 0 was 0)
+        assert.strictEqual(cycles, 6);
+        assert.strictEqual(await cpu.readByte(0x90), 0x55); // 0xAA >> 1 = 0x55
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Carry clear (bit 0 was 0)
 
         // Test LSR Absolute,X
         await cpu.loadByte(7, 0x5e); // LSR Absolute,X
@@ -428,10 +429,10 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(7);
-        expect(await cpu.readByte(0x0310)).toBe(0x00); // 0x01 >> 1 = 0x00
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry set (bit 0 was 1)
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero set (result is 0)
+        assert.strictEqual(cycles, 7);
+        assert.strictEqual(await cpu.readByte(0x0310), 0x00); // 0x01 >> 1 = 0x00
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry set (bit 0 was 1)
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero set (result is 0)
 
         // Test ROL Zero Page,X
         await cpu.loadByte(10, 0x36); // ROL Zero Page,X
@@ -443,9 +444,9 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(6);
-        expect(await cpu.readByte(0x90)).toBe(0xab); // (0x55 << 1) | 0x01 = 0xAB
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(false); // Carry clear (bit 7 was 0)
+        assert.strictEqual(cycles, 6);
+        assert.strictEqual(await cpu.readByte(0x90), 0xab); // (0x55 << 1) | 0x01 = 0xAB
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Carry clear (bit 7 was 0)
 
         // Test ROL Absolute,X
         await cpu.loadByte(12, 0x3e); // ROL Absolute,X
@@ -457,10 +458,10 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(7);
-        expect(await cpu.readByte(0x0310)).toBe(0x00); // (0x80 << 1) | 0x00 = 0x00 (with overflow)
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry set (bit 7 was 1)
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero set (result is 0)
+        assert.strictEqual(cycles, 7);
+        assert.strictEqual(await cpu.readByte(0x0310), 0x00); // (0x80 << 1) | 0x00 = 0x00 (with overflow)
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry set (bit 7 was 1)
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero set (result is 0)
 
         // Test ROR Zero Page,X
         await cpu.loadByte(15, 0x76); // ROR Zero Page,X
@@ -471,9 +472,9 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(6);
-        expect(await cpu.readByte(0x90)).toBe(0xd5); // (0xAA >> 1) | 0x80 = 0xD5
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(false); // Carry clear (bit 0 was 0)
+        assert.strictEqual(cycles, 6);
+        assert.strictEqual(await cpu.readByte(0x90), 0xd5); // (0xAA >> 1) | 0x80 = 0xD5
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Carry clear (bit 0 was 0)
 
         // Test ROR Absolute,X
         await cpu.loadByte(17, 0x7e); // ROR Absolute,X
@@ -487,10 +488,10 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(7);
-        expect(await cpu.readByte(0x0310)).toBe(0x80); // (0x01 >> 1) | 0x80 = 0x80
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry set (bit 0 was 1)
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Negative set (bit 7 of result is 1)
+        assert.strictEqual(cycles, 7);
+        assert.strictEqual(await cpu.readByte(0x0310), 0x80); // (0x01 >> 1) | 0x80 = 0x80
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry set (bit 0 was 1)
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Negative set (bit 7 of result is 1)
     });
 
     it("should have additional test for branch instructions", async () => {
@@ -507,8 +508,8 @@ describe("Addressing modes", () => {
         let cycles = await cpu.step();
 
         // Verify results
-        expect(cycles).toBe(3);
-        expect(await await getProgramCounter(cpu)).toBe(0x12); // 0x02 (PC after opcode+operand) + 0x10 (offset)
+        assert.strictEqual(cycles, 3);
+        assert.strictEqual(await await getProgramCounter(cpu), 0x12); // 0x02 (PC after opcode+operand) + 0x10 (offset)
 
         // Test BNE when Z=0
         await cpu.loadByte(0x12, 0xd0); // BNE
@@ -518,8 +519,8 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(3);
-        expect(await await getProgramCounter(cpu)).toBe(0x12); // 0x14 (PC after opcode+operand) - 2 (negative offset)
+        assert.strictEqual(cycles, 3);
+        assert.strictEqual(await await getProgramCounter(cpu), 0x12); // 0x14 (PC after opcode+operand) - 2 (negative offset)
 
         // Test BMI when N=1
         await cpu.loadByte(0x12, 0x30); // BMI
@@ -529,8 +530,8 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(4); // 3+1 (page boundary crossed)
-        expect(await await getProgramCounter(cpu)).toBe(0xff94); // 0x14 (PC after opcode+operand) - 128 (negative offset) = 0xFF94
+        assert.strictEqual(cycles, 4); // 3+1 (page boundary crossed)
+        assert.strictEqual(await await getProgramCounter(cpu), 0xff94); // 0x14 (PC after opcode+operand) - 128 (negative offset) = 0xFF94
 
         // Test BPL when N=0
         await cpu.loadByte(0xff94, 0x10); // BPL
@@ -541,8 +542,8 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(4); // 3+1 (page boundary crossed)
-        expect(await await getProgramCounter(cpu)).toBe(0x01); // 0xFF96 (PC after opcode+operand) + 0x6B (offset) = 0x01 (wraps around)
+        assert.strictEqual(cycles, 4); // 3+1 (page boundary crossed)
+        assert.strictEqual(await await getProgramCounter(cpu), 0x01); // 0xFF96 (PC after opcode+operand) + 0x6B (offset) = 0x01 (wraps around)
 
         // Test BVS when V=1
         await cpu.loadByte(0x01, 0x70); // BVS
@@ -552,8 +553,8 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(3);
-        expect(await await getProgramCounter(cpu)).toBe(0x13); // 0x03 (PC after opcode+operand) + 0x10 (offset)
+        assert.strictEqual(cycles, 3);
+        assert.strictEqual(await await getProgramCounter(cpu), 0x13); // 0x03 (PC after opcode+operand) + 0x10 (offset)
 
         // Test BVC when V=0
         await cpu.loadByte(0x13, 0x50); // BVC
@@ -564,7 +565,7 @@ describe("Addressing modes", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(3);
-        expect(await await getProgramCounter(cpu)).toBe(0x25); // 0x15 (PC after opcode+operand) + 0x10 (offset)
+        assert.strictEqual(cycles, 3);
+        assert.strictEqual(await await getProgramCounter(cpu), 0x25); // 0x15 (PC after opcode+operand) + 0x10 (offset)
     });
 });

@@ -1,6 +1,7 @@
-import { describe, expect, it } from "bun:test";
-import { ZERO, NEGATIVE } from "../constants";
-import { createCPU, getYRegister, getProgramCounter } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { ZERO, NEGATIVE } from "../constants.ts";
+import { createCPU, getYRegister, getProgramCounter } from "./utils.ts";
 
 describe("Maximum LDY instruction coverage", () => {
     // This test specifically targets the remaining uncovered lines in cpu.ts
@@ -17,12 +18,12 @@ describe("Maximum LDY instruction coverage", () => {
 
         let cycles = await cpu.step();
 
-        expect(cycles).toBe(4);
-        expect(await await getYRegister(cpu)).toBe(0xff); // Reading from the last byte of memory
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(await await getYRegister(cpu), 0xff); // Reading from the last byte of memory
         // PC will be 0 because it's wrapped around to the start
         // However, due to how the emulator works, this might be represented as 0xFFFF + 3 = 0x10002 (65538)
         const pc = await await getProgramCounter(cpu);
-        expect(pc > 0xff00 || pc < 0x0010).toBe(true);
+        assert.strictEqual(pc > 0xff00 || pc < 0x0010, true);
 
         // Test with Absolute,X and page crossing at boundary
         await cpu.loadByte(0x2000, 0xbc); // LDY Absolute,X
@@ -35,9 +36,9 @@ describe("Maximum LDY instruction coverage", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(5); // 4 + 1 for page boundary crossing
-        expect(await await getYRegister(cpu)).toBe(0x55);
-        expect(await getProgramCounter(cpu)).toBe(0x2003);
+        assert.strictEqual(cycles, 5); // 4 + 1 for page boundary crossing
+        assert.strictEqual(await await getYRegister(cpu), 0x55);
+        assert.strictEqual(await getProgramCounter(cpu), 0x2003);
     });
 
     // This test covers additional zero page operations
@@ -53,9 +54,9 @@ describe("Maximum LDY instruction coverage", () => {
 
         let cycles = await cpu.step();
 
-        expect(cycles).toBe(3);
-        expect(await await getYRegister(cpu)).toBe(0x77);
-        expect(await getProgramCounter(cpu)).toBe(0x1002);
+        assert.strictEqual(cycles, 3);
+        assert.strictEqual(await await getYRegister(cpu), 0x77);
+        assert.strictEqual(await getProgramCounter(cpu), 0x1002);
 
         // Test with Zero Page,X that wraps around
         await cpu.loadByte(0x1002, 0xb4); // LDY Zero Page,X
@@ -67,8 +68,8 @@ describe("Maximum LDY instruction coverage", () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(4);
-        expect(await await getYRegister(cpu)).toBe(0x66);
-        expect(await getProgramCounter(cpu)).toBe(0x1004);
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(await await getYRegister(cpu), 0x66);
+        assert.strictEqual(await getProgramCounter(cpu), 0x1004);
     });
 });

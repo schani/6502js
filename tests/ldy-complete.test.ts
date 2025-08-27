@@ -1,4 +1,5 @@
-import { describe, expect, it } from "bun:test";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 import {
     CARRY,
     ZERO,
@@ -8,8 +9,8 @@ import {
     UNUSED,
     OVERFLOW,
     NEGATIVE,
-} from "../constants";
-import { createCPU, getYRegister } from "./utils";
+} from "../constants.ts";
+import { createCPU, getYRegister } from "./utils.ts";
 
 describe("LDY instruction complete coverage", () => {
     it("should cover LDY instruction with all addressing modes", async () => {
@@ -21,8 +22,8 @@ describe("LDY instruction complete coverage", () => {
         await cpu.loadByte(0x1001, 0x42);
         await cpu.setProgramCounter(0x1000);
         let cycles = await cpu.step();
-        expect(cycles).toBe(2);
-        expect(await await getYRegister(cpu)).toBe(0x42);
+        assert.strictEqual(cycles, 2);
+        assert.strictEqual(await await getYRegister(cpu), 0x42);
 
         // Test LDY Zero Page
         await cpu.loadByte(0x1002, 0xa4); // LDY $50
@@ -30,8 +31,8 @@ describe("LDY instruction complete coverage", () => {
         await cpu.loadByte(0x0050, 0x99);
         await cpu.setProgramCounter(0x1002);
         cycles = await cpu.step();
-        expect(cycles).toBe(3);
-        expect(await await getYRegister(cpu)).toBe(0x99);
+        assert.strictEqual(cycles, 3);
+        assert.strictEqual(await await getYRegister(cpu), 0x99);
 
         // Test LDY Zero Page,X
         await cpu.loadByte(0x1004, 0xb4); // LDY $60,X
@@ -40,8 +41,8 @@ describe("LDY instruction complete coverage", () => {
         await cpu.setXRegister(0x10);
         await cpu.setProgramCounter(0x1004);
         cycles = await cpu.step();
-        expect(cycles).toBe(4);
-        expect(await await getYRegister(cpu)).toBe(0x88);
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(await await getYRegister(cpu), 0x88);
 
         // Test LDY Absolute
         await cpu.loadByte(0x1006, 0xac); // LDY $2000
@@ -50,8 +51,8 @@ describe("LDY instruction complete coverage", () => {
         await cpu.loadByte(0x2000, 0x77);
         await cpu.setProgramCounter(0x1006);
         cycles = await cpu.step();
-        expect(cycles).toBe(4);
-        expect(await await getYRegister(cpu)).toBe(0x77);
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(await await getYRegister(cpu), 0x77);
 
         // Test LDY Absolute,X
         await cpu.loadByte(0x1009, 0xbc); // LDY $2100,X
@@ -61,8 +62,8 @@ describe("LDY instruction complete coverage", () => {
         await cpu.setXRegister(0x10);
         await cpu.setProgramCounter(0x1009);
         cycles = await cpu.step();
-        expect(cycles).toBe(4);
-        expect(await await getYRegister(cpu)).toBe(0x66);
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(await await getYRegister(cpu), 0x66);
 
         // Test LDY Absolute,X with page crossing
         await cpu.loadByte(0x100c, 0xbc); // LDY $21F0,X
@@ -72,8 +73,8 @@ describe("LDY instruction complete coverage", () => {
         await cpu.setXRegister(0x10);
         await cpu.setProgramCounter(0x100c);
         cycles = await cpu.step();
-        expect(cycles).toBe(5); // +1 cycle for page boundary crossing
-        expect(await await getYRegister(cpu)).toBe(0x55);
+        assert.strictEqual(cycles, 5); // +1 cycle for page boundary crossing
+        assert.strictEqual(await await getYRegister(cpu), 0x55);
     });
 
     it("should test negative/zero flag setting with LDY", async () => {
@@ -86,10 +87,10 @@ describe("LDY instruction complete coverage", () => {
         await cpu.clearStatusFlag(ZERO); // Clear zero flag
         await cpu.clearStatusFlag(NEGATIVE); // Clear negative flag
         let cycles = await cpu.step();
-        expect(cycles).toBe(2);
-        expect(await await getYRegister(cpu)).toBe(0x00);
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
-        expect(((await cpu.getState()).p & NEGATIVE) === 0).toBe(true); // Negative flag should be clear
+        assert.strictEqual(cycles, 2);
+        assert.strictEqual(await await getYRegister(cpu), 0x00);
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Negative flag should be clear
 
         // Test LDY with negative result
         await cpu.loadByte(0x1002, 0xa0); // LDY #$80
@@ -98,9 +99,9 @@ describe("LDY instruction complete coverage", () => {
         await cpu.clearStatusFlag(ZERO); // Clear zero flag
         await cpu.clearStatusFlag(NEGATIVE); // Clear negative flag
         cycles = await cpu.step();
-        expect(cycles).toBe(2);
-        expect(await await getYRegister(cpu)).toBe(0x80);
-        expect(((await cpu.getState()).p & ZERO) === 0).toBe(true); // Zero flag should be clear
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Negative flag should be set
+        assert.strictEqual(cycles, 2);
+        assert.strictEqual(await await getYRegister(cpu), 0x80);
+        assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Zero flag should be clear
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Negative flag should be set
     });
 });

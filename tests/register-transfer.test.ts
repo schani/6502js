@@ -1,5 +1,6 @@
-import { describe, expect, it } from "bun:test";
-import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStackPointer, getStatusRegister, createCPU, ZERO, NEGATIVE, INTERRUPT, UNUSED } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStackPointer, getStatusRegister, createCPU, ZERO, NEGATIVE, INTERRUPT, UNUSED } from "./utils.ts";
 describe("Register transfer instructions", () => {
   it("should perform TAX instruction", async () => {
     const cpu = createCPU();
@@ -12,25 +13,25 @@ describe("Register transfer instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect(await await getXRegister(cpu)).toBe(0x42);
-    expect(await await getProgramCounter(cpu)).toBe(1);
-    expect(cycles).toBe(2);
-    expect((await await getStatusRegister(cpu)) & ZERO).toBe(0);
-    expect((await await getStatusRegister(cpu)) & NEGATIVE).toBe(0);
+    assert.strictEqual(await await getXRegister(cpu), 0x42);
+    assert.strictEqual(await await getProgramCounter(cpu), 1);
+    assert.strictEqual(cycles, 2);
+    assert.strictEqual((await await getStatusRegister(cpu)) & ZERO, 0);
+    assert.strictEqual((await await getStatusRegister(cpu)) & NEGATIVE, 0);
     
     // Test zero flag
     await cpu.setProgramCounter(0);
     await cpu.setAccumulator(0);
     await cpu.step();
-    expect(await await getXRegister(cpu)).toBe(0);
-    expect((await await getStatusRegister(cpu)) & ZERO).toBe(ZERO);
+    assert.strictEqual(await await getXRegister(cpu), 0);
+    assert.strictEqual((await await getStatusRegister(cpu)) & ZERO, ZERO);
     
     // Test negative flag
     await cpu.setProgramCounter(0);
     await cpu.setAccumulator(0x80);
     await cpu.step();
-    expect(await getXRegister(cpu)).toBe(0x80);
-    expect((await await getStatusRegister(cpu)) & NEGATIVE).toBe(NEGATIVE);
+    assert.strictEqual(await getXRegister(cpu), 0x80);
+    assert.strictEqual((await await getStatusRegister(cpu)) & NEGATIVE, NEGATIVE);
   });
   
   it("should perform TAY instruction", async () => {
@@ -44,9 +45,9 @@ describe("Register transfer instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect(await await getYRegister(cpu)).toBe(0x42);
-    expect(await await getProgramCounter(cpu)).toBe(1);
-    expect(cycles).toBe(2);
+    assert.strictEqual(await await getYRegister(cpu), 0x42);
+    assert.strictEqual(await await getProgramCounter(cpu), 1);
+    assert.strictEqual(cycles, 2);
   });
   
   it("should perform TXA instruction", async () => {
@@ -60,9 +61,9 @@ describe("Register transfer instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect(await await getAccumulator(cpu)).toBe(0x42);
-    expect(await await getProgramCounter(cpu)).toBe(1);
-    expect(cycles).toBe(2);
+    assert.strictEqual(await await getAccumulator(cpu), 0x42);
+    assert.strictEqual(await await getProgramCounter(cpu), 1);
+    assert.strictEqual(cycles, 2);
   });
   
   it("should perform TYA instruction", async () => {
@@ -76,9 +77,9 @@ describe("Register transfer instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect(await await getAccumulator(cpu)).toBe(0x42);
-    expect(await await getProgramCounter(cpu)).toBe(1);
-    expect(cycles).toBe(2);
+    assert.strictEqual(await await getAccumulator(cpu), 0x42);
+    assert.strictEqual(await await getProgramCounter(cpu), 1);
+    assert.strictEqual(cycles, 2);
   });
   
   it("should perform TSX instruction", async () => {
@@ -92,11 +93,11 @@ describe("Register transfer instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect(await await getXRegister(cpu)).toBe(0x42);
-    expect(await await getProgramCounter(cpu)).toBe(1);
-    expect(cycles).toBe(2);
-    expect((await await getStatusRegister(cpu)) & ZERO).toBe(0); // Result is not zero
-    expect((await await getStatusRegister(cpu)) & NEGATIVE).toBe(0); // Result is not negative
+    assert.strictEqual(await await getXRegister(cpu), 0x42);
+    assert.strictEqual(await await getProgramCounter(cpu), 1);
+    assert.strictEqual(cycles, 2);
+    assert.strictEqual((await await getStatusRegister(cpu)) & ZERO, 0); // Result is not zero
+    assert.strictEqual((await await getStatusRegister(cpu)) & NEGATIVE, 0); // Result is not negative
   });
   
   it("should perform TXS instruction", async () => {
@@ -110,10 +111,10 @@ describe("Register transfer instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect(await await getStackPointer(cpu)).toBe(0x42);
-    expect(await await getProgramCounter(cpu)).toBe(1);
-    expect(cycles).toBe(2);
+    assert.strictEqual(await await getStackPointer(cpu), 0x42);
+    assert.strictEqual(await await getProgramCounter(cpu), 1);
+    assert.strictEqual(cycles, 2);
     // TXS does not affect any flags
-    expect(await await getStatusRegister(cpu)).toBe(INTERRUPT | UNUSED); // Original status
+    assert.strictEqual(await await getStatusRegister(cpu), INTERRUPT | UNUSED); // Original status
   });
 });

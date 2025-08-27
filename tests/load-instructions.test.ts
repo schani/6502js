@@ -1,5 +1,6 @@
-import { describe, expect, it } from "bun:test";
-import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStatusRegister, createCPU, ZERO, NEGATIVE } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStatusRegister, createCPU, ZERO, NEGATIVE } from "./utils.ts";
 describe("Load instructions", async () => {
   it("should perform LDA immediate instruction", async () => {
     const cpu = createCPU();
@@ -10,25 +11,25 @@ describe("Load instructions", async () => {
 
     const cycles = await cpu.step();
     
-    expect(await getAccumulator(cpu)).toBe(0x42);
-    expect(await getProgramCounter(cpu)).toBe(2);  // PC should advance by 2 bytes
-    expect(cycles).toBe(2);  // LDA immediate takes 2 cycles
-    expect(await getStatusRegister(cpu) & ZERO).toBe(0); // Zero flag should be clear
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0); // Negative flag should be clear
+    assert.strictEqual(await getAccumulator(cpu), 0x42);
+    assert.strictEqual(await getProgramCounter(cpu), 2);  // PC should advance by 2 bytes
+    assert.strictEqual(cycles, 2);  // LDA immediate takes 2 cycles
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, 0); // Zero flag should be clear
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, 0); // Negative flag should be clear
     
     // Test zero flag
     await cpu.setProgramCounter(0);
     cpu.loadByte(1, 0x00);
     await cpu.step();
-    expect(await getAccumulator(cpu)).toBe(0);
-    expect(await getStatusRegister(cpu) & ZERO).toBe(ZERO); // Zero flag should be set
+    assert.strictEqual(await getAccumulator(cpu), 0);
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, ZERO); // Zero flag should be set
     
     // Test negative flag
     await cpu.setProgramCounter(0);
     cpu.loadByte(1, 0x80);
     await cpu.step();
-    expect(await getAccumulator(cpu)).toBe(0x80);
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(NEGATIVE); // Negative flag should be set
+    assert.strictEqual(await getAccumulator(cpu), 0x80);
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, NEGATIVE); // Negative flag should be set
   });
 
   it("should perform LDX immediate instruction", async () => {
@@ -40,11 +41,11 @@ describe("Load instructions", async () => {
 
     const cycles = await cpu.step();
     
-    expect(await getXRegister(cpu)).toBe(0x42);
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(2);
-    expect(await getStatusRegister(cpu) & ZERO).toBe(0);
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0);
+    assert.strictEqual(await getXRegister(cpu), 0x42);
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 2);
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, 0);
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, 0);
   });
 
   it("should perform LDY immediate instruction", async () => {
@@ -56,11 +57,11 @@ describe("Load instructions", async () => {
 
     const cycles = await cpu.step();
     
-    expect(await getYRegister(cpu)).toBe(0x42);
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(2);
-    expect(await getStatusRegister(cpu) & ZERO).toBe(0);
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0);
+    assert.strictEqual(await getYRegister(cpu), 0x42);
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 2);
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, 0);
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, 0);
   });
 
   it("should perform LDA zero page instruction", async () => {
@@ -73,9 +74,9 @@ describe("Load instructions", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await getAccumulator(cpu)).toBe(0x37);
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(3);
+    assert.strictEqual(await getAccumulator(cpu), 0x37);
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 3);
   });
 
   it("should perform LDX zero page instruction", async () => {
@@ -88,9 +89,9 @@ describe("Load instructions", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await getXRegister(cpu)).toBe(0x37);
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(3);
+    assert.strictEqual(await getXRegister(cpu), 0x37);
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 3);
   });
   
   // Add tests for zero page,X and zero page,Y addressing
@@ -107,9 +108,9 @@ describe("Load instructions", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await getAccumulator(cpu)).toBe(0x42);
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(4);
+    assert.strictEqual(await getAccumulator(cpu), 0x42);
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 4);
   });
   
   it("should handle zero page,X wrap-around", async () => {
@@ -125,9 +126,9 @@ describe("Load instructions", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await getAccumulator(cpu)).toBe(0x42);
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(4);
+    assert.strictEqual(await getAccumulator(cpu), 0x42);
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 4);
   });
   
   it("should perform LDX zero page,Y instruction", async () => {
@@ -143,9 +144,9 @@ describe("Load instructions", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await getXRegister(cpu)).toBe(0x42);
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(4);
+    assert.strictEqual(await getXRegister(cpu), 0x42);
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 4);
   });
   
   // Tests for absolute addressing
@@ -160,9 +161,9 @@ describe("Load instructions", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await getAccumulator(cpu)).toBe(0x42);
-    expect(await getProgramCounter(cpu)).toBe(3);
-    expect(cycles).toBe(4);
+    assert.strictEqual(await getAccumulator(cpu), 0x42);
+    assert.strictEqual(await getProgramCounter(cpu), 3);
+    assert.strictEqual(cycles, 4);
   });
   
   it("should perform LDA absolute,X instruction", async () => {
@@ -179,9 +180,9 @@ describe("Load instructions", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await getAccumulator(cpu)).toBe(0x42);
-    expect(await getProgramCounter(cpu)).toBe(3);
-    expect(cycles).toBe(4);
+    assert.strictEqual(await getAccumulator(cpu), 0x42);
+    assert.strictEqual(await getProgramCounter(cpu), 3);
+    assert.strictEqual(cycles, 4);
   });
   
   it("should add cycle when crossing page boundary with absolute,X", async () => {
@@ -198,9 +199,9 @@ describe("Load instructions", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await getAccumulator(cpu)).toBe(0x42);
-    expect(await getProgramCounter(cpu)).toBe(3);
-    expect(cycles).toBe(5); // Extra cycle for page boundary crossing
+    assert.strictEqual(await getAccumulator(cpu), 0x42);
+    assert.strictEqual(await getProgramCounter(cpu), 3);
+    assert.strictEqual(cycles, 5); // Extra cycle for page boundary crossing
   });
   
   it("should perform LDA absolute,Y instruction", async () => {
@@ -217,8 +218,8 @@ describe("Load instructions", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await getAccumulator(cpu)).toBe(0x42);
-    expect(await getProgramCounter(cpu)).toBe(3);
-    expect(cycles).toBe(4);
+    assert.strictEqual(await getAccumulator(cpu), 0x42);
+    assert.strictEqual(await getProgramCounter(cpu), 3);
+    assert.strictEqual(cycles, 4);
   });
 });

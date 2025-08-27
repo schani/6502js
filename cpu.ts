@@ -3,11 +3,11 @@
  */
 
 // Export the CPU interface and types
-export * from './6502';
+export * from "./6502.ts";
 
 // Export the CPU implementations
-export { CPU1 } from './cpu1';
-export { CPU2 } from './cpu2';
+export { CPU1 } from "./cpu1.ts";
+export { CPU2 } from "./cpu2.ts";
 
 // Export helper functions for backward compatibility with tests
 export { 
@@ -16,7 +16,7 @@ export {
     readWord, 
     writeByte, 
     writeWord 
-} from './cpu1';
+} from "./cpu1.ts";
 
 /**
  * Create a CPU state (for backward compatibility with tests)

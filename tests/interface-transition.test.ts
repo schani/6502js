@@ -1,9 +1,10 @@
-import { describe, expect, it } from "bun:test";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 /**
  * This test file demonstrates transitioning from direct CPU state access
  * to using the CPU interface methods
  */
-import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStackPointer, getStatusRegister, createCPU, type CPU, CARRY, ZERO, NEGATIVE } from "./utils";
+import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStackPointer, getStatusRegister, createCPU, type CPU, CARRY, ZERO, NEGATIVE } from "./utils.ts";
 describe("CPU Interface Tests", () => {
   it("should demonstrate all interface methods", async () => {
     const cpu = createCPU();
@@ -16,45 +17,45 @@ describe("CPU Interface Tests", () => {
     await cpu.setProgramCounter(0x1000);
     
     // Verify registers
-    expect(await getAccumulator(cpu)).toBe(0x42);
-    expect(await getXRegister(cpu)).toBe(0x84);
-    expect(await getYRegister(cpu)).toBe(0x28);
-    expect(await getStackPointer(cpu)).toBe(0xF0);
-    expect(await getProgramCounter(cpu)).toBe(0x1000);
+    assert.strictEqual(await getAccumulator(cpu), 0x42);
+    assert.strictEqual(await getXRegister(cpu), 0x84);
+    assert.strictEqual(await getYRegister(cpu), 0x28);
+    assert.strictEqual(await getStackPointer(cpu), 0xF0);
+    assert.strictEqual(await getProgramCounter(cpu), 0x1000);
     
     // Set status flags
     await cpu.setStatusFlag(ZERO | CARRY);
-    expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true);
-    expect(((await cpu.getState()).p & NEGATIVE) === 0).toBe(true);
-    expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true);
+    assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true);
+    assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true);
+    assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true);
     
     // Clear status flags
     await cpu.clearStatusFlag(CARRY);
-    expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true);
-    expect(((await cpu.getState()).p & CARRY) === 0).toBe(true);
+    assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true);
+    assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true);
     
     // Set full status register
     await cpu.setStatusRegister(NEGATIVE);
-    expect(await getStatusRegister(cpu)).toBe(NEGATIVE);
-    expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true);
-    expect(((await cpu.getState()).p & ZERO) === 0).toBe(true);
+    assert.strictEqual(await getStatusRegister(cpu), NEGATIVE);
+    assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true);
+    assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true);
     
     // Memory access
     await cpu.loadByte(0x2000, 0xFF);
-    expect(await cpu.readByte(0x2000)).toBe(0xFF);
+    assert.strictEqual(await cpu.readByte(0x2000), 0xFF);
     
     await cpu.loadWord(0x2100, 0xABCD);
-    expect(await cpu.readByte(0x2100)).toBe(0xCD); // Low byte
-    expect(await cpu.readByte(0x2101)).toBe(0xAB); // High byte
-    expect(await cpu.readWord(0x2100)).toBe(0xABCD);
+    assert.strictEqual(await cpu.readByte(0x2100), 0xCD); // Low byte
+    assert.strictEqual(await cpu.readByte(0x2101), 0xAB); // High byte
+    assert.strictEqual(await cpu.readWord(0x2100), 0xABCD);
     
     // Reset and verify defaults
     await cpu.reset();
-    expect(await getAccumulator(cpu)).toBe(0);
-    expect(await getXRegister(cpu)).toBe(0);
-    expect(await getYRegister(cpu)).toBe(0);
-    expect(await getProgramCounter(cpu)).toBe(0);
-    expect(await getStackPointer(cpu)).toBe(0xFD);
+    assert.strictEqual(await getAccumulator(cpu), 0);
+    assert.strictEqual(await getXRegister(cpu), 0);
+    assert.strictEqual(await getYRegister(cpu), 0);
+    assert.strictEqual(await getProgramCounter(cpu), 0);
+    assert.strictEqual(await getStackPointer(cpu), 0xFD);
   });
   
   it("should run a simple program using the interface", async () => {
@@ -77,13 +78,13 @@ describe("CPU Interface Tests", () => {
     
     // Run the program
     await cpu.step(); // LDA #5
-    expect(await getAccumulator(cpu)).toBe(5);
+    assert.strictEqual(await getAccumulator(cpu), 5);
     
     await cpu.step(); // ADC #3 (with carry set, so 5 + 3 + 1 = 9)
-    expect(await getAccumulator(cpu)).toBe(9);
+    assert.strictEqual(await getAccumulator(cpu), 9);
     
     await cpu.step(); // STA $80
-    expect(await cpu.readByte(0x80)).toBe(9);
-    expect(await getProgramCounter(cpu)).toBe(0x1006);
+    assert.strictEqual(await cpu.readByte(0x80), 9);
+    assert.strictEqual(await getProgramCounter(cpu), 0x1006);
   });
 });

@@ -1,4 +1,4 @@
-import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStackPointer, getStatusRegister } from "./tests/utils";
+import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStackPointer, getStatusRegister } from "./tests/utils.ts";
 /**
  * dsl-runner.ts — Minimal line-based DSL to drive Microsoft BASIC
  * on the JS 6502 core for debugging program entry/storage issues.
@@ -15,10 +15,10 @@ import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStack
 
 import { readFileSync } from "fs";
 import { exit } from "process";
-import type { CPU } from "./cpu-interface";
-import { CPU1 } from "./cpu1";
-import { CPU2 } from "./cpu2";
-import { SyncCPU } from "./sync-cpu";
+import type { CPU } from "./cpu-interface.ts";
+import { CPU1 } from "./cpu1.ts";
+import { CPU2 } from "./cpu2.ts";
+import { SyncCPU } from "./sync-cpu.ts";
 
 // BASIC ROM (OSI)
 const ROM_PATH = "./osi.bin";
@@ -69,6 +69,7 @@ class BasicHarness {
     } catch (e) {
       console.error(`Cannot read ${ROM_PATH}.`);
       exit(1);
+      return; // TypeScript needs this to know rom is definitely assigned
     }
     for (let i = 0; i < rom.length; i++) {
       const b = rom[i];

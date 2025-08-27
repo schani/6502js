@@ -3,7 +3,7 @@
  * This allows us to gradually transition tests to use the CPU interface
  */
 
-import type { CPU, CPUState } from "../cpu-interface";
+import type { CPU, CPUState } from "../cpu-interface.ts";
 
 /**
  * Creates a proxy object that wraps a CPU instance to allow direct property access

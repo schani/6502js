@@ -1,6 +1,7 @@
-import { describe, expect, it } from "bun:test";
-import { ZERO, NEGATIVE, CARRY } from "../constants";
-import { createCPU } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { ZERO, NEGATIVE, CARRY } from "../constants.ts";
+import { createCPU } from "./utils.ts";
 
 // This test targets specific edge cases for shift and rotate operations
 describe("Shift and rotate edge cases for 100% coverage", () => {
@@ -15,9 +16,9 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
         await cpu.loadByte(0x80, 0x00); // Value to shift
 
         await cpu.step();
-        expect(await cpu.readByte(0x80)).toBe(0x00);
-        expect(((await cpu.getState()).p & CARRY) === 0).toBe(true); // Carry should be clear
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
+        assert.strictEqual(await cpu.readByte(0x80), 0x00);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // Carry should be clear
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
 
         // Test ASL Zero Page with 0x80 value (sets carry, result zero)
         await cpu.setProgramCounter(0);
@@ -26,9 +27,9 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
         await cpu.loadByte(0x80, 0x80); // Value to shift
 
         await cpu.step();
-        expect(await cpu.readByte(0x80)).toBe(0x00);
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry should be set
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
+        assert.strictEqual(await cpu.readByte(0x80), 0x00);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry should be set
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
     });
 
     // Test ASL with edge cases - Absolute
@@ -43,9 +44,9 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
         await cpu.loadByte(0x1000, 0x80); // Value to shift
 
         await cpu.step();
-        expect(await cpu.readByte(0x1000)).toBe(0x00);
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry should be set
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
+        assert.strictEqual(await cpu.readByte(0x1000), 0x00);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry should be set
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
     });
 
     // Test ASL with edge cases - Absolute,X
@@ -61,9 +62,9 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
         await cpu.loadByte(0x1005, 0x80); // Value to shift
 
         await cpu.step();
-        expect(await cpu.readByte(0x1005)).toBe(0x00);
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry should be set
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
+        assert.strictEqual(await cpu.readByte(0x1005), 0x00);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry should be set
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
     });
 
     // Test LSR with edge cases - Zero Page
@@ -77,9 +78,9 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
         await cpu.loadByte(0x80, 0x01); // Value to shift
 
         await cpu.step();
-        expect(await cpu.readByte(0x80)).toBe(0x00);
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry should be set
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
+        assert.strictEqual(await cpu.readByte(0x80), 0x00);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry should be set
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
     });
 
     // Test LSR with edge cases - Absolute
@@ -94,9 +95,9 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
         await cpu.loadByte(0x1000, 0x01); // Value to shift
 
         await cpu.step();
-        expect(await cpu.readByte(0x1000)).toBe(0x00);
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry should be set
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
+        assert.strictEqual(await cpu.readByte(0x1000), 0x00);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry should be set
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
     });
 
     // Test ROL with edge cases - Zero Page
@@ -111,9 +112,9 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
         await cpu.setStatusFlag(CARRY); // Set carry flag
 
         await cpu.step();
-        expect(await cpu.readByte(0x80)).toBe(0x01); // Rotated carry in
-        expect(((await cpu.getState()).p & CARRY) === 0).toBe(true); // No carry out
-        expect(((await cpu.getState()).p & ZERO) === 0).toBe(true); // Not zero
+        assert.strictEqual(await cpu.readByte(0x80), 0x01); // Rotated carry in
+        assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // No carry out
+        assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Not zero
 
         // Test ROL Zero Page with 0x80 value and carry set
         await cpu.setProgramCounter(0);
@@ -123,9 +124,9 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
         await cpu.setStatusFlag(CARRY); // Set carry flag
 
         await cpu.step();
-        expect(await cpu.readByte(0x80)).toBe(0x01); // Rotated with carry set
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry should be set from bit 7
-        expect(((await cpu.getState()).p & ZERO) === 0).toBe(true); // Not zero
+        assert.strictEqual(await cpu.readByte(0x80), 0x01); // Rotated with carry set
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry should be set from bit 7
+        assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Not zero
     });
 
     // Test ROR with edge cases - Zero Page
@@ -140,9 +141,9 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
         await cpu.setStatusFlag(CARRY); // Set carry flag
 
         await cpu.step();
-        expect(await cpu.readByte(0x80)).toBe(0x80); // Rotated carry to bit 7
-        expect(((await cpu.getState()).p & CARRY) === 0).toBe(true); // No carry out
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Negative flag set
+        assert.strictEqual(await cpu.readByte(0x80), 0x80); // Rotated carry to bit 7
+        assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // No carry out
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Negative flag set
 
         // Test ROR Zero Page with 0x01 value and carry set
         await cpu.setProgramCounter(0);
@@ -152,8 +153,8 @@ describe("Shift and rotate edge cases for 100% coverage", () => {
         await cpu.setStatusFlag(CARRY); // Set carry flag
 
         await cpu.step();
-        expect(await cpu.readByte(0x80)).toBe(0x80); // Rotated with carry in
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry should be set from bit 0
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Negative flag set
+        assert.strictEqual(await cpu.readByte(0x80), 0x80); // Rotated with carry in
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry should be set from bit 0
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Negative flag set
     });
 });

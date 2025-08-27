@@ -21,10 +21,10 @@
 import { readFileSync, appendFileSync } from "fs";
 import { exit } from "process";
 import { setTimeout } from "timers/promises";
-import type { CPU } from "./cpu-interface";
-import { CPU1 } from "./cpu1";
-import { CPU2 } from "./cpu2";
-import { SyncCPU } from "./sync-cpu";
+import type { CPU } from "./cpu-interface.ts";
+import { CPU1 } from "./cpu1.ts";
+import { CPU2 } from "./cpu2.ts";
+import { SyncCPU } from "./sync-cpu.ts";
 import { defined } from "@glideapps/ts-necessities";
 
 // Command line flags
@@ -205,7 +205,7 @@ async function readChar(): Promise<number> {
 }
 
 function writeChar(c: number) {
-    Bun.stdout.write(Uint8Array.of(c));
+    process.stdout.write(Buffer.from([c]));
 }
 
 // ---------------------------------------------------------------------------

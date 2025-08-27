@@ -1,6 +1,7 @@
-import { describe, expect, it } from "bun:test";
-import { CARRY, ZERO, NEGATIVE } from "../constants";
-import { getAccumulator, createCPU } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { CARRY, ZERO, NEGATIVE } from "../constants.ts";
+import { getAccumulator, createCPU } from "./utils.ts";
 // This test is a comprehensive test of all shift and rotate operations
 // to achieve 100% line coverage
 describe("All Shift and Rotate Operations for 100% Coverage", () => {
@@ -130,17 +131,17 @@ describe("All Shift and Rotate Operations for 100% Coverage", () => {
                         const shouldSetCarry = (value & 0x80) !== 0;
 
                         // Check carry flag
-                        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(
+                        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, 
                             shouldSetCarry,
                         );
 
                         // Check the result
                         if (opcode === 0x0a) {
-                            expect(await await getAccumulator(cpu)).toBe(
+                            assert.strictEqual(await await getAccumulator(cpu), 
                                 result,
                             );
                         } else {
-                            expect(await cpu.readByte(memLocation)).toBe(
+                            assert.strictEqual(await cpu.readByte(memLocation), 
                                 result,
                             );
                         }
@@ -156,17 +157,17 @@ describe("All Shift and Rotate Operations for 100% Coverage", () => {
                         const shouldSetCarry = (value & 0x01) !== 0;
 
                         // Check carry flag
-                        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(
+                        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, 
                             shouldSetCarry,
                         );
 
                         // Check the result
                         if (opcode === 0x4a) {
-                            expect(await await getAccumulator(cpu)).toBe(
+                            assert.strictEqual(await await getAccumulator(cpu), 
                                 result,
                             );
                         } else {
-                            expect(await cpu.readByte(memLocation)).toBe(
+                            assert.strictEqual(await cpu.readByte(memLocation), 
                                 result,
                             );
                         }
@@ -183,17 +184,17 @@ describe("All Shift and Rotate Operations for 100% Coverage", () => {
                         const shouldSetCarry = (value & 0x80) !== 0;
 
                         // Check carry flag
-                        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(
+                        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, 
                             shouldSetCarry,
                         );
 
                         // Check the result
                         if (opcode === 0x2a) {
-                            expect(await await getAccumulator(cpu)).toBe(
+                            assert.strictEqual(await await getAccumulator(cpu), 
                                 result,
                             );
                         } else {
-                            expect(await cpu.readByte(memLocation)).toBe(
+                            assert.strictEqual(await cpu.readByte(memLocation), 
                                 result,
                             );
                         }
@@ -210,17 +211,17 @@ describe("All Shift and Rotate Operations for 100% Coverage", () => {
                         const shouldSetCarry = (value & 0x01) !== 0;
 
                         // Check carry flag
-                        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(
+                        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, 
                             shouldSetCarry,
                         );
 
                         // Check the result
                         if (opcode === 0x6a) {
-                            expect(await await getAccumulator(cpu)).toBe(
+                            assert.strictEqual(await await getAccumulator(cpu), 
                                 result,
                             );
                         } else {
-                            expect(await cpu.readByte(memLocation)).toBe(
+                            assert.strictEqual(await cpu.readByte(memLocation), 
                                 result,
                             );
                         }

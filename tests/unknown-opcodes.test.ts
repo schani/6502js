@@ -1,5 +1,6 @@
-import { describe, expect, it } from "bun:test";
-import { type CPU, createCPU } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { type CPU, createCPU } from "./utils.ts";
 
 describe("Unknown opcodes", () => {
   it("should throw an error for unknown opcodes", () => {
@@ -12,7 +13,7 @@ describe("Unknown opcodes", () => {
     cpu.setProgramCounter(0);
     
     // Should throw an error
-    expect(() => cpu.step()).toThrow("Unknown opcode");
+    assert.throws(() => cpu.step(), "Unknown opcode");
   });
 
   it("should throw an error for unknown opcodes with trace enabled", () => {
@@ -36,10 +37,10 @@ describe("Unknown opcodes", () => {
       cpu.setProgramCounter(0);
       
       // Should throw an error but will log trace info first
-      expect(() => cpu.step(true)).toThrow("Unknown opcode");
+      assert.throws(() => cpu.step(true), "Unknown opcode");
       
       // Trace logging should have been called
-      expect(traceOutput).toBe(true);
+      assert.strictEqual(traceOutput, true);
     } finally {
       // Restore the original console.log
       console.log = originalConsoleLog;

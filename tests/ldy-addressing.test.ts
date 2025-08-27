@@ -1,6 +1,7 @@
-import { describe, expect, it } from "bun:test";
-import { ZERO, NEGATIVE } from "../constants";
-import { createCPU, getYRegister } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { ZERO, NEGATIVE } from "../constants.ts";
+import { createCPU, getYRegister } from "./utils.ts";
 
 describe("LDY with different addressing modes", async () => {
     it("should perform LDY Zero Page,X instruction", async () => {
@@ -18,10 +19,10 @@ describe("LDY with different addressing modes", async () => {
         const cycles = await cpu.step();
 
         // Verify
-        expect(cycles).toBe(4);
-        expect(await await getYRegister(cpu)).toBe(0x42);
-        expect(((await cpu.getState()).p & ZERO) === 0).toBe(true); // Result is not zero
-        expect(((await cpu.getState()).p & NEGATIVE) === 0).toBe(true); // Result is not negative
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(await await getYRegister(cpu), 0x42);
+        assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Result is not zero
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Result is not negative
     });
 
     it("should perform LDY Absolute instruction", async () => {
@@ -39,10 +40,10 @@ describe("LDY with different addressing modes", async () => {
         const cycles = await cpu.step();
 
         // Verify
-        expect(cycles).toBe(4);
-        expect(await await getYRegister(cpu)).toBe(0x80);
-        expect(((await cpu.getState()).p & ZERO) === 0).toBe(true); // Result is not zero
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Result is negative (bit 7 set)
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(await await getYRegister(cpu), 0x80);
+        assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Result is not zero
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result is negative (bit 7 set)
     });
 
     it("should perform LDY Absolute,X instruction", async () => {
@@ -61,10 +62,10 @@ describe("LDY with different addressing modes", async () => {
         const cycles = await cpu.step();
 
         // Verify
-        expect(cycles).toBe(4); // No page boundary crossed
-        expect(await await getYRegister(cpu)).toBe(0x00);
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Result is zero
-        expect(((await cpu.getState()).p & NEGATIVE) === 0).toBe(true); // Result is not negative
+        assert.strictEqual(cycles, 4); // No page boundary crossed
+        assert.strictEqual(await await getYRegister(cpu), 0x00);
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Result is zero
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Result is not negative
     });
 
     it("should perform LDY Absolute,X instruction with page crossing", async () => {
@@ -83,9 +84,9 @@ describe("LDY with different addressing modes", async () => {
         const cycles = await cpu.step();
 
         // Verify
-        expect(cycles).toBe(5); // +1 cycle for page boundary crossing
-        expect(await await getYRegister(cpu)).toBe(0xff);
-        expect(((await cpu.getState()).p & ZERO) === 0).toBe(true); // Result is not zero
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Result is negative (bit 7 set)
+        assert.strictEqual(cycles, 5); // +1 cycle for page boundary crossing
+        assert.strictEqual(await await getYRegister(cpu), 0xff);
+        assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Result is not zero
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result is negative (bit 7 set)
     });
 });

@@ -1,11 +1,12 @@
-import { describe, expect, it } from "bun:test";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 import {
     createCPU,
     getXRegister,
     getAccumulator,
     getStackPointer,
     getProgramCounter,
-} from "./utils";
+} from "./utils.ts";
 import {
     CARRY,
     ZERO,
@@ -14,7 +15,7 @@ import {
     BREAK,
     UNUSED,
     INTERRUPT,
-} from "../constants";
+} from "../constants.ts";
 
 describe("Comprehensive coverage tests", () => {
     // Test writeWord function
@@ -38,8 +39,8 @@ describe("Comprehensive coverage tests", () => {
 
         // Execute STA to trigger write
         let cycles = await cpu.step();
-        expect(cycles).toBe(4);
-        expect(await cpu.readByte(0x100)).toBe(0x34);
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(await cpu.readByte(0x100), 0x34);
 
         // Now write to the second byte
         await cpu.setProgramCounter(0);
@@ -50,13 +51,13 @@ describe("Comprehensive coverage tests", () => {
 
         // Execute STA again
         cycles = await cpu.step();
-        expect(cycles).toBe(4);
-        expect(await cpu.readByte(0x101)).toBe(0x12);
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(await cpu.readByte(0x101), 0x12);
 
         // Verify word was written correctly (0x1234)
-        expect(
+        assert.strictEqual(
             ((await cpu.readByte(0x101)) << 8) | (await cpu.readByte(0x100)),
-        ).toBe(0x1234);
+            0x1234);
     });
 
     // Test LDX Absolute,Y addressing mode with page crossing
@@ -74,8 +75,8 @@ describe("Comprehensive coverage tests", () => {
         const cycles = await cpu.step();
 
         // Check if crossing page boundary costs an extra cycle
-        expect(cycles).toBe(5); // 4 + 1 for page cross
-        expect(await await getXRegister(cpu)).toBe(0x42);
+        assert.strictEqual(cycles, 5); // 4 + 1 for page cross
+        assert.strictEqual(await await getXRegister(cpu), 0x42);
     });
 
     // Test ROL, ROR, ASL, LSR instructions with specific conditions
@@ -89,10 +90,10 @@ describe("Comprehensive coverage tests", () => {
         await cpu.setStatusFlag(CARRY); // Carry flag set
 
         await cpu.step();
-        expect(await await getAccumulator(cpu)).toBe(0x01); // Result should be 0x01 (carry rotated in)
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(false); // Carry flag should be cleared
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(false); // Zero flag should be cleared
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(false); // Negative flag should be cleared
+        assert.strictEqual(await await getAccumulator(cpu), 0x01); // Result should be 0x01 (carry rotated in)
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Carry flag should be cleared
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // Zero flag should be cleared
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, false); // Negative flag should be cleared
 
         // Test ROR with carry set and result having negative bit set
         await cpu.setProgramCounter(0);
@@ -101,10 +102,10 @@ describe("Comprehensive coverage tests", () => {
         await cpu.setStatusFlag(CARRY); // Carry flag set
 
         await cpu.step();
-        expect(await await getAccumulator(cpu)).toBe(0x80); // Result should be 0x80 (carry rotated to bit 7)
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(false); // Carry flag should be cleared
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(false); // Zero flag should be cleared
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Negative flag should be set
+        assert.strictEqual(await await getAccumulator(cpu), 0x80); // Result should be 0x80 (carry rotated to bit 7)
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Carry flag should be cleared
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // Zero flag should be cleared
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Negative flag should be set
 
         // Test ASL with a value that will set both zero and clear carry
         await cpu.setProgramCounter(0);
@@ -112,9 +113,9 @@ describe("Comprehensive coverage tests", () => {
         await cpu.setAccumulator(0x00); // Accumulator = 0
 
         await cpu.step();
-        expect(await await getAccumulator(cpu)).toBe(0x00); // Result should be 0
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(false); // Carry flag should be cleared
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
+        assert.strictEqual(await await getAccumulator(cpu), 0x00); // Result should be 0
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Carry flag should be cleared
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
 
         // Test LSR with value that sets carry and zero
         await cpu.setProgramCounter(0);
@@ -122,9 +123,9 @@ describe("Comprehensive coverage tests", () => {
         await cpu.setAccumulator(0x01); // Accumulator = 1
 
         await cpu.step();
-        expect(await await getAccumulator(cpu)).toBe(0x00); // Result should be 0
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry flag should be set
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
+        assert.strictEqual(await await getAccumulator(cpu), 0x00); // Result should be 0
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry flag should be set
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
     });
 
     // Test memory operations at page boundaries
@@ -140,9 +141,9 @@ describe("Comprehensive coverage tests", () => {
         await cpu.loadByte(0x0200, 0x80); // Value to shift
 
         await cpu.step();
-        expect(await cpu.readByte(0x0200)).toBe(0x00); // Result after shift
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry flag should be set
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
+        assert.strictEqual(await cpu.readByte(0x0200), 0x00); // Result after shift
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry flag should be set
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
 
         // Test LSR Absolute,X at page boundary
         await cpu.setProgramCounter(0);
@@ -153,9 +154,9 @@ describe("Comprehensive coverage tests", () => {
         await cpu.loadByte(0x0200, 0x01); // Value to shift
 
         await cpu.step();
-        expect(await cpu.readByte(0x0200)).toBe(0x00); // Result after shift
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry flag should be set
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
+        assert.strictEqual(await cpu.readByte(0x0200), 0x00); // Result after shift
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry flag should be set
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
 
         // Test ROL Absolute,X at page boundary
         await cpu.setProgramCounter(0);
@@ -167,9 +168,9 @@ describe("Comprehensive coverage tests", () => {
         await cpu.setStatusFlag(CARRY); // Set carry flag
 
         await cpu.step();
-        expect(await cpu.readByte(0x0200)).toBe(0x01); // Result after rotate
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry flag should be set
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(false); // Zero flag should be cleared
+        assert.strictEqual(await cpu.readByte(0x0200), 0x01); // Result after rotate
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry flag should be set
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // Zero flag should be cleared
 
         // Test ROR Absolute,X at page boundary
         await cpu.setProgramCounter(0);
@@ -181,9 +182,9 @@ describe("Comprehensive coverage tests", () => {
         await cpu.setStatusFlag(CARRY); // Set carry flag
 
         await cpu.step();
-        expect(await cpu.readByte(0x0200)).toBe(0x80); // Result after rotate
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry flag should be set
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Negative flag should be set
+        assert.strictEqual(await cpu.readByte(0x0200), 0x80); // Result after rotate
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry flag should be set
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Negative flag should be set
     });
 
     // Test DEC/INC at page boundaries
@@ -199,8 +200,8 @@ describe("Comprehensive coverage tests", () => {
         await cpu.loadByte(0x0200, 0xff); // Value to increment
 
         await cpu.step();
-        expect(await cpu.readByte(0x0200)).toBe(0x00); // Result after increment
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
+        assert.strictEqual(await cpu.readByte(0x0200), 0x00); // Result after increment
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
 
         // Test DEC Absolute,X
         await cpu.setProgramCounter(0);
@@ -211,8 +212,8 @@ describe("Comprehensive coverage tests", () => {
         await cpu.loadByte(0x0200, 0x01); // Value to decrement
 
         await cpu.step();
-        expect(await cpu.readByte(0x0200)).toBe(0x00); // Result after decrement
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
+        assert.strictEqual(await cpu.readByte(0x0200), 0x00); // Result after decrement
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
     });
 
     // Test BRK, RTI with specific conditions
@@ -247,7 +248,7 @@ describe("Comprehensive coverage tests", () => {
         const stackPointerAfterBRK = await await getStackPointer(cpu);
 
         // Check if processor is at the interrupt handler
-        expect(await await getProgramCounter(cpu)).toBe(0x2000);
+        assert.strictEqual(await await getProgramCounter(cpu), 0x2000);
 
         // After BRK, stack should have:
         // SP+1: status flags with B set
@@ -255,18 +256,18 @@ describe("Comprehensive coverage tests", () => {
         // SP+3: high byte of return address
 
         // Check status on stack (using readByte directly)
-        expect(await cpu.readByte(0x0100 + stackPointerAfterBRK + 1)).toBe(
+        assert.strictEqual(await cpu.readByte(0x0100 + stackPointerAfterBRK + 1), 
             ZERO | OVERFLOW | CARRY | UNUSED | BREAK,
         );
-        expect(await cpu.readByte(0x0100 + stackPointerAfterBRK + 2)).toBe(
+        assert.strictEqual(await cpu.readByte(0x0100 + stackPointerAfterBRK + 2), 
             0x02,
         ); // Low byte of PC+2
-        expect(await cpu.readByte(0x0100 + stackPointerAfterBRK + 3)).toBe(
+        assert.strictEqual(await cpu.readByte(0x0100 + stackPointerAfterBRK + 3), 
             0x10,
         ); // High byte of PC+2
 
         // Interrupt flag should be set
-        expect(((await cpu.getState()).p & INTERRUPT) !== 0).toBe(true);
+        assert.strictEqual(((await cpu.getState()).p & INTERRUPT) !== 0, true);
 
         // Place RTI instruction at interrupt handler
         await cpu.loadByte(0x2000, 0x40); // RTI
@@ -275,14 +276,14 @@ describe("Comprehensive coverage tests", () => {
         await cpu.step();
 
         // Check if PC was restored correctly
-        expect(await getProgramCounter(cpu)).toBe(0x1002);
+        assert.strictEqual(await getProgramCounter(cpu), 0x1002);
 
         // Check if status flags were restored (with B flag cleared)
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true);
-        expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(true);
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true);
-        expect(((await cpu.getState()).p & UNUSED) !== 0).toBe(true);
-        expect(((await cpu.getState()).p & BREAK) !== 0).toBe(false);
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true);
+        assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, true);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true);
+        assert.strictEqual(((await cpu.getState()).p & UNUSED) !== 0, true);
+        assert.strictEqual(((await cpu.getState()).p & BREAK) !== 0, false);
     });
 
     // Test ADC, SBC with various overflow conditions
@@ -297,9 +298,9 @@ describe("Comprehensive coverage tests", () => {
         await cpu.setStatusFlag(CARRY); // Carry flag set
 
         await cpu.step();
-        expect(await await getAccumulator(cpu)).toBe(0xe1); // 0x70 + 0x70 + 1 = 0xE1
-        expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(true); // Overflow flag should be set
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Negative flag should be set
+        assert.strictEqual(await await getAccumulator(cpu), 0xe1); // 0x70 + 0x70 + 1 = 0xE1
+        assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, true); // Overflow flag should be set
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Negative flag should be set
 
         // Setup SBC with overflow from negative - positive = positive
         await cpu.setProgramCounter(0);
@@ -309,9 +310,9 @@ describe("Comprehensive coverage tests", () => {
         await cpu.setStatusFlag(CARRY); // Carry flag set (no borrow)
 
         await cpu.step();
-        expect(await await getAccumulator(cpu)).toBe(0x20); // 0x90 - 0x70 = 0x20
-        expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(true); // Overflow flag should be set
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(false); // Negative flag should be cleared
+        assert.strictEqual(await await getAccumulator(cpu), 0x20); // 0x90 - 0x70 = 0x20
+        assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, true); // Overflow flag should be set
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, false); // Negative flag should be cleared
     });
 
     // Test for LDX Absolute,Y edge cases
@@ -327,9 +328,9 @@ describe("Comprehensive coverage tests", () => {
         await cpu.loadByte(0x0085, 0xff); // Value to load
 
         const cycles = await cpu.step();
-        expect(cycles).toBe(4); // No page crossing
-        expect(await await getXRegister(cpu)).toBe(0xff);
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Negative flag should be set
+        assert.strictEqual(cycles, 4); // No page crossing
+        assert.strictEqual(await await getXRegister(cpu), 0xff);
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Negative flag should be set
 
         // Test LDX Absolute,Y with zero result
         await cpu.setProgramCounter(0);
@@ -340,8 +341,8 @@ describe("Comprehensive coverage tests", () => {
         await cpu.loadByte(0x0085, 0x00); // Value to load (zero)
 
         await cpu.step();
-        expect(await await getXRegister(cpu)).toBe(0x00);
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
+        assert.strictEqual(await await getXRegister(cpu), 0x00);
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
     });
 
     // Test various bit manipulation operations
@@ -356,9 +357,9 @@ describe("Comprehensive coverage tests", () => {
         await cpu.setAccumulator(0x00); // A = 0
 
         await cpu.step();
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Bit 7 should set N flag
-        expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(true); // Bit 6 should set V flag
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // A & M = 0 should set Z flag
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Bit 7 should set N flag
+        assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, true); // Bit 6 should set V flag
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // A & M = 0 should set Z flag
 
         // Test BIT Absolute
         await cpu.setProgramCounter(0);
@@ -369,9 +370,9 @@ describe("Comprehensive coverage tests", () => {
         await cpu.setAccumulator(0x01); // A = 1
 
         await cpu.step();
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Bit 7 should set N flag
-        expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(false); // Bit 6 should clear V flag
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // A & M = 0 should set Z flag
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Bit 7 should set N flag
+        assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, false); // Bit 6 should clear V flag
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // A & M = 0 should set Z flag
     });
 
     // Add more tests as needed to cover the remaining edge cases

@@ -1,6 +1,7 @@
-import { describe, expect, it } from "bun:test";
-import { CARRY, ZERO, NEGATIVE } from "../constants";
-import { createCPU } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { CARRY, ZERO, NEGATIVE } from "../constants.ts";
+import { createCPU } from "./utils.ts";
 
 // This test file is dedicated to achieving 100% coverage of the ROR Absolute,X instruction
 describe("ROR Absolute,X Complete Coverage", () => {
@@ -25,9 +26,9 @@ describe("ROR Absolute,X Complete Coverage", () => {
 
         // Verify the results
         // 0x01 >> 1 = 0x00 (with carry flag set)
-        expect(await cpu.readByte(0x3005)).toBe(0x00);
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry should be set
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
+        assert.strictEqual(await cpu.readByte(0x3005), 0x00);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry should be set
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
     });
 
     it("should test ROR Absolute,X with carry clear (line 1581)", async () => {
@@ -53,9 +54,9 @@ describe("ROR Absolute,X Complete Coverage", () => {
         // 0x02 >> 1 = 0x01 (with carry flag clear)
         // Since carry was initially set, bit 7 will be 1
         // So result is 0x01 | 0x80 = 0x81
-        expect(await cpu.readByte(0x3005)).toBe(0x81);
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(false); // Carry should be clear
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Negative flag should be set
+        assert.strictEqual(await cpu.readByte(0x3005), 0x81);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Carry should be clear
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Negative flag should be set
     });
 
     it("should test ROR Absolute,X with all coverage variations", async () => {
@@ -74,8 +75,8 @@ describe("ROR Absolute,X Complete Coverage", () => {
         await cpu.step();
 
         // 0x55 >> 1 = 0x2A (with carry flag set due to LSB being 1)
-        expect(await cpu.readByte(0x4010)).toBe(0x2a);
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry should be set
+        assert.strictEqual(await cpu.readByte(0x4010), 0x2a);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry should be set
 
         // Test 2: Value with bit 0 clear (even), carry initially set
         await cpu.setProgramCounter(0);
@@ -89,9 +90,9 @@ describe("ROR Absolute,X Complete Coverage", () => {
         await cpu.step();
 
         // 0xAA >> 1 = 0x55 with carry in to bit 7, so 0xD5
-        expect(await cpu.readByte(0x4010)).toBe(0xd5);
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(false); // Carry should be clear
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Negative flag should be set
+        assert.strictEqual(await cpu.readByte(0x4010), 0xd5);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Carry should be clear
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Negative flag should be set
 
         // Test 3: Zero result
         await cpu.setProgramCounter(0);
@@ -105,8 +106,8 @@ describe("ROR Absolute,X Complete Coverage", () => {
         await cpu.step();
 
         // 0x00 >> 1 = 0x00 (with carry flag clear)
-        expect(await cpu.readByte(0x4010)).toBe(0x00);
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(false); // Carry should be clear
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
+        assert.strictEqual(await cpu.readByte(0x4010), 0x00);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Carry should be clear
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
     });
 });

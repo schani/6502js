@@ -1,5 +1,6 @@
-import { describe, expect, it } from "bun:test";
-import { getAccumulator, getProgramCounter, createCPU, ZERO } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { getAccumulator, getProgramCounter, createCPU, ZERO } from "./utils.ts";
 describe("Indirect addressing modes", () => {
   it("should perform LDA indirect,X instruction", async () => {
     const cpu = createCPU();
@@ -20,9 +21,9 @@ describe("Indirect addressing modes", () => {
     
     const cycles = await cpu.step();
     
-    expect(await getAccumulator(cpu)).toBe(0x42);
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(6);
+    assert.strictEqual(await getAccumulator(cpu), 0x42);
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 6);
   });
   
   it("should perform LDA indirect,Y instruction", async () => {
@@ -44,9 +45,9 @@ describe("Indirect addressing modes", () => {
     
     const cycles = await cpu.step();
     
-    expect(await getAccumulator(cpu)).toBe(0x42);
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(5);
+    assert.strictEqual(await getAccumulator(cpu), 0x42);
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 5);
   });
   
   it("should add cycle when crossing page boundary with indirect,Y", async () => {
@@ -68,9 +69,9 @@ describe("Indirect addressing modes", () => {
     
     const cycles = await cpu.step();
     
-    expect(await getAccumulator(cpu)).toBe(0x42);
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(6); // Extra cycle for page boundary crossing
+    assert.strictEqual(await getAccumulator(cpu), 0x42);
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 6); // Extra cycle for page boundary crossing
   });
   
   it("should perform JMP indirect instruction", async () => {
@@ -87,8 +88,8 @@ describe("Indirect addressing modes", () => {
     
     const cycles = await cpu.step();
     
-    expect(await getProgramCounter(cpu)).toBe(0x5040); // PC should be set to target address
-    expect(cycles).toBe(5);
+    assert.strictEqual(await getProgramCounter(cpu), 0x5040); // PC should be set to target address
+    assert.strictEqual(cycles, 5);
   });
   
   // Test the 6502's indirect JMP bug when vector falls on page boundary
@@ -106,7 +107,7 @@ describe("Indirect addressing modes", () => {
     
     const cycles = await cpu.step();
     
-    expect(await getProgramCounter(cpu)).toBe(0x5040); // PC should be set to target address with bug behavior
-    expect(cycles).toBe(5);
+    assert.strictEqual(await getProgramCounter(cpu), 0x5040); // PC should be set to target address with bug behavior
+    assert.strictEqual(cycles, 5);
   });
 });

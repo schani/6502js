@@ -1,5 +1,6 @@
-import { describe, expect, it } from "bun:test";
-import { createCPU, ZERO, NEGATIVE, getXRegister, getYRegister, getProgramCounter, getStatusRegister } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { createCPU, ZERO, NEGATIVE, getXRegister, getYRegister, getProgramCounter, getStatusRegister } from "./utils.ts";
 
 describe("Increment and decrement operations", async () => {
   it("should perform INX instruction", async () => {
@@ -13,11 +14,11 @@ describe("Increment and decrement operations", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await getXRegister(cpu)).toBe(0x42);
-    expect(await getStatusRegister(cpu) & ZERO).toBe(0); // Result is not zero
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0); // Result is not negative
-    expect(await getProgramCounter(cpu)).toBe(1);
-    expect(cycles).toBe(2);
+    assert.strictEqual(await getXRegister(cpu), 0x42);
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, 0); // Result is not zero
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, 0); // Result is not negative
+    assert.strictEqual(await getProgramCounter(cpu), 1);
+    assert.strictEqual(cycles, 2);
     
     // Test wrapping from 0xFF to 0x00
     await cpu.setProgramCounter(0);
@@ -25,8 +26,8 @@ describe("Increment and decrement operations", async () => {
     
     await cpu.step();
     
-    expect(await getXRegister(cpu)).toBe(0x00);
-    expect(await getStatusRegister(cpu) & ZERO).toBe(ZERO); // Result is zero
+    assert.strictEqual(await getXRegister(cpu), 0x00);
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, ZERO); // Result is zero
   });
   
   it("should perform INY instruction", async () => {
@@ -40,11 +41,11 @@ describe("Increment and decrement operations", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await getYRegister(cpu)).toBe(0x42);
-    expect(await getStatusRegister(cpu) & ZERO).toBe(0); // Result is not zero
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0); // Result is not negative
-    expect(await getProgramCounter(cpu)).toBe(1);
-    expect(cycles).toBe(2);
+    assert.strictEqual(await getYRegister(cpu), 0x42);
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, 0); // Result is not zero
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, 0); // Result is not negative
+    assert.strictEqual(await getProgramCounter(cpu), 1);
+    assert.strictEqual(cycles, 2);
   });
   
   it("should perform DEX instruction", async () => {
@@ -58,11 +59,11 @@ describe("Increment and decrement operations", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await getXRegister(cpu)).toBe(0x42);
-    expect(await getStatusRegister(cpu) & ZERO).toBe(0); // Result is not zero
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0); // Result is not negative
-    expect(await getProgramCounter(cpu)).toBe(1);
-    expect(cycles).toBe(2);
+    assert.strictEqual(await getXRegister(cpu), 0x42);
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, 0); // Result is not zero
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, 0); // Result is not negative
+    assert.strictEqual(await getProgramCounter(cpu), 1);
+    assert.strictEqual(cycles, 2);
     
     // Test wrapping from 0x00 to 0xFF
     await cpu.setProgramCounter(0);
@@ -70,8 +71,8 @@ describe("Increment and decrement operations", async () => {
     
     await cpu.step();
     
-    expect(await getXRegister(cpu)).toBe(0xFF);
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(NEGATIVE); // Result is negative
+    assert.strictEqual(await getXRegister(cpu), 0xFF);
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, NEGATIVE); // Result is negative
   });
   
   it("should perform DEY instruction", async () => {
@@ -85,11 +86,11 @@ describe("Increment and decrement operations", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await getYRegister(cpu)).toBe(0x42);
-    expect(await getStatusRegister(cpu) & ZERO).toBe(0); // Result is not zero
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0); // Result is not negative
-    expect(await getProgramCounter(cpu)).toBe(1);
-    expect(cycles).toBe(2);
+    assert.strictEqual(await getYRegister(cpu), 0x42);
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, 0); // Result is not zero
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, 0); // Result is not negative
+    assert.strictEqual(await getProgramCounter(cpu), 1);
+    assert.strictEqual(cycles, 2);
   });
   
   it("should perform INC zero page instruction", async () => {
@@ -102,11 +103,11 @@ describe("Increment and decrement operations", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await cpu.readByte(0x20)).toBe(0x42);
-    expect(await getStatusRegister(cpu) & ZERO).toBe(0); // Result is not zero
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0); // Result is not negative
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(5);
+    assert.strictEqual(await cpu.readByte(0x20), 0x42);
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, 0); // Result is not zero
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, 0); // Result is not negative
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 5);
   });
   
   it("should perform DEC zero page instruction", async () => {
@@ -119,10 +120,10 @@ describe("Increment and decrement operations", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await cpu.readByte(0x20)).toBe(0x42);
-    expect(await getStatusRegister(cpu) & ZERO).toBe(0); // Result is not zero
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0); // Result is not negative
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(5);
+    assert.strictEqual(await cpu.readByte(0x20), 0x42);
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, 0); // Result is not zero
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, 0); // Result is not negative
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 5);
   });
 });

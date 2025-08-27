@@ -1,5 +1,6 @@
-import { describe, expect, it } from "bun:test";
-import { createCPU } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { createCPU } from "./utils.ts";
 import {
     getAccumulator,
     getXRegister,
@@ -7,7 +8,7 @@ import {
     getProgramCounter,
     getStackPointer,
     getStatusRegister,
-} from "./utils";
+} from "./utils.ts";
 
 describe("Store instructions", () => {
     it("should perform STA zero page instruction", async () => {
@@ -22,9 +23,9 @@ describe("Store instructions", () => {
 
         const cycles = await cpu.step();
 
-        expect(await cpu.readByte(0x30)).toBe(0x42);
-        expect(await getProgramCounter(cpu)).toBe(2);
-        expect(cycles).toBe(3);
+        assert.strictEqual(await cpu.readByte(0x30), 0x42);
+        assert.strictEqual(await getProgramCounter(cpu), 2);
+        assert.strictEqual(cycles, 3);
     });
 
     it("should perform STA zero page,X instruction", async () => {
@@ -40,9 +41,9 @@ describe("Store instructions", () => {
 
         const cycles = await cpu.step();
 
-        expect(await cpu.readByte(0x35)).toBe(0x42); // Value at address 0x30 + 0x05
-        expect(await getProgramCounter(cpu)).toBe(2);
-        expect(cycles).toBe(4);
+        assert.strictEqual(await cpu.readByte(0x35), 0x42); // Value at address 0x30 + 0x05
+        assert.strictEqual(await getProgramCounter(cpu), 2);
+        assert.strictEqual(cycles, 4);
     });
 
     it("should perform STA absolute instruction", async () => {
@@ -58,9 +59,9 @@ describe("Store instructions", () => {
 
         const cycles = await cpu.step();
 
-        expect(await cpu.readByte(0x1234)).toBe(0x42);
-        expect(await getProgramCounter(cpu)).toBe(3);
-        expect(cycles).toBe(4);
+        assert.strictEqual(await cpu.readByte(0x1234), 0x42);
+        assert.strictEqual(await getProgramCounter(cpu), 3);
+        assert.strictEqual(cycles, 4);
     });
 
     it("should perform STA absolute,X instruction", async () => {
@@ -77,9 +78,9 @@ describe("Store instructions", () => {
 
         const cycles = await cpu.step();
 
-        expect(await cpu.readByte(0x1239)).toBe(0x42); // Value at address 0x1234 + 0x05
-        expect(await getProgramCounter(cpu)).toBe(3);
-        expect(cycles).toBe(5); // Always 5 cycles, regardless of page crossing
+        assert.strictEqual(await cpu.readByte(0x1239), 0x42); // Value at address 0x1234 + 0x05
+        assert.strictEqual(await getProgramCounter(cpu), 3);
+        assert.strictEqual(cycles, 5); // Always 5 cycles, regardless of page crossing
     });
 
     it("should perform STA absolute,Y instruction", async () => {
@@ -96,9 +97,9 @@ describe("Store instructions", () => {
 
         const cycles = await cpu.step();
 
-        expect(await cpu.readByte(0x1239)).toBe(0x42); // Value at address 0x1234 + 0x05
-        expect(await getProgramCounter(cpu)).toBe(3);
-        expect(cycles).toBe(5); // Always 5 cycles, regardless of page crossing
+        assert.strictEqual(await cpu.readByte(0x1239), 0x42); // Value at address 0x1234 + 0x05
+        assert.strictEqual(await getProgramCounter(cpu), 3);
+        assert.strictEqual(cycles, 5); // Always 5 cycles, regardless of page crossing
     });
 
     it("should perform STA (indirect,X) instruction", async () => {
@@ -118,9 +119,9 @@ describe("Store instructions", () => {
 
         const cycles = await cpu.step();
 
-        expect(await cpu.readByte(0x2074)).toBe(0x42); // Value at effective address
-        expect(await getProgramCounter(cpu)).toBe(2);
-        expect(cycles).toBe(6);
+        assert.strictEqual(await cpu.readByte(0x2074), 0x42); // Value at effective address
+        assert.strictEqual(await getProgramCounter(cpu), 2);
+        assert.strictEqual(cycles, 6);
     });
 
     it("should perform STA (indirect),Y instruction", async () => {
@@ -140,9 +141,9 @@ describe("Store instructions", () => {
 
         const cycles = await cpu.step();
 
-        expect(await cpu.readByte(0x2084)).toBe(0x42); // Value at (base address + Y)
-        expect(await getProgramCounter(cpu)).toBe(2);
-        expect(cycles).toBe(6); // Always 6 cycles, regardless of page crossing
+        assert.strictEqual(await cpu.readByte(0x2084), 0x42); // Value at (base address + Y)
+        assert.strictEqual(await getProgramCounter(cpu), 2);
+        assert.strictEqual(cycles, 6); // Always 6 cycles, regardless of page crossing
     });
 
     it("should perform STX zero page instruction", async () => {
@@ -157,9 +158,9 @@ describe("Store instructions", () => {
 
         const cycles = await cpu.step();
 
-        expect(await cpu.readByte(0x30)).toBe(0x42);
-        expect(await getProgramCounter(cpu)).toBe(2);
-        expect(cycles).toBe(3);
+        assert.strictEqual(await cpu.readByte(0x30), 0x42);
+        assert.strictEqual(await getProgramCounter(cpu), 2);
+        assert.strictEqual(cycles, 3);
     });
 
     it("should perform STX zero page,Y instruction", async () => {
@@ -175,9 +176,9 @@ describe("Store instructions", () => {
 
         const cycles = await cpu.step();
 
-        expect(await cpu.readByte(0x35)).toBe(0x42); // Value at address 0x30 + 0x05
-        expect(await getProgramCounter(cpu)).toBe(2);
-        expect(cycles).toBe(4);
+        assert.strictEqual(await cpu.readByte(0x35), 0x42); // Value at address 0x30 + 0x05
+        assert.strictEqual(await getProgramCounter(cpu), 2);
+        assert.strictEqual(cycles, 4);
     });
 
     it("should perform STX absolute instruction", async () => {
@@ -193,9 +194,9 @@ describe("Store instructions", () => {
 
         const cycles = await cpu.step();
 
-        expect(await cpu.readByte(0x1234)).toBe(0x42);
-        expect(await getProgramCounter(cpu)).toBe(3);
-        expect(cycles).toBe(4);
+        assert.strictEqual(await cpu.readByte(0x1234), 0x42);
+        assert.strictEqual(await getProgramCounter(cpu), 3);
+        assert.strictEqual(cycles, 4);
     });
 
     it("should perform STY zero page instruction", async () => {
@@ -210,9 +211,9 @@ describe("Store instructions", () => {
 
         const cycles = await cpu.step();
 
-        expect(await cpu.readByte(0x30)).toBe(0x42);
-        expect(await getProgramCounter(cpu)).toBe(2);
-        expect(cycles).toBe(3);
+        assert.strictEqual(await cpu.readByte(0x30), 0x42);
+        assert.strictEqual(await getProgramCounter(cpu), 2);
+        assert.strictEqual(cycles, 3);
     });
 
     it("should perform STY zero page,X instruction", async () => {
@@ -228,9 +229,9 @@ describe("Store instructions", () => {
 
         const cycles = await cpu.step();
 
-        expect(await cpu.readByte(0x35)).toBe(0x42); // Value at address 0x30 + 0x05
-        expect(await getProgramCounter(cpu)).toBe(2);
-        expect(cycles).toBe(4);
+        assert.strictEqual(await cpu.readByte(0x35), 0x42); // Value at address 0x30 + 0x05
+        assert.strictEqual(await getProgramCounter(cpu), 2);
+        assert.strictEqual(cycles, 4);
     });
 
     it("should perform STY absolute instruction", async () => {
@@ -246,8 +247,8 @@ describe("Store instructions", () => {
 
         const cycles = await cpu.step();
 
-        expect(await cpu.readByte(0x1234)).toBe(0x42);
-        expect(await getProgramCounter(cpu)).toBe(3);
-        expect(cycles).toBe(4);
+        assert.strictEqual(await cpu.readByte(0x1234), 0x42);
+        assert.strictEqual(await getProgramCounter(cpu), 3);
+        assert.strictEqual(cycles, 4);
     });
 });

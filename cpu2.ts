@@ -1,10 +1,10 @@
 /*  tiny-6502.ts – "good-enough" 6502 core for MS BASIC
     — Mark Probst, 2025-04-24                                               */
 
-import type { CPU, CPUState } from "./cpu-interface";
-import { createCPUState } from "./cpu-interface";
+import type { CPU, CPUState } from "./cpu-interface.ts";
+import { createCPUState } from "./cpu-interface.ts";
 import { defined } from "@glideapps/ts-necessities";
-import { disassemble } from "./disasm";
+import { disassemble } from "./disasm.ts";
 
 /**
  * Lightweight implementation of the 6502 CPU
@@ -196,16 +196,16 @@ export class CPU2 implements CPU {
 }
 
 /* status-flag bit masks */
-const enum F {
-    C = 1,
-    Z = 2,
-    I = 4,
-    D = 8,
-    B = 16,
-    U = 32,
-    V = 64,
-    N = 128,
-}
+const F = {
+    C: 1,
+    Z: 2,
+    I: 4,
+    D: 8,
+    B: 16,
+    U: 32,
+    V: 64,
+    N: 128,
+} as const;
 
 /* ─────────────────── helpers ─────────────────── */
 

@@ -1,5 +1,6 @@
-import { describe, expect, it } from "bun:test";
-import { createCPU, CARRY, ZERO, NEGATIVE } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { createCPU, CARRY, ZERO, NEGATIVE } from "./utils.ts";
 
 describe("Shift and rotate instructions", () => {
   it("should perform ASL A instruction", async () => {
@@ -13,11 +14,11 @@ describe("Shift and rotate instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect((await cpu.getState()).a).toBe(0x82); // 10000010
-    expect(((await cpu.getState()).p & CARRY) === 0).toBe(true); // Bit 7 was 0
-    expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Result has bit 7 set
-    expect((await cpu.getState()).pc).toBe(1);
-    expect(cycles).toBe(2);
+    assert.strictEqual((await cpu.getState()).a, 0x82); // 10000010
+    assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // Bit 7 was 0
+    assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result has bit 7 set
+    assert.strictEqual((await cpu.getState()).pc, 1);
+    assert.strictEqual(cycles, 2);
     
     // Test with carry out
     await cpu.setProgramCounter(0);
@@ -25,9 +26,9 @@ describe("Shift and rotate instructions", () => {
     
     await cpu.step();
     
-    expect((await cpu.getState()).a).toBe(0x02); // 00000010
-    expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Bit 7 was 1
-    expect(((await cpu.getState()).p & ZERO) === 0).toBe(true); // Result is not zero
+    assert.strictEqual((await cpu.getState()).a, 0x02); // 00000010
+    assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Bit 7 was 1
+    assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Result is not zero
   });
   
   it("should perform ASL zero page instruction", async () => {
@@ -40,11 +41,11 @@ describe("Shift and rotate instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect(await cpu.readByte(0x42)).toBe(0x82); // 10000010
-    expect(((await cpu.getState()).p & CARRY) === 0).toBe(true); // Bit 7 was 0
-    expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Result has bit 7 set
-    expect((await cpu.getState()).pc).toBe(2);
-    expect(cycles).toBe(5);
+    assert.strictEqual(await cpu.readByte(0x42), 0x82); // 10000010
+    assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // Bit 7 was 0
+    assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result has bit 7 set
+    assert.strictEqual((await cpu.getState()).pc, 2);
+    assert.strictEqual(cycles, 5);
   });
   
   it("should perform ASL absolute instruction", async () => {
@@ -58,11 +59,11 @@ describe("Shift and rotate instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect(await cpu.readByte(0x1234)).toBe(0x82); // 10000010
-    expect(((await cpu.getState()).p & CARRY) === 0).toBe(true); // Bit 7 was 0
-    expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Result has bit 7 set
-    expect((await cpu.getState()).pc).toBe(3);
-    expect(cycles).toBe(6);
+    assert.strictEqual(await cpu.readByte(0x1234), 0x82); // 10000010
+    assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // Bit 7 was 0
+    assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result has bit 7 set
+    assert.strictEqual((await cpu.getState()).pc, 3);
+    assert.strictEqual(cycles, 6);
   });
   
   it("should perform LSR A instruction", async () => {
@@ -76,11 +77,11 @@ describe("Shift and rotate instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect((await cpu.getState()).a).toBe(0x20); // 00100000
-    expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Bit 0 was 1
-    expect(((await cpu.getState()).p & NEGATIVE) === 0).toBe(true); // Bit 7 is always cleared
-    expect((await cpu.getState()).pc).toBe(1);
-    expect(cycles).toBe(2);
+    assert.strictEqual((await cpu.getState()).a, 0x20); // 00100000
+    assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Bit 0 was 1
+    assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Bit 7 is always cleared
+    assert.strictEqual((await cpu.getState()).pc, 1);
+    assert.strictEqual(cycles, 2);
     
     // Test with zero result
     await cpu.setProgramCounter(0);
@@ -88,9 +89,9 @@ describe("Shift and rotate instructions", () => {
     
     await cpu.step();
     
-    expect((await cpu.getState()).a).toBe(0x00); // 00000000
-    expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Bit 0 was 1
-    expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Result is zero
+    assert.strictEqual((await cpu.getState()).a, 0x00); // 00000000
+    assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Bit 0 was 1
+    assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Result is zero
   });
   
   it("should perform LSR zero page instruction", async () => {
@@ -103,11 +104,11 @@ describe("Shift and rotate instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect(await cpu.readByte(0x42)).toBe(0x20); // 00100000
-    expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Bit 0 was 1
-    expect(((await cpu.getState()).p & NEGATIVE) === 0).toBe(true); // Bit 7 is always cleared
-    expect((await cpu.getState()).pc).toBe(2);
-    expect(cycles).toBe(5);
+    assert.strictEqual(await cpu.readByte(0x42), 0x20); // 00100000
+    assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Bit 0 was 1
+    assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Bit 7 is always cleared
+    assert.strictEqual((await cpu.getState()).pc, 2);
+    assert.strictEqual(cycles, 5);
   });
   
   it("should perform LSR absolute instruction", async () => {
@@ -121,11 +122,11 @@ describe("Shift and rotate instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect(await cpu.readByte(0x1234)).toBe(0x20); // 00100000
-    expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Bit 0 was 1
-    expect(((await cpu.getState()).p & NEGATIVE) === 0).toBe(true); // Bit 7 is always cleared
-    expect((await cpu.getState()).pc).toBe(3);
-    expect(cycles).toBe(6);
+    assert.strictEqual(await cpu.readByte(0x1234), 0x20); // 00100000
+    assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Bit 0 was 1
+    assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Bit 7 is always cleared
+    assert.strictEqual((await cpu.getState()).pc, 3);
+    assert.strictEqual(cycles, 6);
   });
   
   it("should perform ROL A instruction", async () => {
@@ -140,11 +141,11 @@ describe("Shift and rotate instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect((await cpu.getState()).a).toBe(0x82); // 10000010
-    expect(((await cpu.getState()).p & CARRY) === 0).toBe(true); // Old bit 7 was 0
-    expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Result has bit 7 set
-    expect((await cpu.getState()).pc).toBe(1);
-    expect(cycles).toBe(2);
+    assert.strictEqual((await cpu.getState()).a, 0x82); // 10000010
+    assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // Old bit 7 was 0
+    assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result has bit 7 set
+    assert.strictEqual((await cpu.getState()).pc, 1);
+    assert.strictEqual(cycles, 2);
     
     // Test with carry in and out
     await cpu.setProgramCounter(0);
@@ -153,9 +154,9 @@ describe("Shift and rotate instructions", () => {
     
     await cpu.step();
     
-    expect((await cpu.getState()).a).toBe(0x03); // 00000011 (carry in becomes bit 0)
-    expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Old bit 7 was 1
-    expect(((await cpu.getState()).p & ZERO) === 0).toBe(true); // Result is not zero
+    assert.strictEqual((await cpu.getState()).a, 0x03); // 00000011 (carry in becomes bit 0)
+    assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Old bit 7 was 1
+    assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Result is not zero
   });
   
   it("should perform ROL zero page instruction", async () => {
@@ -171,11 +172,11 @@ describe("Shift and rotate instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect(await cpu.readByte(0x42)).toBe(0x82); // 10000010
-    expect(((await cpu.getState()).p & CARRY) === 0).toBe(true); // Old bit 7 was 0
-    expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Result has bit 7 set
-    expect((await cpu.getState()).pc).toBe(2);
-    expect(cycles).toBe(5);
+    assert.strictEqual(await cpu.readByte(0x42), 0x82); // 10000010
+    assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // Old bit 7 was 0
+    assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result has bit 7 set
+    assert.strictEqual((await cpu.getState()).pc, 2);
+    assert.strictEqual(cycles, 5);
   });
   
   it("should perform ROL absolute instruction", async () => {
@@ -192,11 +193,11 @@ describe("Shift and rotate instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect(await cpu.readByte(0x1234)).toBe(0x82); // 10000010
-    expect(((await cpu.getState()).p & CARRY) === 0).toBe(true); // Old bit 7 was 0
-    expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Result has bit 7 set
-    expect((await cpu.getState()).pc).toBe(3);
-    expect(cycles).toBe(6);
+    assert.strictEqual(await cpu.readByte(0x1234), 0x82); // 10000010
+    assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // Old bit 7 was 0
+    assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result has bit 7 set
+    assert.strictEqual((await cpu.getState()).pc, 3);
+    assert.strictEqual(cycles, 6);
   });
   
   it("should perform ROR A instruction", async () => {
@@ -211,11 +212,11 @@ describe("Shift and rotate instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect((await cpu.getState()).a).toBe(0x20); // 00100000
-    expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Old bit 0 was 1
-    expect(((await cpu.getState()).p & NEGATIVE) === 0).toBe(true); // Result has bit 7 clear
-    expect((await cpu.getState()).pc).toBe(1);
-    expect(cycles).toBe(2);
+    assert.strictEqual((await cpu.getState()).a, 0x20); // 00100000
+    assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Old bit 0 was 1
+    assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Result has bit 7 clear
+    assert.strictEqual((await cpu.getState()).pc, 1);
+    assert.strictEqual(cycles, 2);
     
     // Test with carry in
     await cpu.setProgramCounter(0);
@@ -224,9 +225,9 @@ describe("Shift and rotate instructions", () => {
     
     await cpu.step();
     
-    expect((await cpu.getState()).a).toBe(0x80); // 10000000 (carry in becomes bit 7)
-    expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Old bit 0 was 1
-    expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Result has bit 7 set
+    assert.strictEqual((await cpu.getState()).a, 0x80); // 10000000 (carry in becomes bit 7)
+    assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Old bit 0 was 1
+    assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result has bit 7 set
   });
   
   it("should perform ROR zero page instruction", async () => {
@@ -242,11 +243,11 @@ describe("Shift and rotate instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect(await cpu.readByte(0x42)).toBe(0x20); // 00100000
-    expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Old bit 0 was 1
-    expect(((await cpu.getState()).p & NEGATIVE) === 0).toBe(true); // Result has bit 7 clear
-    expect((await cpu.getState()).pc).toBe(2);
-    expect(cycles).toBe(5);
+    assert.strictEqual(await cpu.readByte(0x42), 0x20); // 00100000
+    assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Old bit 0 was 1
+    assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Result has bit 7 clear
+    assert.strictEqual((await cpu.getState()).pc, 2);
+    assert.strictEqual(cycles, 5);
   });
   
   it("should perform ROR absolute instruction", async () => {
@@ -263,11 +264,11 @@ describe("Shift and rotate instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect(await cpu.readByte(0x1234)).toBe(0x20); // 00100000
-    expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Old bit 0 was 1
-    expect(((await cpu.getState()).p & NEGATIVE) === 0).toBe(true); // Result has bit 7 clear
-    expect((await cpu.getState()).pc).toBe(3);
-    expect(cycles).toBe(6);
+    assert.strictEqual(await cpu.readByte(0x1234), 0x20); // 00100000
+    assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Old bit 0 was 1
+    assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Result has bit 7 clear
+    assert.strictEqual((await cpu.getState()).pc, 3);
+    assert.strictEqual(cycles, 6);
   });
   
   it("should handle ASL with zero result", async () => {
@@ -281,11 +282,11 @@ describe("Shift and rotate instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect((await cpu.getState()).a).toBe(0x00); // 00000000
-    expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Bit 7 was 1
-    expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Result is zero
-    expect(((await cpu.getState()).p & NEGATIVE) === 0).toBe(true); // Result is not negative
-    expect((await cpu.getState()).pc).toBe(1);
-    expect(cycles).toBe(2);
+    assert.strictEqual((await cpu.getState()).a, 0x00); // 00000000
+    assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Bit 7 was 1
+    assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Result is zero
+    assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Result is not negative
+    assert.strictEqual((await cpu.getState()).pc, 1);
+    assert.strictEqual(cycles, 2);
   });
 });

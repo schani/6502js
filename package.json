@@ -1,15 +1,18 @@
 {
     "name": "6502-js",
     "private": true,
+    "type": "module",
     "scripts": {
         "typecheck": "tsc --noEmit",
-        "test": "bun run test-runner.ts",
-        "dsl": "bun run dsl-runner.ts",
+        "test": "node --experimental-strip-types --test tests/**/*.test.ts",
+        "test:coverage": "node --experimental-strip-types --test --experimental-test-coverage tests/**/*.test.ts",
+        "basic": "node --experimental-strip-types basic-runner.ts",
+        "dsl": "node --experimental-strip-types dsl-runner.ts",
         "web:build": "tsc -p web/tsconfig.json",
-        "web:serve": "bun run web/serve.ts"
+        "web:serve": "node --experimental-strip-types web/serve.ts"
     },
     "devDependencies": {
-        "@types/bun": "latest"
+        "@types/node": "^20.0.0"
     },
     "peerDependencies": {
         "typescript": "^5"

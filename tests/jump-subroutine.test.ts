@@ -1,5 +1,6 @@
-import { describe, expect, it } from "bun:test";
-import { createCPU, getProgramCounter, getStackPointer } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { createCPU, getProgramCounter, getStackPointer } from "./utils.ts";
 
 describe("Jump and subroutine instructions", () => {
   it("should perform JMP absolute instruction", async () => {
@@ -12,8 +13,8 @@ describe("Jump and subroutine instructions", () => {
     
     const cycles = await cpu.step();
     
-    expect(await getProgramCounter(cpu)).toBe(0x1234);
-    expect(cycles).toBe(3);
+    assert.strictEqual(await getProgramCounter(cpu), 0x1234);
+    assert.strictEqual(cycles, 3);
   });
   
   it("should perform JSR and RTS instructions", async () => {
@@ -30,17 +31,17 @@ describe("Jump and subroutine instructions", () => {
     // Execute JSR
     let cycles = await cpu.step();
     
-    expect(await getProgramCounter(cpu)).toBe(0x1234);
-    expect(await getStackPointer(cpu)).toBe(0xFB); // SP decremented by 2 (for 16-bit return address)
-    expect(await cpu.readByte(0x01FC)).toBe(0x02); // Low byte of return address (PC+2-1)
-    expect(await cpu.readByte(0x01FD)).toBe(0x00); // High byte of return address (PC+2-1)
-    expect(cycles).toBe(6);
+    assert.strictEqual(await getProgramCounter(cpu), 0x1234);
+    assert.strictEqual(await getStackPointer(cpu), 0xFB); // SP decremented by 2 (for 16-bit return address)
+    assert.strictEqual(await cpu.readByte(0x01FC), 0x02); // Low byte of return address (PC+2-1)
+    assert.strictEqual(await cpu.readByte(0x01FD), 0x00); // High byte of return address (PC+2-1)
+    assert.strictEqual(cycles, 6);
     
     // Execute RTS
     cycles = await cpu.step();
     
-    expect(await getProgramCounter(cpu)).toBe(0x0003); // Return address (0x0002) + 1
-    expect(await getStackPointer(cpu)).toBe(0xFD); // SP incremented by 2
-    expect(cycles).toBe(6);
+    assert.strictEqual(await getProgramCounter(cpu), 0x0003); // Return address (0x0002) + 1
+    assert.strictEqual(await getStackPointer(cpu), 0xFD); // SP incremented by 2
+    assert.strictEqual(cycles, 6);
   });
 });

@@ -1,21 +1,22 @@
-import type { CPU } from "./cpu-interface";
+import type { CPU } from "./cpu-interface.ts";
 
 // Addressing modes
-enum AddressingMode {
-  IMPLIED,
-  ACCUMULATOR,
-  IMMEDIATE,
-  ZERO_PAGE,
-  ZERO_PAGE_X,
-  ZERO_PAGE_Y,
-  RELATIVE,
-  ABSOLUTE,
-  ABSOLUTE_X,
-  ABSOLUTE_Y,
-  INDIRECT,
-  INDEXED_INDIRECT, // (indirect,X)
-  INDIRECT_INDEXED, // (indirect),Y
-}
+const AddressingMode = {
+  IMPLIED: 0,
+  ACCUMULATOR: 1,
+  IMMEDIATE: 2,
+  ZERO_PAGE: 3,
+  ZERO_PAGE_X: 4,
+  ZERO_PAGE_Y: 5,
+  RELATIVE: 6,
+  ABSOLUTE: 7,
+  ABSOLUTE_X: 8,
+  ABSOLUTE_Y: 9,
+  INDIRECT: 10,
+  INDEXED_INDIRECT: 11, // (indirect,X)
+  INDIRECT_INDEXED: 12, // (indirect),Y
+} as const;
+type AddressingMode = typeof AddressingMode[keyof typeof AddressingMode];
 
 // Instruction table entry
 interface Instruction {

@@ -1,6 +1,7 @@
-import { describe, expect, it } from "bun:test";
-import { CARRY, ZERO, OVERFLOW, NEGATIVE } from "../constants";
-import { createCPU, getProgramCounter } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { CARRY, ZERO, OVERFLOW, NEGATIVE } from "../constants.ts";
+import { createCPU, getProgramCounter } from "./utils.ts";
 
 describe("Additional branch instruction tests", () => {
     // This adds even more branch tests to ensure 100% coverage
@@ -13,8 +14,8 @@ describe("Additional branch instruction tests", () => {
         await cpu.clearStatusFlag(NEGATIVE); // Clear negative (condition true)
         await cpu.setProgramCounter(0x1000);
         let cycles = await cpu.step();
-        expect(cycles).toBe(3); // 3 cycles, no page cross
-        expect(await await getProgramCounter(cpu)).toBe(0x1007); // 0x1002 + 0x05 = 0x1007
+        assert.strictEqual(cycles, 3); // 3 cycles, no page cross
+        assert.strictEqual(await await getProgramCounter(cpu), 0x1007); // 0x1002 + 0x05 = 0x1007
 
         // BVC - Branch on Overflow Clear
         await cpu.loadByte(0x2000, 0x50); // BVC
@@ -22,8 +23,8 @@ describe("Additional branch instruction tests", () => {
         await cpu.clearStatusFlag(OVERFLOW); // Clear overflow (condition true)
         await cpu.setProgramCounter(0x2000);
         cycles = await cpu.step();
-        expect(cycles).toBe(3); // 3 cycles, no page cross
-        expect(await await getProgramCounter(cpu)).toBe(0x2007); // 0x2002 + 0x05 = 0x2007
+        assert.strictEqual(cycles, 3); // 3 cycles, no page cross
+        assert.strictEqual(await await getProgramCounter(cpu), 0x2007); // 0x2002 + 0x05 = 0x2007
 
         // BVS - Branch on Overflow Set
         await cpu.loadByte(0x3000, 0x70); // BVS
@@ -31,8 +32,8 @@ describe("Additional branch instruction tests", () => {
         cpu.setStatusFlag(OVERFLOW); // Set overflow (condition true)
         await cpu.setProgramCounter(0x3000);
         cycles = await cpu.step();
-        expect(cycles).toBe(3); // 3 cycles, no page cross
-        expect(await await getProgramCounter(cpu)).toBe(0x3007); // 0x3002 + 0x05 = 0x3007
+        assert.strictEqual(cycles, 3); // 3 cycles, no page cross
+        assert.strictEqual(await await getProgramCounter(cpu), 0x3007); // 0x3002 + 0x05 = 0x3007
     });
 
     it("should test branches with small negative offset (no page crossing)", async () => {
@@ -44,8 +45,8 @@ describe("Additional branch instruction tests", () => {
         await cpu.clearStatusFlag(CARRY); // Clear carry (condition true)
         await cpu.setProgramCounter(0x1010);
         let cycles = await cpu.step();
-        expect(cycles).toBe(3); // 3 cycles, no page cross
-        expect(await await getProgramCounter(cpu)).toBe(0x100f); // 0x1012 - 3 = 0x100F
+        assert.strictEqual(cycles, 3); // 3 cycles, no page cross
+        assert.strictEqual(await await getProgramCounter(cpu), 0x100f); // 0x1012 - 3 = 0x100F
 
         // BCS - Branch on Carry Set
         await cpu.loadByte(0x2010, 0xb0); // BCS
@@ -53,8 +54,8 @@ describe("Additional branch instruction tests", () => {
         cpu.setStatusFlag(CARRY); // Set carry (condition true)
         await cpu.setProgramCounter(0x2010);
         cycles = await cpu.step();
-        expect(cycles).toBe(3); // 3 cycles, no page cross
-        expect(await await getProgramCounter(cpu)).toBe(0x200f); // 0x2012 - 3 = 0x200F
+        assert.strictEqual(cycles, 3); // 3 cycles, no page cross
+        assert.strictEqual(await await getProgramCounter(cpu), 0x200f); // 0x2012 - 3 = 0x200F
 
         // BEQ - Branch on Equal (Zero Set)
         await cpu.loadByte(0x3010, 0xf0); // BEQ
@@ -62,8 +63,8 @@ describe("Additional branch instruction tests", () => {
         cpu.setStatusFlag(ZERO); // Set zero (condition true)
         await cpu.setProgramCounter(0x3010);
         cycles = await cpu.step();
-        expect(cycles).toBe(3); // 3 cycles, no page cross
-        expect(await await getProgramCounter(cpu)).toBe(0x300f); // 0x3012 - 3 = 0x300F
+        assert.strictEqual(cycles, 3); // 3 cycles, no page cross
+        assert.strictEqual(await await getProgramCounter(cpu), 0x300f); // 0x3012 - 3 = 0x300F
 
         // BNE - Branch on Not Equal (Zero Clear)
         await cpu.loadByte(0x4010, 0xd0); // BNE
@@ -71,8 +72,8 @@ describe("Additional branch instruction tests", () => {
         await cpu.clearStatusFlag(ZERO); // Clear zero (condition true)
         await cpu.setProgramCounter(0x4010);
         cycles = await cpu.step();
-        expect(cycles).toBe(3); // 3 cycles, no page cross
-        expect(await await getProgramCounter(cpu)).toBe(0x400f); // 0x4012 - 3 = 0x400F
+        assert.strictEqual(cycles, 3); // 3 cycles, no page cross
+        assert.strictEqual(await await getProgramCounter(cpu), 0x400f); // 0x4012 - 3 = 0x400F
 
         // BMI - Branch on Minus (Negative Set)
         await cpu.loadByte(0x5010, 0x30); // BMI
@@ -80,7 +81,7 @@ describe("Additional branch instruction tests", () => {
         cpu.setStatusFlag(NEGATIVE); // Set negative (condition true)
         await cpu.setProgramCounter(0x5010);
         cycles = await cpu.step();
-        expect(cycles).toBe(3); // 3 cycles, no page cross
-        expect(await await getProgramCounter(cpu)).toBe(0x500f); // 0x5012 - 3 = 0x500F
+        assert.strictEqual(cycles, 3); // 3 cycles, no page cross
+        assert.strictEqual(await await getProgramCounter(cpu), 0x500f); // 0x5012 - 3 = 0x500F
     });
 });

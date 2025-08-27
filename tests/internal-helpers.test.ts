@@ -1,5 +1,6 @@
-import { describe, expect, it } from "bun:test";
-import { createCPU, getProgramCounter } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { createCPU, getProgramCounter } from "./utils.ts";
 
 describe("Internal helper functions", () => {
   it("should correctly read and write words", async () => {
@@ -18,8 +19,8 @@ describe("Internal helper functions", () => {
     
     // Verify the return address was written correctly
     // JSR pushes PC+2-1 to stack, which is 2 in this case (0x0002)
-    expect(await cpu.readByte(0x01FC)).toBe(0x02); // Low byte
-    expect(await cpu.readByte(0x01FD)).toBe(0x00); // High byte
+    assert.strictEqual(await cpu.readByte(0x01FC), 0x02); // Low byte
+    assert.strictEqual(await cpu.readByte(0x01FD), 0x00); // High byte
     
     // Test readWord via JMP indirect
     // First set up the memory
@@ -35,6 +36,6 @@ describe("Internal helper functions", () => {
     await cpu.step(); // This calls readWord internally
     
     // Verify PC was set to the address read from memory
-    expect(await getProgramCounter(cpu)).toBe(0x3742);
+    assert.strictEqual(await getProgramCounter(cpu), 0x3742);
   });
 });

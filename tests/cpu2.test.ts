@@ -1,6 +1,7 @@
-import { describe, expect, it } from "bun:test";
-import { CPU2 } from "../cpu2";
-import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStackPointer, getStatusRegister } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { CPU2 } from "../cpu2.ts";
+import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStackPointer, getStatusRegister } from "./utils.ts";
 
 describe("CPU2 Implementation", () => {
   it("should perform basic operations", async () => {
@@ -22,13 +23,13 @@ describe("CPU2 Implementation", () => {
     
     // Step through each instruction
     cpu.step(); // LDA #42
-    expect(await getAccumulator(cpu)).toBe(0x2A); // A should be 42
+    assert.strictEqual(await getAccumulator(cpu), 0x2A); // A should be 42
     
     cpu.step(); // TAX
-    expect(await getXRegister(cpu)).toBe(0x2A); // X should be 42
+    assert.strictEqual(await getXRegister(cpu), 0x2A); // X should be 42
     
     cpu.step(); // INX
-    expect(await getXRegister(cpu)).toBe(0x2B); // X should be 43
+    assert.strictEqual(await getXRegister(cpu), 0x2B); // X should be 43
   });
   
   it("should reset the CPU state", async () => {
@@ -43,9 +44,9 @@ describe("CPU2 Implementation", () => {
     cpu.reset();
     
     // Verify default values are restored
-    expect(await getAccumulator(cpu)).toBe(0);
-    expect(await getXRegister(cpu)).toBe(0);
-    expect(await getProgramCounter(cpu)).toBe(0);
-    expect(await getStackPointer(cpu)).toBe(0xFD);
+    assert.strictEqual(await getAccumulator(cpu), 0);
+    assert.strictEqual(await getXRegister(cpu), 0);
+    assert.strictEqual(await getProgramCounter(cpu), 0);
+    assert.strictEqual(await getStackPointer(cpu), 0xFD);
   });
 });

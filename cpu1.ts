@@ -1,7 +1,7 @@
-import { disassemble } from "./disasm";
-import type { CPU, CPUState } from "./cpu-interface";
-import { createCPUState } from "./cpu-interface";
-import { CARRY, ZERO, INTERRUPT, DECIMAL, BREAK, UNUSED, OVERFLOW, NEGATIVE } from "./constants";
+import { disassemble } from "./disasm.ts";
+import type { CPU, CPUState } from "./cpu-interface.ts";
+import { createCPUState } from "./cpu-interface.ts";
+import { CARRY, ZERO, INTERRUPT, DECIMAL, BREAK, UNUSED, OVERFLOW, NEGATIVE } from "./constants.ts";
 
 /**
  * Full-featured implementation of the 6502 CPU

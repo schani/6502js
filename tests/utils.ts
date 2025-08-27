@@ -7,9 +7,9 @@ import {
     UNUSED,
     OVERFLOW,
     NEGATIVE,
-} from "../constants";
-import type { CPU } from "../cpu-interface";
-import { SyncCPU } from "../sync-cpu";
+} from "../constants.ts";
+import type { CPU } from "../cpu-interface.ts";
+import { SyncCPU } from "../sync-cpu.ts";
 
 /**
  * Create a CPU instance with default values for testing.

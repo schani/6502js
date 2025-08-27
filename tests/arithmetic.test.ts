@@ -1,5 +1,6 @@
-import { describe, expect, it } from "bun:test";
-import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStatusRegister, createCPU, CARRY, ZERO, NEGATIVE, OVERFLOW } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStatusRegister, createCPU, CARRY, ZERO, NEGATIVE, OVERFLOW } from "./utils.ts";
 describe("Arithmetic operations", async () => {
   it("should perform ADC immediate instruction", async () => {
     const cpu = createCPU();
@@ -14,13 +15,13 @@ describe("Arithmetic operations", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await await getAccumulator(cpu)).toBe(0x79); // 0x42 + 0x37 = 0x79
-    expect(await getStatusRegister(cpu) & CARRY).toBe(0); // No carry out
-    expect(await getStatusRegister(cpu) & ZERO).toBe(0); // Result is not zero
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0); // Result is not negative
-    expect(await getStatusRegister(cpu) & OVERFLOW).toBe(0); // No overflow (both inputs and result have same sign bit)
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(2);
+    assert.strictEqual(await await getAccumulator(cpu), 0x79); // 0x42 + 0x37 = 0x79
+    assert.strictEqual(await getStatusRegister(cpu) & CARRY, 0); // No carry out
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, 0); // Result is not zero
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, 0); // Result is not negative
+    assert.strictEqual(await getStatusRegister(cpu) & OVERFLOW, 0); // No overflow (both inputs and result have same sign bit)
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 2);
   });
   
   it("should handle ADC with carry in", async () => {
@@ -36,9 +37,9 @@ describe("Arithmetic operations", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await await getAccumulator(cpu)).toBe(0x7A); // 0x42 + 0x37 + 1 = 0x7A
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(2);
+    assert.strictEqual(await await getAccumulator(cpu), 0x7A); // 0x42 + 0x37 + 1 = 0x7A
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 2);
   });
   
   it("should handle ADC with carry out", async () => {
@@ -54,10 +55,10 @@ describe("Arithmetic operations", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await await getAccumulator(cpu)).toBe(0x60); // 0xD0 + 0x90 = 0x160, truncated to 0x60
-    expect(await getStatusRegister(cpu) & CARRY).toBe(CARRY); // Carry flag should be set
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(2);
+    assert.strictEqual(await await getAccumulator(cpu), 0x60); // 0xD0 + 0x90 = 0x160, truncated to 0x60
+    assert.strictEqual(await getStatusRegister(cpu) & CARRY, CARRY); // Carry flag should be set
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 2);
   });
   
   it("should handle ADC with overflow", async () => {
@@ -75,11 +76,11 @@ describe("Arithmetic operations", async () => {
     
     // 80 + 80 = 160, which is -96 when interpreted as signed 8-bit
     // (sign bit flipped from positive to negative)
-    expect(await await getAccumulator(cpu)).toBe(0xA0);
-    expect(await getStatusRegister(cpu) & OVERFLOW).toBe(OVERFLOW); // Overflow flag should be set
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(NEGATIVE); // Result is negative
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(2);
+    assert.strictEqual(await await getAccumulator(cpu), 0xA0);
+    assert.strictEqual(await getStatusRegister(cpu) & OVERFLOW, OVERFLOW); // Overflow flag should be set
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, NEGATIVE); // Result is negative
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 2);
   });
 
   it("should perform SBC immediate instruction", async () => {
@@ -95,12 +96,12 @@ describe("Arithmetic operations", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await await getAccumulator(cpu)).toBe(0x22); // 0x42 - 0x20 = 0x22
-    expect(await getStatusRegister(cpu) & CARRY).toBe(CARRY); // No borrow needed
-    expect(await getStatusRegister(cpu) & ZERO).toBe(0); // Result is not zero
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0); // Result is not negative
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(2);
+    assert.strictEqual(await await getAccumulator(cpu), 0x22); // 0x42 - 0x20 = 0x22
+    assert.strictEqual(await getStatusRegister(cpu) & CARRY, CARRY); // No borrow needed
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, 0); // Result is not zero
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, 0); // Result is not negative
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 2);
   });
   
   it("should handle SBC with borrow", async () => {
@@ -116,9 +117,9 @@ describe("Arithmetic operations", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await await getAccumulator(cpu)).toBe(0x21); // 0x42 - 0x20 - 1 = 0x21
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(2);
+    assert.strictEqual(await await getAccumulator(cpu), 0x21); // 0x42 - 0x20 - 1 = 0x21
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 2);
   });
   
   it("should handle SBC with borrow out", async () => {
@@ -134,11 +135,11 @@ describe("Arithmetic operations", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await await getAccumulator(cpu)).toBe(0xF0); // 0x20 - 0x30 = 0xF0 (with borrow)
-    expect(await getStatusRegister(cpu) & CARRY).toBe(0); // Borrow needed
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(NEGATIVE); // Result is negative
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(2);
+    assert.strictEqual(await await getAccumulator(cpu), 0xF0); // 0x20 - 0x30 = 0xF0 (with borrow)
+    assert.strictEqual(await getStatusRegister(cpu) & CARRY, 0); // Borrow needed
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, NEGATIVE); // Result is negative
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 2);
   });
   
   it("should perform CMP immediate instruction", async () => {
@@ -153,12 +154,12 @@ describe("Arithmetic operations", async () => {
     
     let cycles = await cpu.step();
     
-    expect(await await getAccumulator(cpu)).toBe(0x42); // Accumulator should not change
-    expect(await getStatusRegister(cpu) & ZERO).toBe(ZERO); // Equal, so zero flag set
-    expect(await getStatusRegister(cpu) & CARRY).toBe(CARRY); // A >= M, so carry set
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(0); // Result bit 7 is clear
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(2);
+    assert.strictEqual(await await getAccumulator(cpu), 0x42); // Accumulator should not change
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, ZERO); // Equal, so zero flag set
+    assert.strictEqual(await getStatusRegister(cpu) & CARRY, CARRY); // A >= M, so carry set
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, 0); // Result bit 7 is clear
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 2);
     
     // Set up memory for A > M
     await cpu.setProgramCounter(0);
@@ -166,8 +167,8 @@ describe("Arithmetic operations", async () => {
     
     cycles = await cpu.step();
     
-    expect(await getStatusRegister(cpu) & ZERO).toBe(0); // Not equal, so zero flag clear
-    expect(await getStatusRegister(cpu) & CARRY).toBe(CARRY); // A >= M, so carry set
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, 0); // Not equal, so zero flag clear
+    assert.strictEqual(await getStatusRegister(cpu) & CARRY, CARRY); // A >= M, so carry set
     
     // Set up memory for A < M
     await cpu.setProgramCounter(0);
@@ -175,9 +176,9 @@ describe("Arithmetic operations", async () => {
     
     cycles = await cpu.step();
     
-    expect(await getStatusRegister(cpu) & ZERO).toBe(0); // Not equal, so zero flag clear
-    expect(await getStatusRegister(cpu) & CARRY).toBe(0); // A < M, so carry clear
-    expect(await getStatusRegister(cpu) & NEGATIVE).toBe(NEGATIVE); // Result bit 7 is set
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, 0); // Not equal, so zero flag clear
+    assert.strictEqual(await getStatusRegister(cpu) & CARRY, 0); // A < M, so carry clear
+    assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, NEGATIVE); // Result bit 7 is set
   });
   
   it("should perform CMP zero page instruction", async () => {
@@ -193,11 +194,11 @@ describe("Arithmetic operations", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await await getAccumulator(cpu)).toBe(0x42); // Accumulator should not change
-    expect(await getStatusRegister(cpu) & ZERO).toBe(ZERO); // Equal, so zero flag set
-    expect(await getStatusRegister(cpu) & CARRY).toBe(CARRY); // A >= M, so carry set
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(3);
+    assert.strictEqual(await await getAccumulator(cpu), 0x42); // Accumulator should not change
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, ZERO); // Equal, so zero flag set
+    assert.strictEqual(await getStatusRegister(cpu) & CARRY, CARRY); // A >= M, so carry set
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 3);
   });
   
   it("should perform CPX immediate instruction", async () => {
@@ -212,11 +213,11 @@ describe("Arithmetic operations", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await getXRegister(cpu)).toBe(0x42); // X register should not change
-    expect(await getStatusRegister(cpu) & ZERO).toBe(ZERO); // Equal, so zero flag set
-    expect(await getStatusRegister(cpu) & CARRY).toBe(CARRY); // X >= M, so carry set
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(2);
+    assert.strictEqual(await getXRegister(cpu), 0x42); // X register should not change
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, ZERO); // Equal, so zero flag set
+    assert.strictEqual(await getStatusRegister(cpu) & CARRY, CARRY); // X >= M, so carry set
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 2);
   });
   
   it("should perform CPY immediate instruction", async () => {
@@ -231,10 +232,10 @@ describe("Arithmetic operations", async () => {
     
     const cycles = await cpu.step();
     
-    expect(await getYRegister(cpu)).toBe(0x42); // Y register should not change
-    expect(await getStatusRegister(cpu) & ZERO).toBe(ZERO); // Equal, so zero flag set
-    expect(await getStatusRegister(cpu) & CARRY).toBe(CARRY); // Y >= M, so carry set
-    expect(await getProgramCounter(cpu)).toBe(2);
-    expect(cycles).toBe(2);
+    assert.strictEqual(await getYRegister(cpu), 0x42); // Y register should not change
+    assert.strictEqual(await getStatusRegister(cpu) & ZERO, ZERO); // Equal, so zero flag set
+    assert.strictEqual(await getStatusRegister(cpu) & CARRY, CARRY); // Y >= M, so carry set
+    assert.strictEqual(await getProgramCounter(cpu), 2);
+    assert.strictEqual(cycles, 2);
   });
 });

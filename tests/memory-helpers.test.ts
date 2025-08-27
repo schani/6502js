@@ -1,5 +1,6 @@
-import { describe, expect, it } from "bun:test";
-import { getAccumulator, getProgramCounter, createCPU } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { getAccumulator, getProgramCounter, createCPU } from "./utils.ts";
 describe("Memory helper functions", () => {
   it("should handle edge cases in readByte and writeByte", async () => {
     const cpu = createCPU();
@@ -18,8 +19,8 @@ describe("Memory helper functions", () => {
     const cycles = await cpu.step();
     
     // Verify the result
-    expect(cycles).toBe(4);
-    expect(await getAccumulator(cpu)).toBe(0x42);
+    assert.strictEqual(cycles, 4);
+    assert.strictEqual(await getAccumulator(cpu), 0x42);
     
     // Test boundary by writing to 0xFFFF
     await cpu.loadByte(3, 0x8D); // STA Absolute
@@ -33,8 +34,8 @@ describe("Memory helper functions", () => {
     const cycles2 = await cpu.step();
     
     // Verify the result
-    expect(cycles2).toBe(4);
-    expect(await cpu.readByte(0xFFFF)).toBe(0x84);
+    assert.strictEqual(cycles2, 4);
+    assert.strictEqual(await cpu.readByte(0xFFFF), 0x84);
   });
   
   it("should correctly handle writeWord at memory boundary", async () => {
@@ -51,8 +52,8 @@ describe("Memory helper functions", () => {
     const cycles = await cpu.step();
     
     // JSR pushes return address (PC+2-1) to stack and jumps to target address
-    expect(cycles).toBe(6);
-    expect(await getProgramCounter(cpu)).toBe(0xFFFF);
+    assert.strictEqual(cycles, 6);
+    assert.strictEqual(await getProgramCounter(cpu), 0xFFFF);
     
     // Pull the address from the stack to verify it was stored correctly
     await cpu.loadByte(0xFFFF, 0x60); // RTS
@@ -61,8 +62,8 @@ describe("Memory helper functions", () => {
     const cycles2 = await cpu.step();
     
     // RTS pulls address from stack, adds 1, and sets PC
-    expect(cycles2).toBe(6);
-    expect(await getProgramCounter(cpu)).toBe(3); // Since JSR saves PC+2-1=2, RTS adds 1 to get 3
+    assert.strictEqual(cycles2, 6);
+    assert.strictEqual(await getProgramCounter(cpu), 3); // Since JSR saves PC+2-1=2, RTS adds 1 to get 3
   });
   
 });

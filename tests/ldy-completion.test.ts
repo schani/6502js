@@ -1,5 +1,6 @@
-import { describe, expect, it } from "bun:test";
-import { type CPU, createCPU, ZERO, NEGATIVE, getYRegister, getProgramCounter } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { type CPU, createCPU, ZERO, NEGATIVE, getYRegister, getProgramCounter } from "./utils.ts";
 
 describe("Complete LDY instruction coverage", () => {
   it("should test every possible LDY addressing mode and flag combination", async () => {
@@ -13,10 +14,10 @@ describe("Complete LDY instruction coverage", () => {
     
     let cycles = await cpu.step();
     
-    expect(cycles).toBe(3);
-    expect(await await getYRegister(cpu)).toBe(0); // Should read 0 from uninitialized memory
-    expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
-    expect(await await getProgramCounter(cpu)).toBe(0x1002);
+    assert.strictEqual(cycles, 3);
+    assert.strictEqual(await await getYRegister(cpu), 0); // Should read 0 from uninitialized memory
+    assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
+    assert.strictEqual(await await getProgramCounter(cpu), 0x1002);
     
     // Absolute test with negative value after wrap-around
     await cpu.loadByte(0x1002, 0xAC); // LDY Absolute
@@ -26,10 +27,10 @@ describe("Complete LDY instruction coverage", () => {
     
     cycles = await cpu.step();
     
-    expect(cycles).toBe(4);
-    expect(await await getYRegister(cpu)).toBe(0x80);
-    expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Negative flag should be set
-    expect(await await getProgramCounter(cpu)).toBe(0x1005);
+    assert.strictEqual(cycles, 4);
+    assert.strictEqual(await await getYRegister(cpu), 0x80);
+    assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Negative flag should be set
+    assert.strictEqual(await await getProgramCounter(cpu), 0x1005);
     
     // Zero Page,X test with wrap-around
     await cpu.loadByte(0x1005, 0xB4); // LDY Zero Page,X
@@ -40,9 +41,9 @@ describe("Complete LDY instruction coverage", () => {
     
     cycles = await cpu.step();
     
-    expect(cycles).toBe(4);
-    expect(await await getYRegister(cpu)).toBe(0x42);
-    expect(await await getProgramCounter(cpu)).toBe(0x1007);
+    assert.strictEqual(cycles, 4);
+    assert.strictEqual(await await getYRegister(cpu), 0x42);
+    assert.strictEqual(await await getProgramCounter(cpu), 0x1007);
     
     // Absolute,X test with page crossing
     await cpu.loadByte(0x1007, 0xBC); // LDY Absolute,X
@@ -56,7 +57,7 @@ describe("Complete LDY instruction coverage", () => {
     
     // Accept either 4 or 5 cycles - either is valid, as implementations might differ
     // on whether they count an extra cycle for this page crossing
-    expect([4, 5]).toContain(cycles);
+    assert.ok([4, 5].includes(cycles));
     
     // Load the memory value directly to verify it's there
     const memValue = cpu.readByte(0x0500);
@@ -65,7 +66,7 @@ describe("Complete LDY instruction coverage", () => {
     // - Some implementations may return 0x37 (the actual value at address 0x0500)
     // - Others may return 0 if they don't fully implement page crossing behavior
     // Both are acceptable for test purposes as we're gradually improving implementation
-    expect([0, 0x37]).toContain(await getYRegister(cpu));
-    expect(await await getProgramCounter(cpu)).toBe(0x100A);
+    assert.ok([0, 0x37].includes(await getYRegister(cpu)));
+    assert.strictEqual(await await getProgramCounter(cpu), 0x100A);
   });
 });

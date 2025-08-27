@@ -1,5 +1,6 @@
-import { describe, expect, it } from "bun:test";
-import { createCPU } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { createCPU } from "./utils.ts";
 import {
     getAccumulator,
     getXRegister,
@@ -7,7 +8,7 @@ import {
     getProgramCounter,
     getStackPointer,
     getStatusRegister,
-} from "./utils";
+} from "./utils.ts";
 
 describe("CPU trace functionality", () => {
     it("should log operations when trace is enabled", async () => {
@@ -38,24 +39,24 @@ describe("CPU trace functionality", () => {
             await cpu.step(true); // NOP
 
             // Verify that trace messages were logged
-            expect(logCalls.length).toBe(3);
+            assert.strictEqual(logCalls.length, 3);
 
             // First log should be for LDA at PC=0
-            expect(logCalls[0]).toContain("0000:");
-            expect(logCalls[0]).toContain("LDA #$42");
+            assert.ok(logCalls[0]?.includes("0000:"));
+            assert.ok(logCalls[0]?.includes("LDA #$42"));
 
             // Second log should be for TAX at PC=2
-            expect(logCalls[1]).toContain("0002:");
-            expect(logCalls[1]).toContain("TAX");
+            assert.ok(logCalls[1]?.includes("0002:"));
+            assert.ok(logCalls[1]?.includes("TAX"));
 
             // Third log should be for NOP at PC=3
-            expect(logCalls[2]).toContain("0003:");
-            expect(logCalls[2]).toContain("NOP");
+            assert.ok(logCalls[2]?.includes("0003:"));
+            assert.ok(logCalls[2]?.includes("NOP"));
 
             // Verify the CPU state is correct after execution
-            expect(await getAccumulator(cpu)).toBe(0x42);
-            expect(await getXRegister(cpu)).toBe(0x42);
-            expect(await getProgramCounter(cpu)).toBe(4);
+            assert.strictEqual(await getAccumulator(cpu), 0x42);
+            assert.strictEqual(await getXRegister(cpu), 0x42);
+            assert.strictEqual(await getProgramCounter(cpu), 4);
         } finally {
             // Restore the original console.log
             console.log = originalConsoleLog;

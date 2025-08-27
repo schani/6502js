@@ -1,6 +1,7 @@
-import { describe, expect, it } from "bun:test";
-import { createCPU } from "./utils";
-import { ZERO, OVERFLOW, NEGATIVE } from "../constants";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { createCPU } from "./utils.ts";
+import { ZERO, OVERFLOW, NEGATIVE } from "../constants.ts";
 
 describe("BIT instruction extensive tests", async () => {
     it("should test all flag behavior of BIT instruction in Zero Page mode", async () => {
@@ -17,10 +18,10 @@ describe("BIT instruction extensive tests", async () => {
 
         let cycles = await cpu.step();
 
-        expect(cycles).toBe(3);
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Bit 7 of memory is 1
-        expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(true); // Bit 6 of memory is 1
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // A & M is zero (0x01 & 0xC0 = 0x00)
+        assert.strictEqual(cycles, 3);
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Bit 7 of memory is 1
+        assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, true); // Bit 6 of memory is 1
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // A & M is zero (0x01 & 0xC0 = 0x00)
 
         // Test with bit 7 and bit 6 clear, A matches some bits
         await cpu.loadByte(0x1002, 0x24); // BIT Zero Page
@@ -33,10 +34,10 @@ describe("BIT instruction extensive tests", async () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(3);
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(false); // Bit 7 of memory is 0
-        expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(false); // Bit 6 of memory is 0
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(false); // A & M is non-zero (0x01 & 0x01 = 0x01)
+        assert.strictEqual(cycles, 3);
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, false); // Bit 7 of memory is 0
+        assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, false); // Bit 6 of memory is 0
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // A & M is non-zero (0x01 & 0x01 = 0x01)
 
         // Test with A not matching any bits (should set ZERO flag)
         await cpu.loadByte(0x1004, 0x24); // BIT Zero Page
@@ -49,10 +50,10 @@ describe("BIT instruction extensive tests", async () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(3);
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Bit 7 of memory is 1
-        expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(true); // Bit 6 of memory is 1
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // A & M is zero (0x01 & 0xC0 = 0x00)
+        assert.strictEqual(cycles, 3);
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Bit 7 of memory is 1
+        assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, true); // Bit 6 of memory is 1
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // A & M is zero (0x01 & 0xC0 = 0x00)
     });
 
     it("should test all flag behavior of BIT instruction in Absolute mode", async () => {
@@ -70,10 +71,10 @@ describe("BIT instruction extensive tests", async () => {
 
         let cycles = await cpu.step();
 
-        expect(cycles).toBe(4);
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Bit 7 of memory is 1
-        expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(true); // Bit 6 of memory is 1
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(false); // A & M is non-zero (0xFF & 0xFF = 0xFF)
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Bit 7 of memory is 1
+        assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, true); // Bit 6 of memory is 1
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // A & M is non-zero (0xFF & 0xFF = 0xFF)
 
         // Test with bit 7 set and bit 6 clear, A doesn't match any bits
         await cpu.loadByte(0x1003, 0x2c); // BIT Absolute
@@ -87,10 +88,10 @@ describe("BIT instruction extensive tests", async () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(4);
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Bit 7 of memory is 1
-        expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(false); // Bit 6 of memory is 0
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // A & M is zero (0x7F & 0x80 = 0x00)
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Bit 7 of memory is 1
+        assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, false); // Bit 6 of memory is 0
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // A & M is zero (0x7F & 0x80 = 0x00)
 
         // Test with bit 7 clear and bit 6 set, A matches perfectly
         await cpu.loadByte(0x1006, 0x2c); // BIT Absolute
@@ -104,9 +105,9 @@ describe("BIT instruction extensive tests", async () => {
 
         cycles = await cpu.step();
 
-        expect(cycles).toBe(4);
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(false); // Bit 7 of memory is 0
-        expect(((await cpu.getState()).p & OVERFLOW) !== 0).toBe(true); // Bit 6 of memory is 1
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(false); // A & M is non-zero (0x40 & 0x40 = 0x40)
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, false); // Bit 7 of memory is 0
+        assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, true); // Bit 6 of memory is 1
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // A & M is non-zero (0x40 & 0x40 = 0x40)
     });
 });

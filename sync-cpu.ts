@@ -1,6 +1,6 @@
-import type { CPU, CPUState } from "./cpu-interface";
-import { CPU1 } from "./cpu1";
-import { CPU2 } from "./cpu2";
+import type { CPU, CPUState } from "./cpu-interface.ts";
+import { CPU1 } from "./cpu1.ts";
+import { CPU2 } from "./cpu2.ts";
 
 /**
  * CPU implementation that maintains two underlying CPU implementations (CPU1 and CPU2),

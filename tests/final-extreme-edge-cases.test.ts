@@ -1,6 +1,7 @@
-import { describe, expect, it } from "bun:test";
-import { ZERO, NEGATIVE, CARRY } from "../constants";
-import { createCPU, getStatusRegister } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { ZERO, NEGATIVE, CARRY } from "../constants.ts";
+import { createCPU, getStatusRegister } from "./utils.ts";
 
 describe("Final extreme edge cases for 100% coverage", () => {
     // Test all shift operations with different addressing modes and values
@@ -15,8 +16,8 @@ describe("Final extreme edge cases for 100% coverage", () => {
             await cpu.loadByte(0x80, 0x01); // Won't set carry
 
             await cpu.step();
-            expect(await cpu.readByte(0x80)).toBe(0x02); // 0x01 << 1 = 0x02
-            expect(((await getStatusRegister(cpu)) & CARRY) === 0).toBe(true); // No carry set
+            assert.strictEqual(await cpu.readByte(0x80), 0x02); // 0x01 << 1 = 0x02
+            assert.strictEqual(((await getStatusRegister(cpu)) & CARRY) === 0, true); // No carry set
         }
 
         // LSR Tests
@@ -29,8 +30,8 @@ describe("Final extreme edge cases for 100% coverage", () => {
             await cpu.loadByte(0x80, 0x02); // Won't set carry from bit 0
 
             await cpu.step();
-            expect(await cpu.readByte(0x80)).toBe(0x01); // 0x02 >> 1 = 0x01
-            expect(((await getStatusRegister(cpu)) & CARRY) === 0).toBe(true); // No carry set
+            assert.strictEqual(await cpu.readByte(0x80), 0x01); // 0x02 >> 1 = 0x01
+            assert.strictEqual(((await getStatusRegister(cpu)) & CARRY) === 0, true); // No carry set
         }
 
         // ROL Tests
@@ -44,9 +45,9 @@ describe("Final extreme edge cases for 100% coverage", () => {
             await cpu.setStatusRegister(CARRY); // Set carry flag
 
             await cpu.step();
-            expect(await cpu.readByte(0x80)).toBe(0x81); // 0x40 << 1 | 0x01 = 0x81
-            expect(((await getStatusRegister(cpu)) & CARRY) === 0).toBe(true); // No carry out
-            expect(((await getStatusRegister(cpu)) & NEGATIVE) !== 0).toBe(
+            assert.strictEqual(await cpu.readByte(0x80), 0x81); // 0x40 << 1 | 0x01 = 0x81
+            assert.strictEqual(((await getStatusRegister(cpu)) & CARRY) === 0, true); // No carry out
+            assert.strictEqual(((await getStatusRegister(cpu)) & NEGATIVE) !== 0, 
                 true,
             ); // Negative flag set
         }
@@ -62,9 +63,9 @@ describe("Final extreme edge cases for 100% coverage", () => {
             await cpu.setStatusRegister(CARRY); // Set carry flag
 
             await cpu.step();
-            expect(await cpu.readByte(0x80)).toBe(0x81); // (0x03 >> 1) | 0x80 = 0x81
-            expect(((await getStatusRegister(cpu)) & CARRY) !== 0).toBe(true); // Carry set
-            expect(((await getStatusRegister(cpu)) & NEGATIVE) !== 0).toBe(
+            assert.strictEqual(await cpu.readByte(0x80), 0x81); // (0x03 >> 1) | 0x80 = 0x81
+            assert.strictEqual(((await getStatusRegister(cpu)) & CARRY) !== 0, true); // Carry set
+            assert.strictEqual(((await getStatusRegister(cpu)) & NEGATIVE) !== 0, 
                 true,
             ); // Negative flag set
         }
@@ -81,9 +82,9 @@ describe("Final extreme edge cases for 100% coverage", () => {
         await cpu.loadByte(0x81, 0x40); // Value to shift (won't set carry)
 
         await cpu.step();
-        expect(await cpu.readByte(0x81)).toBe(0x80); // 0x40 << 1 = 0x80
-        expect(((await getStatusRegister(cpu)) & CARRY) === 0).toBe(true); // No carry out
-        expect(((await getStatusRegister(cpu)) & NEGATIVE) !== 0).toBe(true); // Negative flag set
+        assert.strictEqual(await cpu.readByte(0x81), 0x80); // 0x40 << 1 = 0x80
+        assert.strictEqual(((await getStatusRegister(cpu)) & CARRY) === 0, true); // No carry out
+        assert.strictEqual(((await getStatusRegister(cpu)) & NEGATIVE) !== 0, true); // Negative flag set
     });
 
     // Additional edge cases for ROR
@@ -98,8 +99,8 @@ describe("Final extreme edge cases for 100% coverage", () => {
         await cpu.setStatusRegister(0); // Clear carry flag
 
         await cpu.step();
-        expect(await cpu.readByte(0x81)).toBe(0x00); // 0x01 >> 1 = 0x00 (no carry in)
-        expect(((await getStatusRegister(cpu)) & CARRY) !== 0).toBe(true); // Carry should be set
-        expect(((await getStatusRegister(cpu)) & ZERO) !== 0).toBe(true); // Zero flag set
+        assert.strictEqual(await cpu.readByte(0x81), 0x00); // 0x01 >> 1 = 0x00 (no carry in)
+        assert.strictEqual(((await getStatusRegister(cpu)) & CARRY) !== 0, true); // Carry should be set
+        assert.strictEqual(((await getStatusRegister(cpu)) & ZERO) !== 0, true); // Zero flag set
     });
 });

@@ -1,4 +1,5 @@
-import { describe, expect, it } from "bun:test";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 import {
     CARRY,
     ZERO,
@@ -6,8 +7,8 @@ import {
     OVERFLOW,
     DECIMAL,
     INTERRUPT,
-} from "../constants";
-import { createCPU, getProgramCounter } from "./utils";
+} from "../constants.ts";
+import { createCPU, getProgramCounter } from "./utils.ts";
 
 describe("Remaining branch and flag operations", async () => {
     it("should test BCS with page crossing", async () => {
@@ -27,10 +28,10 @@ describe("Remaining branch and flag operations", async () => {
         // Effective PC: 0x10F2 + 0x10 = 0x1102 (crosses page boundary)
 
         // Check cycles (should be 4 due to page crossing)
-        expect(cycles).toBe(4);
+        assert.strictEqual(cycles, 4);
 
         // Check if PC was set correctly
-        expect(await await getProgramCounter(cpu)).toBe(0x1102);
+        assert.strictEqual(await await getProgramCounter(cpu), 0x1102);
     });
 
     it("should test BEQ with page crossing", async () => {
@@ -50,10 +51,10 @@ describe("Remaining branch and flag operations", async () => {
         // Effective PC: 0x10F2 + 0x10 = 0x1102 (crosses page boundary)
 
         // Check cycles (should be 4 due to page crossing)
-        expect(cycles).toBe(4);
+        assert.strictEqual(cycles, 4);
 
         // Check if PC was set correctly
-        expect(await await getProgramCounter(cpu)).toBe(0x1102);
+        assert.strictEqual(await await getProgramCounter(cpu), 0x1102);
     });
 
     it("should test BMI with page crossing", async () => {
@@ -73,10 +74,10 @@ describe("Remaining branch and flag operations", async () => {
         // Effective PC: 0x10F2 + 0x10 = 0x1102 (crosses page boundary)
 
         // Check cycles (should be 4 due to page crossing)
-        expect(cycles).toBe(4);
+        assert.strictEqual(cycles, 4);
 
         // Check if PC was set correctly
-        expect(await await getProgramCounter(cpu)).toBe(0x1102);
+        assert.strictEqual(await await getProgramCounter(cpu), 0x1102);
     });
 
     it("should test BVS with page crossing", async () => {
@@ -96,10 +97,10 @@ describe("Remaining branch and flag operations", async () => {
         // Effective PC: 0x10F2 + 0x10 = 0x1102 (crosses page boundary)
 
         // Check cycles (should be 4 due to page crossing)
-        expect(cycles).toBe(4);
+        assert.strictEqual(cycles, 4);
 
         // Check if PC was set correctly
-        expect(await await getProgramCounter(cpu)).toBe(0x1102);
+        assert.strictEqual(await await getProgramCounter(cpu), 0x1102);
     });
 
     it("should test all flag setting and clearing instructions", async () => {
@@ -111,7 +112,7 @@ describe("Remaining branch and flag operations", async () => {
         await cpu.setStatusFlag(CARRY); // Set carry flag
 
         await cpu.step();
-        expect(((await cpu.getState()).p & CARRY) === 0).toBe(true); // Carry flag should be cleared
+        assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // Carry flag should be cleared
 
         // Test SEC (Set Carry)
         await cpu.setProgramCounter(0);
@@ -119,7 +120,7 @@ describe("Remaining branch and flag operations", async () => {
         await cpu.clearStatusFlag(CARRY); // Clear carry flag
 
         await cpu.step();
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry flag should be set
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry flag should be set
 
         // Test CLI (Clear Interrupt)
         await cpu.setProgramCounter(0);
@@ -127,7 +128,7 @@ describe("Remaining branch and flag operations", async () => {
         await cpu.setStatusFlag(INTERRUPT); // Set interrupt flag
 
         await cpu.step();
-        expect(((await cpu.getState()).p & INTERRUPT) === 0).toBe(true); // Interrupt flag should be cleared
+        assert.strictEqual(((await cpu.getState()).p & INTERRUPT) === 0, true); // Interrupt flag should be cleared
 
         // Test SEI (Set Interrupt)
         await cpu.setProgramCounter(0);
@@ -135,7 +136,7 @@ describe("Remaining branch and flag operations", async () => {
         await cpu.clearStatusFlag(INTERRUPT); // Clear interrupt flag
 
         await cpu.step();
-        expect(((await cpu.getState()).p & INTERRUPT) !== 0).toBe(true); // Interrupt flag should be set
+        assert.strictEqual(((await cpu.getState()).p & INTERRUPT) !== 0, true); // Interrupt flag should be set
 
         // Test CLV (Clear Overflow)
         await cpu.setProgramCounter(0);
@@ -143,7 +144,7 @@ describe("Remaining branch and flag operations", async () => {
         await cpu.setStatusFlag(OVERFLOW); // Set overflow flag
 
         await cpu.step();
-        expect(((await cpu.getState()).p & OVERFLOW) === 0).toBe(true); // Overflow flag should be cleared
+        assert.strictEqual(((await cpu.getState()).p & OVERFLOW) === 0, true); // Overflow flag should be cleared
 
         // Test CLD (Clear Decimal)
         await cpu.setProgramCounter(0);
@@ -151,7 +152,7 @@ describe("Remaining branch and flag operations", async () => {
         await cpu.setStatusFlag(DECIMAL); // Set decimal flag
 
         await cpu.step();
-        expect(((await cpu.getState()).p & DECIMAL) === 0).toBe(true); // Decimal flag should be cleared
+        assert.strictEqual(((await cpu.getState()).p & DECIMAL) === 0, true); // Decimal flag should be cleared
 
         // Test SED (Set Decimal)
         await cpu.setProgramCounter(0);
@@ -159,7 +160,7 @@ describe("Remaining branch and flag operations", async () => {
         await cpu.clearStatusFlag(DECIMAL); // Clear decimal flag
 
         await cpu.step();
-        expect(((await cpu.getState()).p & DECIMAL) !== 0).toBe(true); // Decimal flag should be set
+        assert.strictEqual(((await cpu.getState()).p & DECIMAL) !== 0, true); // Decimal flag should be set
     });
 
     it("should test compare operations with various results", async () => {
@@ -172,8 +173,8 @@ describe("Remaining branch and flag operations", async () => {
         await cpu.setAccumulator(0x42); // Accumulator value
 
         await cpu.step();
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry flag should be set (A >= M)
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry flag should be set (A >= M)
 
         // Test CMP with accumulator greater (clears Z flag, sets C flag)
         await cpu.setProgramCounter(0);
@@ -182,8 +183,8 @@ describe("Remaining branch and flag operations", async () => {
         await cpu.setAccumulator(0x42); // Accumulator value
 
         await cpu.step();
-        expect(((await cpu.getState()).p & ZERO) === 0).toBe(true); // Zero flag should be cleared
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry flag should be set (A >= M)
+        assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Zero flag should be cleared
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry flag should be set (A >= M)
 
         // Test CMP with accumulator less (clears Z flag, clears C flag)
         await cpu.setProgramCounter(0);
@@ -192,7 +193,7 @@ describe("Remaining branch and flag operations", async () => {
         await cpu.setAccumulator(0x42); // Accumulator value
 
         await cpu.step();
-        expect(((await cpu.getState()).p & ZERO) === 0).toBe(true); // Zero flag should be cleared
-        expect(((await cpu.getState()).p & CARRY) === 0).toBe(true); // Carry flag should be cleared (A < M)
+        assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Zero flag should be cleared
+        assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // Carry flag should be cleared (A < M)
     });
 });

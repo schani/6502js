@@ -1,6 +1,7 @@
-import { describe, expect, it } from "bun:test";
-import { createCPU } from "./utils";
-import { ZERO, NEGATIVE, CARRY, BREAK, UNUSED } from "../constants";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { createCPU } from "./utils.ts";
+import { ZERO, NEGATIVE, CARRY, BREAK, UNUSED } from "../constants.ts";
 
 describe("Stack operations", () => {
     it("should perform PHA and PLA instructions", async () => {
@@ -16,10 +17,10 @@ describe("Stack operations", () => {
         let cycles = await cpu.step();
 
         // Check that SP was decremented
-        expect((await cpu.getState()).sp).toBe(0xfc);
-        expect(await cpu.readByte(0x01fd)).toBe(0x42); // Stack value at 0x01FD should be 0x42
-        expect((await cpu.getState()).pc).toBe(1);
-        expect(cycles).toBe(3);
+        assert.strictEqual((await cpu.getState()).sp, 0xfc);
+        assert.strictEqual(await cpu.readByte(0x01fd), 0x42); // Stack value at 0x01FD should be 0x42
+        assert.strictEqual((await cpu.getState()).pc, 1);
+        assert.strictEqual(cycles, 3);
 
         // Clear accumulator
         await cpu.setAccumulator(0);
@@ -30,12 +31,12 @@ describe("Stack operations", () => {
         cycles = await cpu.step();
 
         // Check that accumulator got value from stack and SP was incremented
-        expect((await cpu.getState()).a).toBe(0x42);
-        expect((await cpu.getState()).sp).toBe(0xfd);
-        expect((await cpu.getState()).pc).toBe(2);
-        expect(cycles).toBe(4);
-        expect(((await cpu.getState()).p & ZERO) === 0).toBe(true);
-        expect(((await cpu.getState()).p & NEGATIVE) === 0).toBe(true);
+        assert.strictEqual((await cpu.getState()).a, 0x42);
+        assert.strictEqual((await cpu.getState()).sp, 0xfd);
+        assert.strictEqual((await cpu.getState()).pc, 2);
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true);
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true);
     });
 
     it("should perform PHP and PLP instructions", async () => {
@@ -51,15 +52,15 @@ describe("Stack operations", () => {
         let cycles = await cpu.step();
 
         // Check that SP was decremented and status was pushed with B and unused flags set
-        expect((await cpu.getState()).sp).toBe(0xfc);
+        assert.strictEqual((await cpu.getState()).sp, 0xfc);
         // Instead of checking specific value, let's verify the pushed byte has the correct flags set
         const pushedValue = await cpu.readByte(0x01fd);
-        expect(pushedValue & ZERO).toBe(ZERO);
-        expect(pushedValue & CARRY).toBe(CARRY);
-        expect(pushedValue & BREAK).toBe(BREAK);
-        expect(pushedValue & UNUSED).toBe(UNUSED);
-        expect((await cpu.getState()).pc).toBe(1);
-        expect(cycles).toBe(3);
+        assert.strictEqual(pushedValue & ZERO, ZERO);
+        assert.strictEqual(pushedValue & CARRY, CARRY);
+        assert.strictEqual(pushedValue & BREAK, BREAK);
+        assert.strictEqual(pushedValue & UNUSED, UNUSED);
+        assert.strictEqual((await cpu.getState()).pc, 1);
+        assert.strictEqual(cycles, 3);
 
         // Clear status register
         await cpu.clearStatusFlag(ZERO | CARRY);
@@ -71,12 +72,12 @@ describe("Stack operations", () => {
 
         // Check that status was pulled from stack (B and unused should be ignored)
         // Note: We confirm each flag individually rather than checking entire status register
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true);
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true);
-        expect(((await cpu.getState()).p & UNUSED) !== 0).toBe(true);
-        expect(((await cpu.getState()).p & BREAK) === 0).toBe(true); // BREAK flag shouldn't be set from PLP
-        expect((await cpu.getState()).sp).toBe(0xfd);
-        expect((await cpu.getState()).pc).toBe(2);
-        expect(cycles).toBe(4);
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true);
+        assert.strictEqual(((await cpu.getState()).p & UNUSED) !== 0, true);
+        assert.strictEqual(((await cpu.getState()).p & BREAK) === 0, true); // BREAK flag shouldn't be set from PLP
+        assert.strictEqual((await cpu.getState()).sp, 0xfd);
+        assert.strictEqual((await cpu.getState()).pc, 2);
+        assert.strictEqual(cycles, 4);
     });
 });

@@ -1,6 +1,7 @@
-import { describe, expect, it } from "bun:test";
-import { createCPU, getAccumulator } from "./utils";
-import { CARRY, ZERO, NEGATIVE } from "../constants";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { createCPU, getAccumulator } from "./utils.ts";
+import { CARRY, ZERO, NEGATIVE } from "../constants.ts";
 
 describe("Absolute Indexed Addressing Instructions", async () => {
     // Test ASL Absolute,X
@@ -19,9 +20,9 @@ describe("Absolute Indexed Addressing Instructions", async () => {
         await cpu.step();
 
         // After shift: 00000000, carry flag set (bit 7 was 1)
-        expect(await cpu.readByte(0x1005)).toBe(0x00);
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true);
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true);
+        assert.strictEqual(await cpu.readByte(0x1005), 0x00);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true);
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true);
     });
 
     // Test LSR Absolute,X
@@ -40,9 +41,9 @@ describe("Absolute Indexed Addressing Instructions", async () => {
         await cpu.step();
 
         // After shift: 00000000, carry flag set (bit 0 was 1)
-        expect(await cpu.readByte(0x1005)).toBe(0x00);
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true);
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true);
+        assert.strictEqual(await cpu.readByte(0x1005), 0x00);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true);
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true);
     });
 
     // Test ROL Absolute,X
@@ -62,9 +63,9 @@ describe("Absolute Indexed Addressing Instructions", async () => {
         await cpu.step();
 
         // After rotate: 00000001, carry flag set (bit 7 was 1)
-        expect(await cpu.readByte(0x1005)).toBe(0x01);
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true);
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(false);
+        assert.strictEqual(await cpu.readByte(0x1005), 0x01);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true);
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false);
     });
 
     // Test ROR Absolute,X
@@ -84,9 +85,9 @@ describe("Absolute Indexed Addressing Instructions", async () => {
         await cpu.step();
 
         // After rotate: 10000000, carry flag set (bit 0 was 1)
-        expect(await cpu.readByte(0x1005)).toBe(0x80);
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true);
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true);
+        assert.strictEqual(await cpu.readByte(0x1005), 0x80);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true);
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true);
     });
 
     // Test INC Absolute,X
@@ -105,8 +106,8 @@ describe("Absolute Indexed Addressing Instructions", async () => {
         await cpu.step();
 
         // After increment: 0x00, zero flag set
-        expect(await cpu.readByte(0x1005)).toBe(0x00);
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true);
+        assert.strictEqual(await cpu.readByte(0x1005), 0x00);
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true);
     });
 
     // Test DEC Absolute,X
@@ -125,8 +126,8 @@ describe("Absolute Indexed Addressing Instructions", async () => {
         await cpu.step();
 
         // After decrement: 0x00, zero flag set
-        expect(await cpu.readByte(0x1005)).toBe(0x00);
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true);
+        assert.strictEqual(await cpu.readByte(0x1005), 0x00);
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true);
     });
 
     // Test LDA Absolute,X with page crossing
@@ -145,10 +146,10 @@ describe("Absolute Indexed Addressing Instructions", async () => {
         const cycles = await cpu.step();
 
         // Check cycles (should be 5 due to page crossing)
-        expect(cycles).toBe(5);
+        assert.strictEqual(cycles, 5);
 
         // Check if A register was loaded with the value
-        expect(await getAccumulator(cpu)).toBe(0x42);
+        assert.strictEqual(await getAccumulator(cpu), 0x42);
     });
 
     // Test LDA Absolute,Y with page crossing
@@ -167,9 +168,9 @@ describe("Absolute Indexed Addressing Instructions", async () => {
         const cycles = await cpu.step();
 
         // Check cycles (should be 5 due to page crossing)
-        expect(cycles).toBe(5);
+        assert.strictEqual(cycles, 5);
 
         // Check if A register was loaded with the value
-        expect(await getAccumulator(cpu)).toBe(0x42);
+        assert.strictEqual(await getAccumulator(cpu), 0x42);
     });
 });

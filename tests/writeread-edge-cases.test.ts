@@ -1,5 +1,6 @@
-import { describe, expect, it } from "bun:test";
-import { type CPU, createCPU } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { type CPU, createCPU } from "./utils.ts";
 
 describe("Memory helpers edge cases", () => {
   it("should test writeWord/readWord edge cases", async () => {
@@ -9,14 +10,14 @@ describe("Memory helpers edge cases", () => {
     await cpu.loadWord(0xFFFF, 0xABCD);
     
     // Verify the low byte went to 0xFFFF
-    expect(await cpu.readByte(0xFFFF)).toBe(0xCD);
+    assert.strictEqual(await cpu.readByte(0xFFFF), 0xCD);
     
     // Verify the high byte wrapped around to 0x0000
-    expect(await cpu.readByte(0x0000)).toBe(0xAB);
+    assert.strictEqual(await cpu.readByte(0x0000), 0xAB);
     
     // Test reading a word at memory boundary
     const value = await cpu.readWord(0xFFFF);
-    expect(value).toBe(0xABCD);
+    assert.strictEqual(value, 0xABCD);
     
     // Test with undefined memory (should default to 0)
     // First clear the memory we just set
@@ -25,15 +26,15 @@ describe("Memory helpers edge cases", () => {
     
     // Now read from uninitialized memory
     const undefValue = await cpu.readWord(0x3000);
-    expect(undefValue).toBe(0); // Should default to 0 for uninitialized memory
+    assert.strictEqual(undefValue, 0); // Should default to 0 for uninitialized memory
     
     // Test with non-word boundary
     await cpu.loadWord(0x4000, 0x1234);
-    expect(await cpu.readByte(0x4000)).toBe(0x34);
-    expect(await cpu.readByte(0x4001)).toBe(0x12);
+    assert.strictEqual(await cpu.readByte(0x4000), 0x34);
+    assert.strictEqual(await cpu.readByte(0x4001), 0x12);
     
     // Verify reading non-word boundary
     const value2 = await cpu.readWord(0x4000);
-    expect(value2).toBe(0x1234);
+    assert.strictEqual(value2, 0x1234);
   });
 });

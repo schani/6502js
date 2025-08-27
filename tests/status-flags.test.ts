@@ -1,6 +1,7 @@
-import { describe, expect, it } from "bun:test";
-import { createCPU } from "./utils";
-import { CARRY, INTERRUPT, DECIMAL, OVERFLOW } from "../constants";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { createCPU } from "./utils.ts";
+import { CARRY, INTERRUPT, DECIMAL, OVERFLOW } from "../constants.ts";
 
 describe("Status flag instructions", () => {
     it("should perform CLC instruction", async () => {
@@ -15,9 +16,9 @@ describe("Status flag instructions", () => {
 
         const cycles = await cpu.step();
 
-        expect(((await cpu.getState()).p & CARRY) === 0).toBe(true); // Carry should be cleared
-        expect((await cpu.getState()).pc).toBe(1);
-        expect(cycles).toBe(2);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // Carry should be cleared
+        assert.strictEqual((await cpu.getState()).pc, 1);
+        assert.strictEqual(cycles, 2);
     });
 
     it("should perform SEC instruction", async () => {
@@ -32,9 +33,9 @@ describe("Status flag instructions", () => {
 
         const cycles = await cpu.step();
 
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry should be set
-        expect((await cpu.getState()).pc).toBe(1);
-        expect(cycles).toBe(2);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry should be set
+        assert.strictEqual((await cpu.getState()).pc, 1);
+        assert.strictEqual(cycles, 2);
     });
 
     it("should perform CLI instruction", async () => {
@@ -49,9 +50,9 @@ describe("Status flag instructions", () => {
 
         const cycles = await cpu.step();
 
-        expect(((await cpu.getState()).p & INTERRUPT) === 0).toBe(true); // Interrupt disable should be cleared
-        expect((await cpu.getState()).pc).toBe(1);
-        expect(cycles).toBe(2);
+        assert.strictEqual(((await cpu.getState()).p & INTERRUPT) === 0, true); // Interrupt disable should be cleared
+        assert.strictEqual((await cpu.getState()).pc, 1);
+        assert.strictEqual(cycles, 2);
     });
 
     it("should perform SEI instruction", async () => {
@@ -66,9 +67,9 @@ describe("Status flag instructions", () => {
 
         const cycles = await cpu.step();
 
-        expect(((await cpu.getState()).p & INTERRUPT) !== 0).toBe(true); // Interrupt disable should be set
-        expect((await cpu.getState()).pc).toBe(1);
-        expect(cycles).toBe(2);
+        assert.strictEqual(((await cpu.getState()).p & INTERRUPT) !== 0, true); // Interrupt disable should be set
+        assert.strictEqual((await cpu.getState()).pc, 1);
+        assert.strictEqual(cycles, 2);
     });
 
     it("should perform CLD instruction", async () => {
@@ -83,9 +84,9 @@ describe("Status flag instructions", () => {
 
         const cycles = await cpu.step();
 
-        expect(((await cpu.getState()).p & DECIMAL) === 0).toBe(true); // Decimal flag should be cleared
-        expect((await cpu.getState()).pc).toBe(1);
-        expect(cycles).toBe(2);
+        assert.strictEqual(((await cpu.getState()).p & DECIMAL) === 0, true); // Decimal flag should be cleared
+        assert.strictEqual((await cpu.getState()).pc, 1);
+        assert.strictEqual(cycles, 2);
     });
 
     it("should perform SED instruction", async () => {
@@ -100,9 +101,9 @@ describe("Status flag instructions", () => {
 
         const cycles = await cpu.step();
 
-        expect(((await cpu.getState()).p & DECIMAL) !== 0).toBe(true); // Decimal flag should be set
-        expect((await cpu.getState()).pc).toBe(1);
-        expect(cycles).toBe(2);
+        assert.strictEqual(((await cpu.getState()).p & DECIMAL) !== 0, true); // Decimal flag should be set
+        assert.strictEqual((await cpu.getState()).pc, 1);
+        assert.strictEqual(cycles, 2);
     });
 
     it("should perform CLV instruction", async () => {
@@ -117,8 +118,8 @@ describe("Status flag instructions", () => {
 
         const cycles = await cpu.step();
 
-        expect(((await cpu.getState()).p & OVERFLOW) === 0).toBe(true); // Overflow flag should be cleared
-        expect((await cpu.getState()).pc).toBe(1);
-        expect(cycles).toBe(2);
+        assert.strictEqual(((await cpu.getState()).p & OVERFLOW) === 0, true); // Overflow flag should be cleared
+        assert.strictEqual((await cpu.getState()).pc, 1);
+        assert.strictEqual(cycles, 2);
     });
 });

@@ -1,5 +1,6 @@
-import { expect, test, describe } from "bun:test";
-import { CARRY, ZERO, OVERFLOW, NEGATIVE } from "../constants";
+import { test, describe } from 'node:test';
+import assert from 'node:assert/strict';
+import { CARRY, ZERO, OVERFLOW, NEGATIVE } from "../constants.ts";
 import {
     getAccumulator,
     getXRegister,
@@ -8,7 +9,7 @@ import {
     getStackPointer,
     getStatusRegister,
     createCPU,
-} from "./utils";
+} from "./utils.ts";
 
 describe("SyncCPU", () => {
     test("correctly synchronizes CPU states for basic operations", async () => {
@@ -26,13 +27,13 @@ describe("SyncCPU", () => {
 
         // Execute LDA #42
         let cycles = await syncCpu.step();
-        expect(cycles).toBe(2);
-        expect(await await getAccumulator(syncCpu)).toBe(0x2a);
+        assert.strictEqual(cycles, 2);
+        assert.strictEqual(await await getAccumulator(syncCpu), 0x2a);
 
         // Execute ADC #13
         cycles = await syncCpu.step();
-        expect(cycles).toBe(2);
-        expect(await await getAccumulator(syncCpu)).toBe(0x37); // 42 + 13 = 55 (0x37)
+        assert.strictEqual(cycles, 2);
+        assert.strictEqual(await await getAccumulator(syncCpu), 0x37); // 42 + 13 = 55 (0x37)
 
         // We successfully executed both steps, which means the states matched
     });
@@ -43,9 +44,9 @@ describe("SyncCPU", () => {
         // Test a write across the memory boundary
         await syncCpu.loadWord(0xffff, 0x1234);
 
-        expect(await syncCpu.readByte(0xffff)).toBe(0x34);
-        expect(await syncCpu.readByte(0x0000)).toBe(0x12);
-        expect(await syncCpu.readWord(0xffff)).toBe(0x1234);
+        assert.strictEqual(await syncCpu.readByte(0xffff), 0x34);
+        assert.strictEqual(await syncCpu.readByte(0x0000), 0x12);
+        assert.strictEqual(await syncCpu.readWord(0xffff), 0x1234);
 
         // This test passing means that both CPU1 and CPU2 handle wrapping correctly
     });
@@ -75,23 +76,23 @@ describe("SyncCPU", () => {
 
         // Execute JSR $0500
         let cycles = await syncCpu.step();
-        expect(cycles).toBe(6);
-        expect(await await getProgramCounter(syncCpu)).toBe(0x0500);
+        assert.strictEqual(cycles, 6);
+        assert.strictEqual(await await getProgramCounter(syncCpu), 0x0500);
 
         // Execute LDA #$FF
         cycles = await syncCpu.step();
-        expect(cycles).toBe(2);
-        expect(await await getAccumulator(syncCpu)).toBe(0xff);
+        assert.strictEqual(cycles, 2);
+        assert.strictEqual(await await getAccumulator(syncCpu), 0xff);
 
         // Execute RTS
         cycles = await syncCpu.step();
-        expect(cycles).toBe(6);
-        expect(await await getProgramCounter(syncCpu)).toBe(0x0403);
+        assert.strictEqual(cycles, 6);
+        assert.strictEqual(await await getProgramCounter(syncCpu), 0x0403);
 
         // Execute INX
         cycles = await syncCpu.step();
-        expect(cycles).toBe(2);
-        expect(await await getXRegister(syncCpu)).toBe(1);
+        assert.strictEqual(cycles, 2);
+        assert.strictEqual(await await getXRegister(syncCpu), 1);
 
         // We successfully executed the program with JSR/RTS, which means both CPUs handle stack operations correctly
     });
@@ -111,16 +112,16 @@ describe("SyncCPU", () => {
 
         // Execute LDA #$80
         await syncCpu.step();
-        expect(((await syncCpu.getState()).p & NEGATIVE) !== 0).toBe(true);
-        expect(((await syncCpu.getState()).p & ZERO) === 0).toBe(true);
+        assert.strictEqual(((await syncCpu.getState()).p & NEGATIVE) !== 0, true);
+        assert.strictEqual(((await syncCpu.getState()).p & ZERO) === 0, true);
 
         // Execute ADC #$80
         await syncCpu.step();
         // 0x80 + 0x80 = 0x00 with carry and overflow
-        expect(await await getAccumulator(syncCpu)).toBe(0x00);
-        expect(((await syncCpu.getState()).p & CARRY) !== 0).toBe(true);
-        expect(((await syncCpu.getState()).p & ZERO) !== 0).toBe(true);
-        expect(((await syncCpu.getState()).p & OVERFLOW) !== 0).toBe(true);
-        expect(((await syncCpu.getState()).p & NEGATIVE) === 0).toBe(true);
+        assert.strictEqual(await await getAccumulator(syncCpu), 0x00);
+        assert.strictEqual(((await syncCpu.getState()).p & CARRY) !== 0, true);
+        assert.strictEqual(((await syncCpu.getState()).p & ZERO) !== 0, true);
+        assert.strictEqual(((await syncCpu.getState()).p & OVERFLOW) !== 0, true);
+        assert.strictEqual(((await syncCpu.getState()).p & NEGATIVE) === 0, true);
     });
 });

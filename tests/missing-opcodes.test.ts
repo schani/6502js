@@ -1,6 +1,7 @@
-import { describe, expect, it } from "bun:test";
-import { ZERO, NEGATIVE, CARRY } from "../constants";
-import { getAccumulator, createCPU } from "./utils";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { ZERO, NEGATIVE, CARRY } from "../constants.ts";
+import { getAccumulator, createCPU } from "./utils.ts";
 describe("Missing opcodes tests for 100% coverage", () => {
     it("should test LDX Absolute (0xAE)", async () => {
         const cpu = createCPU();
@@ -13,9 +14,9 @@ describe("Missing opcodes tests for 100% coverage", () => {
         await cpu.loadByte(0x1000, 0x00); // Value to load
 
         let cycles = await cpu.step();
-        expect(cycles).toBe(4); // Always 4 cycles for LDX Absolute
-        expect((await cpu.getState()).x).toBe(0x00);
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
+        assert.strictEqual(cycles, 4); // Always 4 cycles for LDX Absolute
+        assert.strictEqual((await cpu.getState()).x, 0x00);
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
 
         // Test loading positive value
         await cpu.setProgramCounter(0);
@@ -25,10 +26,10 @@ describe("Missing opcodes tests for 100% coverage", () => {
         await cpu.loadByte(0x1000, 0x42); // Value to load
 
         cycles = await cpu.step();
-        expect(cycles).toBe(4);
-        expect((await cpu.getState()).x).toBe(0x42);
-        expect(((await cpu.getState()).p & ZERO) === 0).toBe(true); // Zero flag should be cleared
-        expect(((await cpu.getState()).p & NEGATIVE) === 0).toBe(true); // Negative flag should be cleared
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual((await cpu.getState()).x, 0x42);
+        assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Zero flag should be cleared
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Negative flag should be cleared
 
         // Test loading negative value
         await cpu.setProgramCounter(0);
@@ -38,10 +39,10 @@ describe("Missing opcodes tests for 100% coverage", () => {
         await cpu.loadByte(0x1000, 0x80); // Value to load (negative because bit 7 is set)
 
         cycles = await cpu.step();
-        expect(cycles).toBe(4);
-        expect((await cpu.getState()).x).toBe(0x80);
-        expect(((await cpu.getState()).p & ZERO) === 0).toBe(true); // Zero flag should be cleared
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Negative flag should be set
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual((await cpu.getState()).x, 0x80);
+        assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Zero flag should be cleared
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Negative flag should be set
     });
 
     it("should test CMP Absolute (0xCD)", async () => {
@@ -56,10 +57,10 @@ describe("Missing opcodes tests for 100% coverage", () => {
         await cpu.setAccumulator(0x42); // A equals memory
 
         let cycles = await cpu.step();
-        expect(cycles).toBe(4); // Always 4 cycles for CMP Absolute
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag set (values are equal)
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry flag set (A >= M)
-        expect(((await cpu.getState()).p & NEGATIVE) === 0).toBe(true); // Negative flag clear
+        assert.strictEqual(cycles, 4); // Always 4 cycles for CMP Absolute
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag set (values are equal)
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry flag set (A >= M)
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Negative flag clear
 
         // Test with A > M
         await cpu.setProgramCounter(0);
@@ -70,10 +71,10 @@ describe("Missing opcodes tests for 100% coverage", () => {
         await cpu.setAccumulator(0x42); // A greater than memory
 
         cycles = await cpu.step();
-        expect(cycles).toBe(4);
-        expect(((await cpu.getState()).p & ZERO) === 0).toBe(true); // Zero flag clear (values are not equal)
-        expect(((await cpu.getState()).p & CARRY) !== 0).toBe(true); // Carry flag set (A >= M)
-        expect(((await cpu.getState()).p & NEGATIVE) === 0).toBe(true); // Negative flag clear
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Zero flag clear (values are not equal)
+        assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry flag set (A >= M)
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Negative flag clear
 
         // Test with A < M
         await cpu.setProgramCounter(0);
@@ -84,10 +85,10 @@ describe("Missing opcodes tests for 100% coverage", () => {
         await cpu.setAccumulator(0x42); // A less than memory
 
         cycles = await cpu.step();
-        expect(cycles).toBe(4);
-        expect(((await cpu.getState()).p & ZERO) === 0).toBe(true); // Zero flag clear (values are not equal)
-        expect(((await cpu.getState()).p & CARRY) === 0).toBe(true); // Carry flag clear (A < M)
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Negative flag may be set based on result
+        assert.strictEqual(cycles, 4);
+        assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Zero flag clear (values are not equal)
+        assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // Carry flag clear (A < M)
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Negative flag may be set based on result
     });
 
     // Testing more of the uncovered instructions
@@ -98,21 +99,21 @@ describe("Missing opcodes tests for 100% coverage", () => {
         await cpu.loadWord(0x1000, 0x1234);
 
         // Verify the value was written correctly (little-endian)
-        expect(await cpu.readByte(0x1000)).toBe(0x34); // Low byte
-        expect(await cpu.readByte(0x1001)).toBe(0x12); // High byte
+        assert.strictEqual(await cpu.readByte(0x1000), 0x34); // Low byte
+        assert.strictEqual(await cpu.readByte(0x1001), 0x12); // High byte
 
         // Verify we can read it back as a word
-        expect(await cpu.readWord(0x1000)).toBe(0x1234);
+        assert.strictEqual(await cpu.readWord(0x1000), 0x1234);
 
         // Test writing at memory boundary
         await cpu.loadWord(0xffff, 0x4567);
 
         // Verify the value was written correctly, wrapping around to address 0
-        expect(await cpu.readByte(0xffff)).toBe(0x67); // Low byte
-        expect(await cpu.readByte(0x0000)).toBe(0x45); // High byte (wrapped)
+        assert.strictEqual(await cpu.readByte(0xffff), 0x67); // Low byte
+        assert.strictEqual(await cpu.readByte(0x0000), 0x45); // High byte (wrapped)
 
         // Verify we can read it back as a word, even at the boundary
-        expect(await cpu.readWord(0xffff)).toBe(0x4567);
+        assert.strictEqual(await cpu.readWord(0xffff), 0x4567);
     });
 
     // Test remaining shift operations that might be uncovered
@@ -125,9 +126,9 @@ describe("Missing opcodes tests for 100% coverage", () => {
         await cpu.setAccumulator(0x00);
 
         await cpu.step();
-        expect(await await getAccumulator(cpu)).toBe(0x00);
-        expect(((await cpu.getState()).p & CARRY) === 0).toBe(true); // Carry should be clear
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
+        assert.strictEqual(await await getAccumulator(cpu), 0x00);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // Carry should be clear
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
 
         // Test ASL with zero input and zero output (no carry)
         await cpu.setProgramCounter(0);
@@ -135,9 +136,9 @@ describe("Missing opcodes tests for 100% coverage", () => {
         await cpu.setAccumulator(0x00);
 
         await cpu.step();
-        expect(await await getAccumulator(cpu)).toBe(0x00);
-        expect(((await cpu.getState()).p & CARRY) === 0).toBe(true); // Carry should be clear
-        expect(((await cpu.getState()).p & ZERO) !== 0).toBe(true); // Zero flag should be set
+        assert.strictEqual(await await getAccumulator(cpu), 0x00);
+        assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // Carry should be clear
+        assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
 
         // Test ROL with carry set and zero input
         await cpu.setProgramCounter(0);
@@ -146,9 +147,9 @@ describe("Missing opcodes tests for 100% coverage", () => {
         await cpu.setStatusRegister(CARRY); // Set carry flag
 
         await cpu.step();
-        expect(await await getAccumulator(cpu)).toBe(0x01); // Result should be 0x01 (carry rotated into bit 0)
-        expect(((await cpu.getState()).p & CARRY) === 0).toBe(true); // No carry out
-        expect(((await cpu.getState()).p & ZERO) === 0).toBe(true); // Zero flag should be clear
+        assert.strictEqual(await await getAccumulator(cpu), 0x01); // Result should be 0x01 (carry rotated into bit 0)
+        assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // No carry out
+        assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Zero flag should be clear
 
         // Test ROR with carry set and zero input
         await cpu.setProgramCounter(0);
@@ -157,8 +158,8 @@ describe("Missing opcodes tests for 100% coverage", () => {
         await cpu.setStatusRegister(CARRY); // Set carry flag
 
         await cpu.step();
-        expect(await await getAccumulator(cpu)).toBe(0x80); // Result should be 0x80 (carry rotated into bit 7)
-        expect(((await cpu.getState()).p & CARRY) === 0).toBe(true); // No carry out
-        expect(((await cpu.getState()).p & NEGATIVE) !== 0).toBe(true); // Negative flag should be set
+        assert.strictEqual(await await getAccumulator(cpu), 0x80); // Result should be 0x80 (carry rotated into bit 7)
+        assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // No carry out
+        assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Negative flag should be set
     });
 });

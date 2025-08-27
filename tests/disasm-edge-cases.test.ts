@@ -1,5 +1,6 @@
-import { describe, expect, it } from "bun:test";
-import { disassemble } from "../disasm";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { disassemble } from "../disasm.ts";
 
 class Mem {
   buf = new Uint8Array(0x10000);
@@ -21,8 +22,8 @@ describe("Disassembler edge cases", async () => {
     cpu.loadByte(1, 0x42); // Zero page address
     
     let [instruction, length] = await disassemble(cpu as any, 0);
-    expect(instruction).toBe("LDX $42,Y");
-    expect(length).toBe(2);
+    assert.strictEqual(instruction, "LDX $42,Y");
+    assert.strictEqual(length, 2);
     
     // Test Absolute,Y addressing mode (LDX instruction)
     cpu.loadByte(0, 0xBE); // LDX Absolute,Y
@@ -30,15 +31,15 @@ describe("Disassembler edge cases", async () => {
     cpu.loadByte(2, 0x12); // High byte of address
     
     [instruction, length] = await disassemble(cpu as any, 0);
-    expect(instruction).toBe("LDX $1234,Y");
-    expect(length).toBe(3);
+    assert.strictEqual(instruction, "LDX $1234,Y");
+    assert.strictEqual(length, 3);
     
     // Test Accumulator addressing mode (ASL instruction)
     cpu.loadByte(0, 0x0A); // ASL A
     
     [instruction, length] = await disassemble(cpu as any, 0);
-    expect(instruction).toBe("ASL A");
-    expect(length).toBe(1);
+    assert.strictEqual(instruction, "ASL A");
+    assert.strictEqual(length, 1);
     
     // Test Relative addressing mode with negative offset
     cpu.loadByte(0, 0x90); // BCC
@@ -46,8 +47,8 @@ describe("Disassembler edge cases", async () => {
     
     [instruction, length] = await disassemble(cpu as any, 0);
     // Should display the target address (0x0000 + 2 - 128 = 0xFF82)
-    expect(instruction).toBe("BCC $FF82");
-    expect(length).toBe(2);
+    assert.strictEqual(instruction, "BCC $FF82");
+    assert.strictEqual(length, 2);
     
     // Test Relative addressing mode with positive offset
     cpu.loadByte(0, 0x90); // BCC
@@ -55,8 +56,8 @@ describe("Disassembler edge cases", async () => {
     
     [instruction, length] = await disassemble(cpu as any, 0);
     // Should display the target address (0x0000 + 2 + 127 = 0x0081)
-    expect(instruction).toBe("BCC $0081");
-    expect(length).toBe(2);
+    assert.strictEqual(instruction, "BCC $0081");
+    assert.strictEqual(length, 2);
     
     // Test Indirect addressing mode (JMP)
     cpu.loadByte(0, 0x6C); // JMP Indirect
@@ -64,24 +65,24 @@ describe("Disassembler edge cases", async () => {
     cpu.loadByte(2, 0x12); // High byte of pointer address
     
     [instruction, length] = await disassemble(cpu as any, 0);
-    expect(instruction).toBe("JMP ($1234)");
-    expect(length).toBe(3);
+    assert.strictEqual(instruction, "JMP ($1234)");
+    assert.strictEqual(length, 3);
     
     // Test Indexed Indirect addressing mode (ORA)
     cpu.loadByte(0, 0x01); // ORA (Zero Page,X)
     cpu.loadByte(1, 0x42); // Zero page address
     
     [instruction, length] = await disassemble(cpu as any, 0);
-    expect(instruction).toBe("ORA ($42,X)");
-    expect(length).toBe(2);
+    assert.strictEqual(instruction, "ORA ($42,X)");
+    assert.strictEqual(length, 2);
     
     // Test Indirect Indexed addressing mode (ORA)
     cpu.loadByte(0, 0x11); // ORA (Zero Page),Y
     cpu.loadByte(1, 0x42); // Zero page address
     
     [instruction, length] = await disassemble(cpu as any, 0);
-    expect(instruction).toBe("ORA ($42),Y");
-    expect(length).toBe(2);
+    assert.strictEqual(instruction, "ORA ($42),Y");
+    assert.strictEqual(length, 2);
   });
   
   it("should handle disassembling sequences of instructions", async () => {
@@ -108,7 +109,7 @@ describe("Disassembler edge cases", async () => {
     }
     
     // Verify the disassembled instructions
-    expect(instructions).toEqual([
+    assert.deepStrictEqual(instructions,[
       "LDA #$42",
       "STA $00",
       "INX",
@@ -116,7 +117,7 @@ describe("Disassembler edge cases", async () => {
     ]);
     
     // Verify the final offset
-    expect(offset).toBe(8);
+    assert.strictEqual(offset, 8);
   });
   
   it("should handle all system instructions for coverage", async () => {
@@ -125,28 +126,28 @@ describe("Disassembler edge cases", async () => {
     // BRK implied
     cpu.loadByte(0, 0x00);
     let [instruction, length] = await disassemble(cpu as any, 0);
-    expect(instruction).toBe("BRK");
-    expect(length).toBe(1);
+    assert.strictEqual(instruction, "BRK");
+    assert.strictEqual(length, 1);
     
     // RTI implied
     cpu.loadByte(0, 0x40);
     [instruction, length] = await disassemble(cpu as any, 0);
-    expect(instruction).toBe("RTI");
-    expect(length).toBe(1);
+    assert.strictEqual(instruction, "RTI");
+    assert.strictEqual(length, 1);
     
     // RTS implied
     cpu.loadByte(0, 0x60);
     [instruction, length] = await disassemble(cpu as any, 0);
-    expect(instruction).toBe("RTS");
-    expect(length).toBe(1);
+    assert.strictEqual(instruction, "RTS");
+    assert.strictEqual(length, 1);
     
     // JSR Absolute
     cpu.loadByte(0, 0x20);
     cpu.loadByte(1, 0x34);
     cpu.loadByte(2, 0x12);
     [instruction, length] = await disassemble(cpu as any, 0);
-    expect(instruction).toBe("JSR $1234");
-    expect(length).toBe(3);
+    assert.strictEqual(instruction, "JSR $1234");
+    assert.strictEqual(length, 3);
   });
   
   it("should handle unknown opcodes", async () => {
@@ -156,7 +157,7 @@ describe("Disassembler edge cases", async () => {
     cpu.loadByte(0, 0xFF); // Undefined opcode
     
     const [instruction, length] = await disassemble(cpu as any, 0);
-    expect(instruction).toBe(".byte $FF");
-    expect(length).toBe(1);
+    assert.strictEqual(instruction, ".byte $FF");
+    assert.strictEqual(length, 1);
   });
 });
