@@ -260,24 +260,30 @@ function pullWord(cpu: CPUState): number {
 
 // Helper functions for address modes
 function getZeroPageAddress(cpu: CPUState): number {
-    return readByte(cpu, cpu.pc++);
+    const value = readByte(cpu, cpu.pc);
+    cpu.pc = (cpu.pc + 1) & 0xFFFF;
+    return value;
 }
 
 function getZeroPageXAddress(cpu: CPUState): number {
-    const zeroPageAddr = readByte(cpu, cpu.pc++);
+    const zeroPageAddr = readByte(cpu, cpu.pc);
+    cpu.pc = (cpu.pc + 1) & 0xFFFF;
     // Zero page X addressing wraps around in the zero page
     return (zeroPageAddr + cpu.x) & 0xff;
 }
 
 function getZeroPageYAddress(cpu: CPUState): number {
-    const zeroPageAddr = readByte(cpu, cpu.pc++);
+    const zeroPageAddr = readByte(cpu, cpu.pc);
+    cpu.pc = (cpu.pc + 1) & 0xFFFF;
     // Zero page Y addressing wraps around in the zero page
     return (zeroPageAddr + cpu.y) & 0xff;
 }
 
 function getAbsoluteAddress(cpu: CPUState): number {
-    const lowByte = readByte(cpu, cpu.pc++);
-    const highByte = readByte(cpu, cpu.pc++);
+    const lowByte = readByte(cpu, cpu.pc);
+    cpu.pc = (cpu.pc + 1) & 0xFFFF;
+    const highByte = readByte(cpu, cpu.pc);
+    cpu.pc = (cpu.pc + 1) & 0xFFFF;
     return (highByte << 8) | lowByte;
 }
 
@@ -304,7 +310,8 @@ function getAbsoluteYAddress(cpu: CPUState): {
 }
 
 function getIndirectXAddress(cpu: CPUState): number {
-    const zeroPageAddr = readByte(cpu, cpu.pc++);
+    const zeroPageAddr = readByte(cpu, cpu.pc);
+    cpu.pc = (cpu.pc + 1) & 0xFFFF;
     const effectiveZeroPageAddr = (zeroPageAddr + cpu.x) & 0xff;
 
     // Read the effective address from the zero page (wrapping around in the zero page)
@@ -318,7 +325,8 @@ function getIndirectYAddress(cpu: CPUState): {
     address: number;
     pageCrossed: boolean;
 } {
-    const zeroPageAddr = readByte(cpu, cpu.pc++);
+    const zeroPageAddr = readByte(cpu, cpu.pc);
+    cpu.pc = (cpu.pc + 1) & 0xFFFF;
 
     // Read the base address from the zero page (wrapping around in the zero page)
     const lowByte = readByte(cpu, zeroPageAddr);
@@ -458,7 +466,8 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
     const currentPC = cpu.pc;
 
     // Fetch opcode
-    const opcode = readByte(cpu, cpu.pc++);
+    const opcode = readByte(cpu, cpu.pc);
+    cpu.pc = (cpu.pc + 1) & 0xFFFF;
     let cycles = 0;
 
     if (trace && cpuInterface) {
@@ -484,7 +493,8 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
         // LDA - Load Accumulator
         case 0xa9: {
             // LDA Immediate
-            const value = readByte(cpu, cpu.pc++);
+            const value = readByte(cpu, cpu.pc);
+            cpu.pc = (cpu.pc + 1) & 0xFFFF;
             cpu.a = value;
             updateZeroAndNegativeFlags(cpu, cpu.a);
             cycles = 2;
@@ -550,7 +560,8 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
         // LDX - Load X Register
         case 0xa2: {
             // LDX Immediate
-            const value = readByte(cpu, cpu.pc++);
+            const value = readByte(cpu, cpu.pc);
+            cpu.pc = (cpu.pc + 1) & 0xFFFF;
             cpu.x = value;
             updateZeroAndNegativeFlags(cpu, cpu.x);
             cycles = 2;
@@ -592,7 +603,8 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
         // LDY - Load Y Register
         case 0xa0: {
             // LDY Immediate
-            const value = readByte(cpu, cpu.pc++);
+            const value = readByte(cpu, cpu.pc);
+            cpu.pc = (cpu.pc + 1) & 0xFFFF;
             cpu.y = value;
             updateZeroAndNegativeFlags(cpu, cpu.y);
             cycles = 2;
@@ -804,7 +816,8 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
         // Logical operations
         case 0x29: {
             // AND Immediate
-            const value = readByte(cpu, cpu.pc++);
+            const value = readByte(cpu, cpu.pc);
+            cpu.pc = (cpu.pc + 1) & 0xFFFF;
             cpu.a &= value;
             updateZeroAndNegativeFlags(cpu, cpu.a);
             cycles = 2;
@@ -869,7 +882,8 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
 
         case 0x09: {
             // ORA Immediate
-            const value = readByte(cpu, cpu.pc++);
+            const value = readByte(cpu, cpu.pc);
+            cpu.pc = (cpu.pc + 1) & 0xFFFF;
             cpu.a |= value;
             updateZeroAndNegativeFlags(cpu, cpu.a);
             cycles = 2;
@@ -934,7 +948,8 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
 
         case 0x49: {
             // EOR Immediate
-            const value = readByte(cpu, cpu.pc++);
+            const value = readByte(cpu, cpu.pc);
+            cpu.pc = (cpu.pc + 1) & 0xFFFF;
             cpu.a ^= value;
             updateZeroAndNegativeFlags(cpu, cpu.a);
             cycles = 2;
@@ -1059,7 +1074,8 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
         // Arithmetic operations
         case 0x69: {
             // ADC Immediate
-            const value = readByte(cpu, cpu.pc++);
+            const value = readByte(cpu, cpu.pc);
+            cpu.pc = (cpu.pc + 1) & 0xFFFF;
             addWithCarry(cpu, value);
             cycles = 2;
             break;
@@ -1123,7 +1139,8 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
 
         case 0xe9: {
             // SBC Immediate
-            const value = readByte(cpu, cpu.pc++);
+            const value = readByte(cpu, cpu.pc);
+            cpu.pc = (cpu.pc + 1) & 0xFFFF;
             subtractWithCarry(cpu, value);
             cycles = 2;
             break;
@@ -1187,7 +1204,8 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
 
         case 0xc9: {
             // CMP Immediate
-            const value = readByte(cpu, cpu.pc++);
+            const value = readByte(cpu, cpu.pc);
+            cpu.pc = (cpu.pc + 1) & 0xFFFF;
             compare(cpu, cpu.a, value);
             cycles = 2;
             break;
@@ -1251,7 +1269,8 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
 
         case 0xe0: {
             // CPX Immediate
-            const value = readByte(cpu, cpu.pc++);
+            const value = readByte(cpu, cpu.pc);
+            cpu.pc = (cpu.pc + 1) & 0xFFFF;
             compare(cpu, cpu.x, value);
             cycles = 2;
             break;
@@ -1275,7 +1294,8 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
 
         case 0xc0: {
             // CPY Immediate
-            const value = readByte(cpu, cpu.pc++);
+            const value = readByte(cpu, cpu.pc);
+            cpu.pc = (cpu.pc + 1) & 0xFFFF;
             compare(cpu, cpu.y, value);
             cycles = 2;
             break;
@@ -1916,7 +1936,7 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const targetAddress = getAbsoluteAddress(cpu);
             
             // Push PC+2-1 as the return address (PC now points to the next instruction)
-            pushWord(cpu, pc + 2 - 1);
+            pushWord(cpu, (pc + 2 - 1) & 0xFFFF);
             
             // Jump to target
             cpu.pc = targetAddress;
@@ -1928,7 +1948,7 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             // RTS
             // Pull return address from stack and add 1
             // The address on the stack is PC-1, so adding 1 gives us the next instruction
-            cpu.pc = pullWord(cpu) + 1;  // Fixed: should add 1, not 2
+            cpu.pc = (pullWord(cpu) + 1) & 0xFFFF;  // Fixed: should add 1, not 2
             cycles = 6;
             break;
         }
@@ -1986,7 +2006,8 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
         // Branch instructions
         case 0x90: {
             // BCC - Branch if Carry Clear
-            const offset = readByte(cpu, cpu.pc++);
+            const offset = readByte(cpu, cpu.pc);
+            cpu.pc = (cpu.pc + 1) & 0xFFFF;
             if ((cpu.p & CARRY) === 0) {
                 const oldPc = cpu.pc;
                 // Branch offset is signed
@@ -2001,7 +2022,8 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
 
         case 0xb0: {
             // BCS - Branch if Carry Set
-            const offset = readByte(cpu, cpu.pc++);
+            const offset = readByte(cpu, cpu.pc);
+            cpu.pc = (cpu.pc + 1) & 0xFFFF;
             if ((cpu.p & CARRY) !== 0) {
                 const oldPc = cpu.pc;
                 // Branch offset is signed
@@ -2016,7 +2038,8 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
 
         case 0xf0: {
             // BEQ - Branch if Equal (Zero Set)
-            const offset = readByte(cpu, cpu.pc++);
+            const offset = readByte(cpu, cpu.pc);
+            cpu.pc = (cpu.pc + 1) & 0xFFFF;
             if ((cpu.p & ZERO) !== 0) {
                 const oldPc = cpu.pc;
                 // Branch offset is signed
@@ -2031,7 +2054,8 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
 
         case 0xd0: {
             // BNE - Branch if Not Equal (Zero Clear)
-            const offset = readByte(cpu, cpu.pc++);
+            const offset = readByte(cpu, cpu.pc);
+            cpu.pc = (cpu.pc + 1) & 0xFFFF;
             if ((cpu.p & ZERO) === 0) {
                 const oldPc = cpu.pc;
                 // Branch offset is signed
@@ -2046,7 +2070,8 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
 
         case 0x30: {
             // BMI - Branch if Minus (Negative Set)
-            const offset = readByte(cpu, cpu.pc++);
+            const offset = readByte(cpu, cpu.pc);
+            cpu.pc = (cpu.pc + 1) & 0xFFFF;
             if ((cpu.p & NEGATIVE) !== 0) {
                 const oldPc = cpu.pc;
                 // Branch offset is signed
@@ -2061,7 +2086,8 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
 
         case 0x10: {
             // BPL - Branch if Plus (Negative Clear)
-            const offset = readByte(cpu, cpu.pc++);
+            const offset = readByte(cpu, cpu.pc);
+            cpu.pc = (cpu.pc + 1) & 0xFFFF;
             if ((cpu.p & NEGATIVE) === 0) {
                 const oldPc = cpu.pc;
                 // Branch offset is signed
@@ -2076,7 +2102,8 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
 
         case 0x50: {
             // BVC - Branch if Overflow Clear
-            const offset = readByte(cpu, cpu.pc++);
+            const offset = readByte(cpu, cpu.pc);
+            cpu.pc = (cpu.pc + 1) & 0xFFFF;
             if ((cpu.p & OVERFLOW) === 0) {
                 const oldPc = cpu.pc;
                 // Branch offset is signed
@@ -2091,7 +2118,8 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
 
         case 0x70: {
             // BVS - Branch if Overflow Set
-            const offset = readByte(cpu, cpu.pc++);
+            const offset = readByte(cpu, cpu.pc);
+            cpu.pc = (cpu.pc + 1) & 0xFFFF;
             if ((cpu.p & OVERFLOW) !== 0) {
                 const oldPc = cpu.pc;
                 // Branch offset is signed
@@ -2109,7 +2137,7 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             // BRK - Force Interrupt
             // PC increments by 1 already when opcode is fetched, need to increment by 1 more
             // (BRK is a 2-byte instruction, 2nd byte is padding)
-            cpu.pc++;
+            cpu.pc = (cpu.pc + 1) & 0xFFFF;
 
             // Push program counter (effectively PC+2 from original BRK position)
             pushWord(cpu, cpu.pc);
@@ -2121,7 +2149,7 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             cpu.p |= INTERRUPT;
 
             // Load interrupt vector from FFFE-FFFF
-            cpu.pc = readWord(cpu, 0xfffe);
+            cpu.pc = readWord(cpu, 0xfffe) & 0xFFFF;
 
             cycles = 7;
             break;
@@ -2133,7 +2161,7 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             cpu.p = (pullByte(cpu) & ~BREAK) | UNUSED;
 
             // Pull program counter from stack (low byte first, then high byte)
-            cpu.pc = pullWord(cpu);
+            cpu.pc = pullWord(cpu) & 0xFFFF;
 
             cycles = 6;
             break;

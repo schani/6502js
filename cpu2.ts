@@ -308,19 +308,21 @@ const shiftMemOp = (
 
 /* ─────────────────── addressing helpers ─────────────────── */
 
-const zp = (s: CPUState) => rd(s, s.pc++) & 0xff;
+const zp = (s: CPUState) => { const addr = s.pc; s.pc = (s.pc + 1) & 0xffff; return rd(s, addr) & 0xff; };
 const abs16 = (s: CPUState) => {
     const a = rd16(s, s.pc);
-    s.pc += 2;
+    s.pc = (s.pc + 2) & 0xffff;
     return a;
 };
-const imm8 = (s: CPUState) => rd(s, s.pc++);
+const imm8 = (s: CPUState) => { const addr = s.pc; s.pc = (s.pc + 1) & 0xffff; return rd(s, addr); };
 const indx = (s: CPUState) => {
-    const p = (rd(s, s.pc++) + s.x) & 0xff;
+    const addr = s.pc; s.pc = (s.pc + 1) & 0xffff;
+    const p = (rd(s, addr) + s.x) & 0xff;
     return rd16(s, p);
 };
 const indy = (s: CPUState) => {
-    const p = rd(s, s.pc++) & 0xff;
+    const addr = s.pc; s.pc = (s.pc + 1) & 0xffff;
+    const p = rd(s, addr) & 0xff;
     return (rd16(s, p) + s.y) & 0xffff;
 };
 const zpx = (s: CPUState) => (zp(s) + s.x) & 0xff;
@@ -358,7 +360,7 @@ export async function step6502(
 ): Promise<number /* cycles (approx) */> {
     CURRENT_MEM_CPU2 = mem;
     const opPC = s.pc;
-    const op = rd(s, s.pc++);
+    const op = rd(s, s.pc); s.pc = (s.pc + 1) & 0xffff;
 
     if (trace && cpuInterface) {
         const [text] = await disassemble(cpuInterface, opPC);
