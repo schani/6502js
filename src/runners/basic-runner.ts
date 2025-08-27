@@ -256,7 +256,7 @@ async function main() {
 
     // Console message explaining CPU usage
     if (USE_SYNC) {
-        console.log("Running MS-BASIC with SyncCPU");
+        console.log("Running MS-BASIC with SyncCPU (CPU1, CPU2, and PGCPU in parallel)");
         if (DEBUG) {
             console.log("Debug mode enabled");
             console.log("CPU divergences will be logged to:", DIVERGENCE_LOG);
@@ -288,7 +288,7 @@ async function main() {
         console.log("  --cpu2            Use CPU2 implementation");
         console.log("  --pgcpu           Use PGCPU implementation (PostgreSQL-based)");
         console.log(
-            "  --sync            Use SyncCPU (runs both CPU1 and CPU2 in parallel)",
+            "  --sync            Use SyncCPU (runs CPU1, CPU2, and PGCPU in parallel)",
         );
         console.log(
             "  --debug           Enable debug mode with detailed logging",
