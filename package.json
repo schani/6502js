@@ -4,12 +4,12 @@
     "type": "module",
     "scripts": {
         "typecheck": "tsc --noEmit",
-        "test": "node --experimental-strip-types --test tests/**/*.test.ts",
-        "test:coverage": "node --experimental-strip-types --test --experimental-test-coverage tests/**/*.test.ts",
-        "basic": "node --experimental-strip-types basic-runner.ts",
-        "dsl": "node --experimental-strip-types dsl-runner.ts",
-        "web:build": "tsc -p web/tsconfig.json",
-        "web:serve": "node --experimental-strip-types web/serve.ts"
+        "test": "node --experimental-strip-types --test src/tests/**/*.test.ts",
+        "test:coverage": "node --experimental-strip-types --test --experimental-test-coverage src/tests/**/*.test.ts",
+        "basic": "node --experimental-strip-types src/runners/basic-runner.ts",
+        "dsl": "node --experimental-strip-types src/runners/dsl-runner.ts",
+        "web:build": "tsc -p src/web/tsconfig.json",
+        "web:serve": "node --experimental-strip-types src/web/serve.ts"
     },
     "devDependencies": {
         "@types/node": "^20.0.0"

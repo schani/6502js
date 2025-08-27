@@ -25,5 +25,6 @@
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false
   },
-  "exclude": ["web"]
+  "include": ["src/**/*"],
+  "exclude": ["src/web/dist"]
 }

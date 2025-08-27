@@ -1,0 +1,24 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["esnext", "dom"],
+    "outDir": "./dist",
+    "rootDir": "..",
+    "noEmit": false,
+    "module": "ESNext",
+    "target": "ES2019",
+    "moduleResolution": "bundler",
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": false
+  },
+  "include": [
+    "./**/*.ts",
+    "../core/cpu1.ts",
+    "../core/cpu-interface.ts",
+    "../core/constants.ts",
+    "../utils/disasm.ts"
+  ],
+  "exclude": [
+    "../../node_modules"
+  ]
+}
