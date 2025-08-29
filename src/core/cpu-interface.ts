@@ -11,7 +11,7 @@ export interface CPU {
     reset(): Promise<void>;
     
     /** Execute a single instruction */
-    step(trace?: boolean): Promise<number>;
+    step(trace?: boolean): Promise<void>;
     
     /** Memory accessors (operate on external memory supplied at construction) */
     loadByte(address: number, value: number): Promise<void>;

@@ -11,11 +11,11 @@ describe("Register transfer instructions", () => {
     // TAX - Transfer accumulator to X
     await cpu.loadByte(0, 0xAA); // TAX
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await await getXRegister(cpu), 0x42);
     assert.strictEqual(await await getProgramCounter(cpu), 1);
-    assert.strictEqual(cycles, 2);
+    
     assert.strictEqual((await await getStatusRegister(cpu)) & ZERO, 0);
     assert.strictEqual((await await getStatusRegister(cpu)) & NEGATIVE, 0);
     
@@ -43,11 +43,11 @@ describe("Register transfer instructions", () => {
     // TAY - Transfer accumulator to Y
     await cpu.loadByte(0, 0xA8); // TAY
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await await getYRegister(cpu), 0x42);
     assert.strictEqual(await await getProgramCounter(cpu), 1);
-    assert.strictEqual(cycles, 2);
+    
   });
   
   it("should perform TXA instruction", async () => {
@@ -59,11 +59,11 @@ describe("Register transfer instructions", () => {
     // TXA - Transfer X to accumulator
     await cpu.loadByte(0, 0x8A); // TXA
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await await getAccumulator(cpu), 0x42);
     assert.strictEqual(await await getProgramCounter(cpu), 1);
-    assert.strictEqual(cycles, 2);
+    
   });
   
   it("should perform TYA instruction", async () => {
@@ -75,11 +75,11 @@ describe("Register transfer instructions", () => {
     // TYA - Transfer Y to accumulator
     await cpu.loadByte(0, 0x98); // TYA
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await await getAccumulator(cpu), 0x42);
     assert.strictEqual(await await getProgramCounter(cpu), 1);
-    assert.strictEqual(cycles, 2);
+    
   });
   
   it("should perform TSX instruction", async () => {
@@ -91,11 +91,11 @@ describe("Register transfer instructions", () => {
     // TSX - Transfer Stack Pointer to X
     await cpu.loadByte(0, 0xBA); // TSX
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await await getXRegister(cpu), 0x42);
     assert.strictEqual(await await getProgramCounter(cpu), 1);
-    assert.strictEqual(cycles, 2);
+    
     assert.strictEqual((await await getStatusRegister(cpu)) & ZERO, 0); // Result is not zero
     assert.strictEqual((await await getStatusRegister(cpu)) & NEGATIVE, 0); // Result is not negative
   });
@@ -109,12 +109,11 @@ describe("Register transfer instructions", () => {
     // TXS - Transfer X to Stack Pointer
     await cpu.loadByte(0, 0x9A); // TXS
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await await getStackPointer(cpu), 0x42);
     assert.strictEqual(await await getProgramCounter(cpu), 1);
-    assert.strictEqual(cycles, 2);
-    // TXS does not affect any flags
+    
     assert.strictEqual(await await getStatusRegister(cpu), INTERRUPT | UNUSED); // Original status
   });
 });

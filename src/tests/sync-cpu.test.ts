@@ -26,13 +26,13 @@ describe("SyncCPU", () => {
         await syncCpu.setProgramCounter(0x0000);
 
         // Execute LDA #42
-        let cycles = await syncCpu.step();
-        assert.strictEqual(cycles, 2);
+        await syncCpu.step();
+        
         assert.strictEqual(await await getAccumulator(syncCpu), 0x2a);
 
         // Execute ADC #13
-        cycles = await syncCpu.step();
-        assert.strictEqual(cycles, 2);
+        await syncCpu.step();
+        
         assert.strictEqual(await await getAccumulator(syncCpu), 0x37); // 42 + 13 = 55 (0x37)
 
         // We successfully executed both steps, which means the states matched
@@ -75,23 +75,23 @@ describe("SyncCPU", () => {
         await syncCpu.setAccumulator(0);
 
         // Execute JSR $0500
-        let cycles = await syncCpu.step();
-        assert.strictEqual(cycles, 6);
+        await syncCpu.step();
+        
         assert.strictEqual(await await getProgramCounter(syncCpu), 0x0500);
 
         // Execute LDA #$FF
-        cycles = await syncCpu.step();
-        assert.strictEqual(cycles, 2);
+        await syncCpu.step();
+        
         assert.strictEqual(await await getAccumulator(syncCpu), 0xff);
 
         // Execute RTS
-        cycles = await syncCpu.step();
-        assert.strictEqual(cycles, 6);
+        await syncCpu.step();
+        
         assert.strictEqual(await await getProgramCounter(syncCpu), 0x0403);
 
         // Execute INX
-        cycles = await syncCpu.step();
-        assert.strictEqual(cycles, 2);
+        await syncCpu.step();
+        
         assert.strictEqual(await await getXRegister(syncCpu), 1);
 
         // We successfully executed the program with JSR/RTS, which means both CPUs handle stack operations correctly

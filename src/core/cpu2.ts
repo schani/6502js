@@ -39,8 +39,8 @@ export class CPU2 implements CPU {
      * @param trace Whether to log trace information during execution
      * @returns Number of clock cycles consumed by the instruction
      */
-    async step(trace = false): Promise<number> {
-        return await step6502(this.state, this.mem, this, trace);
+    async step(trace = false): Promise<void> {
+        await step6502(this.state, this.mem, this, trace);
     }
 
     /**
@@ -347,7 +347,6 @@ const shiftMem2 = (
     wr(s, addr, v);
     s.p = (s.p & ~F.C) | outC;
     setZN(s, v);
-    return base;
 };
 
 /* ─────────────────── one-instruction executor ─────────────────── */
@@ -357,7 +356,7 @@ export async function step6502(
     mem: Uint8Array,
     cpuInterface: CPU | null,
     trace = false,
-): Promise<number /* cycles (approx) */> {
+): Promise<void> {
     CURRENT_MEM_CPU2 = mem;
     const opPC = s.pc;
     const op = rd(s, s.pc); s.pc = (s.pc + 1) & 0xffff;
@@ -395,127 +394,121 @@ export async function step6502(
 
             // Load IRQ vector from 0xFFFE-0xFFFF and jump
             s.pc = rd16(s, 0xfffe);
-            return 7;
+            return;
         }
 
         /* ---------- load/store/transfer ---------- */
         case 0xa9:
             s.a = setZN(s, imm8(s));
-            return 2; // LDA #
+            return; // LDA #
         case 0xa5:
             s.a = setZN(s, rd(s, zp(s)));
-            return 3; // LDA zp
+            return; // LDA zp
         case 0xb5:
             s.a = setZN(s, rd(s, zpx(s)));
-            return 4;
+            return;
         case 0xad:
             s.a = setZN(s, rd(s, abs16(s)));
-            return 4;
+            return;
         case 0xbd:
             s.a = setZN(s, rd(s, absx(s)));
-            return 4;
+            return;
         case 0xb9:
             s.a = setZN(s, rd(s, absy(s)));
-            return 4;
+            return;
         case 0xa1:
             s.a = setZN(s, rd(s, indx(s)));
-            return 6;
+            return;
         case 0xb1:
             s.a = setZN(s, rd(s, indy(s)));
-            return 5;
-
+            return;
         case 0xa2:
             s.x = setZN(s, imm8(s));
-            return 2; // LDX #
+            return; // LDX #
         case 0xa6:
             s.x = setZN(s, rd(s, zp(s)));
-            return 3;
+            return;
         case 0xb6:
             s.x = setZN(s, rd(s, zpy(s)));
-            return 4;
+            return;
         case 0xae:
             s.x = setZN(s, rd(s, abs16(s)));
-            return 4;
+            return;
         case 0xbe:
             s.x = setZN(s, rd(s, absy(s)));
-            return 4;
-
+            return;
         case 0xa0:
             s.y = setZN(s, imm8(s));
-            return 2; // LDY #
+            return; // LDY #
         case 0xa4:
             s.y = setZN(s, rd(s, zp(s)));
-            return 3;
+            return;
         case 0xb4:
             s.y = setZN(s, rd(s, zpx(s)));
-            return 4;
+            return;
         case 0xac:
             s.y = setZN(s, rd(s, abs16(s)));
-            return 4;
+            return;
         case 0xbc:
             s.y = setZN(s, rd(s, absx(s)));
-            return 4;
-
+            return;
         case 0x85:
             wr(s, zp(s), s.a);
-            return 3; // STA
+            return; // STA
         case 0x95:
             wr(s, zpx(s), s.a);
-            return 4;
+            return;
         case 0x8d:
             wr(s, abs16(s), s.a);
-            return 4;
+            return;
         case 0x9d:
             wr(s, absx(s), s.a);
-            return 5;
+            return;
         case 0x99:
             wr(s, absy(s), s.a);
-            return 5;
+            return;
         case 0x81:
             wr(s, indx(s), s.a);
-            return 6;
+            return;
         case 0x91:
             wr(s, indy(s), s.a);
-            return 6;
-
+            return;
         case 0x86:
             wr(s, zp(s), s.x);
-            return 3; // STX
+            return; // STX
         case 0x96:
             wr(s, zpy(s), s.x);
-            return 4;
+            return;
         case 0x8e:
             wr(s, abs16(s), s.x);
-            return 4;
-
+            return;
         case 0x84:
             wr(s, zp(s), s.y);
-            return 3; // STY
+            return; // STY
         case 0x94:
             wr(s, zpx(s), s.y);
-            return 4;
+            return;
         case 0x8c:
             wr(s, abs16(s), s.y);
-            return 4;
-
+            return;
         case 0xaa:
             s.x = setZN(s, s.a);
-            return 2; // TAX
+            return; // TAX
         case 0x8a:
             s.a = setZN(s, s.x);
-            return 2; // TXA
+            return; // TXA
         case 0xa8:
             s.y = setZN(s, s.a);
-            return 2; // TAY
+            return; // TAY
         case 0x98:
             s.a = setZN(s, s.y);
-            return 2; // TYA
+            return; // TYA
         case 0xba:
             s.x = setZN(s, s.sp);
-            return 2; // TSX
+            return; // TSX
         case 0x9a:
             s.sp = s.x;
-            return 2; // TXS
+            return; // TXS
 
         /* ---------- minimal arithmetic & branch ops (added to fix test
            coverage) ---------- */
@@ -530,21 +523,20 @@ export async function step6502(
         case 0x69: {
             const value = imm8(s);
             adc(s, value);
-            return 2;
+            return;
         }
 
         /* SBC #imm */
         case 0xe9: {
             const value = imm8(s);
             sbc(s, value);
-            return 2;
+            return;
         }
 
         /* SEC – set carry */
         case 0x38:
             s.p |= F.C;
-            return 2;
-
+            return;
         /* BEQ – branch if zero set (relative) */
         case 0xf0: {
             const offset = imm8(s);
@@ -553,7 +545,7 @@ export async function step6502(
                 const rel = offset < 0x80 ? offset : offset - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
             }
-            return 2;
+            return;
         }
 
         /* ---------- additional opcodes for extended tests ---------- */
@@ -561,14 +553,13 @@ export async function step6502(
         /* INX */
         case 0xe8:
             s.x = setZN(s, (s.x + 1) & 0xff);
-            return 2;
-
+            return;
         /* ASL A – shift accumulator left */
         case 0x0a: {
             const old = s.a;
             s.p = (s.p & ~F.C) | ((old >> 7) & 1);
             s.a = setZN(s, (old << 1) & 0xff);
-            return 2;
+            return;
         }
 
         /* LSR A – logical shift right */
@@ -576,7 +567,7 @@ export async function step6502(
             const old = s.a;
             s.p = (s.p & ~F.C) | (old & 1);
             s.a = setZN(s, old >> 1);
-            return 2;
+            return;
         }
 
         /* ROL A – rotate left through carry */
@@ -586,7 +577,7 @@ export async function step6502(
             const outC = (old >> 7) & 1;
             s.a = setZN(s, ((old << 1) & 0xff) | carryIn);
             s.p = (s.p & ~F.C) | outC;
-            return 2;
+            return;
         }
 
         /* ROR A – rotate right through carry */
@@ -596,7 +587,7 @@ export async function step6502(
             const outC = old & 1;
             s.a = setZN(s, (old >> 1) | (carryIn << 7));
             s.p = (s.p & ~F.C) | outC;
-            return 2;
+            return;
         }
 
         /* CMP #imm */
@@ -608,7 +599,7 @@ export async function step6502(
                 (r < 0x100 ? F.C : 0) |
                 ((r & 0xff) === 0 ? F.Z : 0) |
                 (r & 0x80);
-            return 2;
+            return;
         }
 
         /* CPX #imm */
@@ -620,7 +611,7 @@ export async function step6502(
                 (r < 0x100 ? F.C : 0) |
                 ((r & 0xff) === 0 ? F.Z : 0) |
                 (r & 0x80);
-            return 2;
+            return;
         }
 
         /* CPX zero-page */
@@ -632,7 +623,7 @@ export async function step6502(
                 (r < 0x100 ? F.C : 0) |
                 ((r & 0xff) === 0 ? F.Z : 0) |
                 (r & 0x80);
-            return 3;
+            return;
         }
 
         /* CPX absolute */
@@ -644,7 +635,7 @@ export async function step6502(
                 (r < 0x100 ? F.C : 0) |
                 ((r & 0xff) === 0 ? F.Z : 0) |
                 (r & 0x80);
-            return 4;
+            return;
         }
 
         /* CPY absolute */
@@ -656,7 +647,7 @@ export async function step6502(
                 (r < 0x100 ? F.C : 0) |
                 ((r & 0xff) === 0 ? F.Z : 0) |
                 (r & 0x80);
-            return 4;
+            return;
         }
 
         /* CMP memory addressing modes */
@@ -668,7 +659,7 @@ export async function step6502(
                 (r < 0x100 ? F.C : 0) |
                 (r & 0xff ? 0 : F.Z) |
                 (r & 0x80);
-            return 3;
+            return;
         }
         case 0xd5: {
             const val = rd(s, zpx(s));
@@ -678,7 +669,7 @@ export async function step6502(
                 (r < 0x100 ? F.C : 0) |
                 (r & 0xff ? 0 : F.Z) |
                 (r & 0x80);
-            return 4;
+            return;
         }
         case 0xcd: {
             const val = rd(s, abs16(s));
@@ -688,7 +679,7 @@ export async function step6502(
                 (r < 0x100 ? F.C : 0) |
                 (r & 0xff ? 0 : F.Z) |
                 (r & 0x80);
-            return 4;
+            return;
         }
         case 0xdd: {
             const val = rd(s, absx(s));
@@ -698,7 +689,7 @@ export async function step6502(
                 (r < 0x100 ? F.C : 0) |
                 (r & 0xff ? 0 : F.Z) |
                 (r & 0x80);
-            return 4;
+            return;
         }
         case 0xd9: {
             const val = rd(s, absy(s));
@@ -708,7 +699,7 @@ export async function step6502(
                 (r < 0x100 ? F.C : 0) |
                 (r & 0xff ? 0 : F.Z) |
                 (r & 0x80);
-            return 4;
+            return;
         }
         case 0xc1: {
             const val = rd(s, indx(s));
@@ -718,7 +709,7 @@ export async function step6502(
                 (r < 0x100 ? F.C : 0) |
                 (r & 0xff ? 0 : F.Z) |
                 (r & 0x80);
-            return 6;
+            return;
         }
         case 0xd1: {
             const val = rd(s, indy(s));
@@ -728,7 +719,7 @@ export async function step6502(
                 (r < 0x100 ? F.C : 0) |
                 (r & 0xff ? 0 : F.Z) |
                 (r & 0x80);
-            return 5;
+            return;
         }
 
         /* CPY #imm */
@@ -740,7 +731,7 @@ export async function step6502(
                 (r < 0x100 ? F.C : 0) |
                 ((r & 0xff) === 0 ? F.Z : 0) |
                 (r & 0x80);
-            return 2;
+            return;
         }
 
         /* CPY zero-page */
@@ -752,7 +743,7 @@ export async function step6502(
                 (r < 0x100 ? F.C : 0) |
                 ((r & 0xff) === 0 ? F.Z : 0) |
                 (r & 0x80);
-            return 3;
+            return;
         }
 
         /* BNE – branch if zero clear (relative) */
@@ -762,7 +753,7 @@ export async function step6502(
                 const rel = offset < 0x80 ? offset : offset - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
             }
-            return 2;
+            return;
         }
 
         /* ---------- AND instructions (Logical AND with Accumulator) ---------- */
@@ -770,49 +761,49 @@ export async function step6502(
             // AND immediate
             const value = imm8(s);
             s.a = setZN(s, s.a & value);
-            return 2;
+            return;
         }
         case 0x25: {
             // AND zero page
             const addr = zp(s);
             s.a = setZN(s, s.a & rd(s, addr));
-            return 3;
+            return;
         }
         case 0x35: {
             // AND zero page,X
             const addr = zpx(s);
             s.a = setZN(s, s.a & rd(s, addr));
-            return 4;
+            return;
         }
         case 0x2d: {
             // AND absolute
             const addr = abs16(s);
             s.a = setZN(s, s.a & rd(s, addr));
-            return 4;
+            return;
         }
         case 0x3d: {
             // AND absolute,X
             const addr = absx(s);
             s.a = setZN(s, s.a & rd(s, addr));
-            return 4;
+            return;
         }
         case 0x39: {
             // AND absolute,Y
             const addr = absy(s);
             s.a = setZN(s, s.a & rd(s, addr));
-            return 4;
+            return;
         }
         case 0x21: {
             // AND (indirect,X)
             const addr = indx(s);
             s.a = setZN(s, s.a & rd(s, addr));
-            return 6;
+            return;
         }
         case 0x31: {
             // AND (indirect),Y
             const addr = indy(s);
             s.a = setZN(s, s.a & rd(s, addr));
-            return 5;
+            return;
         }
 
         /* ---------- ORA instructions (Logical OR with Accumulator) ---------- */
@@ -820,49 +811,49 @@ export async function step6502(
             // ORA immediate
             const value = imm8(s);
             s.a = setZN(s, s.a | value);
-            return 2;
+            return;
         }
         case 0x05: {
             // ORA zero page
             const addr = zp(s);
             s.a = setZN(s, s.a | rd(s, addr));
-            return 3;
+            return;
         }
         case 0x15: {
             // ORA zero page,X
             const addr = zpx(s);
             s.a = setZN(s, s.a | rd(s, addr));
-            return 4;
+            return;
         }
         case 0x0d: {
             // ORA absolute
             const addr = abs16(s);
             s.a = setZN(s, s.a | rd(s, addr));
-            return 4;
+            return;
         }
         case 0x1d: {
             // ORA absolute,X
             const addr = absx(s);
             s.a = setZN(s, s.a | rd(s, addr));
-            return 4;
+            return;
         }
         case 0x19: {
             // ORA absolute,Y
             const addr = absy(s);
             s.a = setZN(s, s.a | rd(s, addr));
-            return 4;
+            return;
         }
         case 0x01: {
             // ORA (indirect,X)
             const addr = indx(s);
             s.a = setZN(s, s.a | rd(s, addr));
-            return 6;
+            return;
         }
         case 0x11: {
             // ORA (indirect),Y
             const addr = indy(s);
             s.a = setZN(s, s.a | rd(s, addr));
-            return 5;
+            return;
         }
 
         /* ---------- EOR instructions (Logical Exclusive OR with Accumulator) ---------- */
@@ -870,110 +861,110 @@ export async function step6502(
             // EOR immediate
             const value = imm8(s);
             s.a = setZN(s, s.a ^ value);
-            return 2;
+            return;
         }
         case 0x45: {
             // EOR zero page
             const addr = zp(s);
             s.a = setZN(s, s.a ^ rd(s, addr));
-            return 3;
+            return;
         }
         case 0x55: {
             // EOR zero page,X
             const addr = zpx(s);
             s.a = setZN(s, s.a ^ rd(s, addr));
-            return 4;
+            return;
         }
         case 0x4d: {
             // EOR absolute
             const addr = abs16(s);
             s.a = setZN(s, s.a ^ rd(s, addr));
-            return 4;
+            return;
         }
         case 0x5d: {
             // EOR absolute,X
             const addr = absx(s);
             s.a = setZN(s, s.a ^ rd(s, addr));
-            return 4;
+            return;
         }
         case 0x59: {
             // EOR absolute,Y
             const addr = absy(s);
             s.a = setZN(s, s.a ^ rd(s, addr));
-            return 4;
+            return;
         }
         case 0x41: {
             // EOR (indirect,X)
             const addr = indx(s);
             s.a = setZN(s, s.a ^ rd(s, addr));
-            return 6;
+            return;
         }
         case 0x51: {
             // EOR (indirect),Y
             const addr = indy(s);
             s.a = setZN(s, s.a ^ rd(s, addr));
-            return 5;
+            return;
         }
 
         /* ---------- ADC / SBC (zero-page) ---------- */
         case 0x65: {
             const addr = zp(s);
             adc(s, rd(s, addr));
-            return 3;
+            return;
         }
         case 0xe5: {
             const addr = zp(s);
             sbc(s, rd(s, addr));
-            return 3;
+            return;
         }
 
         /* ADC additional addressing modes */
         case 0x75: {
             const addr = zpx(s);
             adc(s, rd(s, addr));
-            return 4;
+            return;
         }
         case 0x7d: {
             const addr = absx(s);
             adc(s, rd(s, addr));
-            return 4;
+            return;
         }
         case 0x79: {
             const addr = absy(s);
             adc(s, rd(s, addr));
-            return 4;
+            return;
         }
         case 0x61: {
             const addr = indx(s);
             adc(s, rd(s, addr));
-            return 6;
+            return;
         }
         case 0x71: {
             const addr = indy(s);
             adc(s, rd(s, addr));
-            return 5;
+            return;
         }
 
         /* SBC additional addressing modes */
         case 0xf5: {
             const addr = zpx(s);
             sbc(s, rd(s, addr));
-            return 4;
+            return;
         }
         case 0xf9: {
             const addr = absy(s);
             sbc(s, rd(s, addr));
-            return 4;
+            return;
         }
         case 0xe1: {
             const addr = indx(s);
             sbc(s, rd(s, addr));
-            return 6;
+            return;
         }
         case 0xf1: {
             const addr = indy(s);
             sbc(s, rd(s, addr));
-            return 5;
+            return;
         }
 
         /* BIT – Zero-page & Absolute */
@@ -983,7 +974,7 @@ export async function step6502(
                 (s.p & ~(F.N | F.V | F.Z)) |
                 (v & 0xc0) |
                 ((s.a & v) === 0 ? F.Z : 0);
-            return 3;
+            return;
         }
         case 0x2c: {
             const v = rd(s, abs16(s));
@@ -991,7 +982,7 @@ export async function step6502(
                 (s.p & ~(F.N | F.V | F.Z)) |
                 (v & 0xc0) |
                 ((s.a & v) === 0 ? F.Z : 0);
-            return 4;
+            return;
         }
 
         /* ---------- Shifts & Rotates : Zero-page only ---------- */
@@ -1004,7 +995,7 @@ export async function step6502(
             wr(s, addr, res);
             s.p = (s.p & ~F.C) | outC;
             setZN(s, res);
-            return 5;
+            return;
         }
         /* LSR $zp */
         case 0x46: {
@@ -1015,7 +1006,7 @@ export async function step6502(
             wr(s, addr, res);
             s.p = (s.p & ~F.C) | outC;
             setZN(s, res);
-            return 5;
+            return;
         }
         /* ROL $zp */
         case 0x26: {
@@ -1027,7 +1018,7 @@ export async function step6502(
             wr(s, addr, res);
             s.p = (s.p & ~F.C) | outC;
             setZN(s, res);
-            return 5;
+            return;
         }
         /* ROR $zp */
         case 0x66: {
@@ -1039,49 +1030,50 @@ export async function step6502(
             wr(s, addr, res);
             s.p = (s.p & ~F.C) | outC;
             setZN(s, res);
-            return 5;
+            return;
         }
 
         /* ASL $zp,X */
         case 0x16:
             shiftMemOp(s, zpx(s), true, false);
-            return 6;
+            return;
         /* LSR $zp,X */
         case 0x56:
             shiftMemOp(s, zpx(s), false, false);
-            return 6;
+            return;
         /* ROL $zp,X */
         case 0x36:
             shiftMemOp(s, zpx(s), true, true);
-            return 6;
+            return;
         /* ROR $zp,X */
         case 0x76:
             shiftMemOp(s, zpx(s), false, true);
-            return 6;
-
+            return;
         /* ---------- Shifts & Rotates : Absolute & Absolute,X ---------- */
         case 0x0e:
             shiftMemOp(s, abs16(s), true, false);
-            return 6; // ASL abs
+            return; // ASL abs
         case 0x1e:
             shiftMemOp(s, absx(s), true, false);
-            return 7; // ASL abs,X
+            return; // ASL abs,X
         case 0x4e:
             shiftMemOp(s, abs16(s), false, false);
-            return 6; // LSR abs
+            return; // LSR abs
         case 0x5e:
             shiftMemOp(s, absx(s), false, false);
-            return 7; // LSR abs,X
+            return; // LSR abs,X
         case 0x2e:
             shiftMemOp(s, abs16(s), true, true);
-            return 6; // ROL abs
+            return; // ROL abs
         case 0x3e:
             shiftMemOp(s, absx(s), true, true);
-            return 7; // ROL abs,X
+            return; // ROL abs,X
         case 0x6e:
-            return shiftMem2(s, false, true, abs16(s), 6); // ROR abs
+            shiftMem2(s, false, true, abs16(s), 6); // ROR abs
+            return;
         case 0x7e:
-            return shiftMem2(s, false, true, absx(s), 7); // ROR abs,X
+            shiftMem2(s, false, true, absx(s), 7); // ROR abs,X
+            return;
 
         /* ---------- INC / DEC other addressing modes ---------- */
         case 0xf6: // INC zp,X
@@ -1090,7 +1082,7 @@ export async function step6502(
                 const v = (rd(s, a) + 1) & 0xff;
                 wr(s, a, v);
                 setZN(s, v);
-                return 6;
+                return;
             })();
         case 0xfe: // INC abs,X
             return (() => {
@@ -1098,7 +1090,7 @@ export async function step6502(
                 const v = (rd(s, a) + 1) & 0xff;
                 wr(s, a, v);
                 setZN(s, v);
-                return 7;
+                return;
             })();
         case 0xee: // INC abs
             return (() => {
@@ -1106,7 +1098,7 @@ export async function step6502(
                 const v = (rd(s, a) + 1) & 0xff;
                 wr(s, a, v);
                 setZN(s, v);
-                return 6;
+                return;
             })();
 
         case 0xd6: // DEC zp,X
@@ -1115,7 +1107,7 @@ export async function step6502(
                 const v = (rd(s, a) - 1) & 0xff;
                 wr(s, a, v);
                 setZN(s, v);
-                return 6;
+                return;
             })();
         case 0xde: // DEC abs,X
             return (() => {
@@ -1123,7 +1115,7 @@ export async function step6502(
                 const v = (rd(s, a) - 1) & 0xff;
                 wr(s, a, v);
                 setZN(s, v);
-                return 7;
+                return;
             })();
         case 0xce: // DEC abs
             return (() => {
@@ -1131,7 +1123,7 @@ export async function step6502(
                 const v = (rd(s, a) - 1) & 0xff;
                 wr(s, a, v);
                 setZN(s, v);
-                return 6;
+                return;
             })();
 
         /* ---------- Other Branches ---------- */
@@ -1142,7 +1134,7 @@ export async function step6502(
                 const rel = off < 0x80 ? off : off - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
             }
-            return 2;
+            return;
         }
         case 0x50: {
             // BVC
@@ -1151,7 +1143,7 @@ export async function step6502(
                 const rel = off < 0x80 ? off : off - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
             }
-            return 2;
+            return;
         }
         case 0x70: {
             // BVS
@@ -1160,7 +1152,7 @@ export async function step6502(
                 const rel = off < 0x80 ? off : off - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
             }
-            return 2;
+            return;
         }
         case 0x30: {
             // BMI
@@ -1169,7 +1161,7 @@ export async function step6502(
                 const rel = off < 0x80 ? off : off - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
             }
-            return 2;
+            return;
         }
         case 0x10: {
             // BPL
@@ -1178,7 +1170,7 @@ export async function step6502(
                 const rel = off < 0x80 ? off : off - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
             }
-            return 2;
+            return;
         }
 
         /* ---------- Quick top-level handlers for remaining failing tests ---------- */
@@ -1187,59 +1179,58 @@ export async function step6502(
         case 0x0d: {
             const addr = abs16(s);
             s.a = setZN(s, s.a | rd(s, addr));
-            return 4;
+            return;
         }
 
         /* EOR (indirect),Y */
         case 0x51: {
             const addr = indy(s);
             s.a = setZN(s, s.a ^ rd(s, addr));
-            return 5;
+            return;
         }
 
         /* ADC absolute */
         case 0x6d: {
             const addr = abs16(s);
             adc(s, rd(s, addr));
-            return 4;
+            return;
         }
 
         /* SBC absolute */
         case 0xed: {
             const addr = abs16(s);
             sbc(s, rd(s, addr));
-            return 4;
+            return;
         }
 
         /* JMP absolute */
         case 0x4c: {
             const target = abs16(s);
             s.pc = target;
-            return 3;
+            return;
         }
 
         /* JMP (indirect) – with 6502 page-boundary bug */
         case 0x6c: {
             const ptr = abs16(s);
             s.pc = rd16bug(s, ptr);
-            return 5;
+            return;
         }
 
         /* SBC abs,X */
         case 0xfd: {
             const addr = absx(s);
             sbc(s, rd(s, addr));
-            return 4;
+            return;
         }
 
         /* ---------- Stack shortcuts ---------- */
         case 0x48: // PHA
             push(s, s.a);
-            return 3;
+            return;
         case 0x68: // PLA
             s.a = setZN(s, pop(s));
-            return 4;
-
+            return;
         /* ---------- Subroutine handling ---------- */
         case 0x20: {
             // JSR abs - Jump to Subroutine
@@ -1259,7 +1250,7 @@ export async function step6502(
 
             // Jump to the target address
             s.pc = targetAddress;
-            return 6;
+            return;
         }
         case 0x60: {
             // RTS - Return from Subroutine
@@ -1270,7 +1261,7 @@ export async function step6502(
             // Set PC to the address plus 1 (per 6502 spec)
             // This corresponds to the original PC+2 value when JSR was called
             s.pc = ((hi << 8) | lo) + 1;
-            return 6;
+            return;
         }
 
         /* RTI - Return from Interrupt */
@@ -1282,7 +1273,7 @@ export async function step6502(
             const lo = pop(s);
             const hi = pop(s);
             s.pc = (hi << 8) | lo;
-            return 6;
+            return;
         }
 
         /* ---------- Additional logical/arithmetic addressing modes ---------- */
@@ -1291,87 +1282,83 @@ export async function step6502(
         case 0x3d: {
             const addr = absx(s);
             s.a = setZN(s, s.a & rd(s, addr));
-            return 4;
+            return;
         }
 
         /* EOR absolute,X */
         case 0x5d: {
             const addr = absx(s);
             s.a = setZN(s, s.a ^ rd(s, addr));
-            return 4;
+            return;
         }
 
         /* ORA absolute,X */
         case 0x1d: {
             const addr = absx(s);
             s.a = setZN(s, s.a | rd(s, addr));
-            return 4;
+            return;
         }
 
         /* ADC (indirect,X) */
         case 0x61: {
             const addr = indx(s);
             adc(s, rd(s, addr));
-            return 6;
+            return;
         }
 
         /* SBC (indirect,X) */
         case 0xe1: {
             const addr = indx(s);
             sbc(s, rd(s, addr));
-            return 6;
+            return;
         }
 
         /* PHP / PLP */
         case 0x08:
             push(s, s.p | F.B | F.U);
-            return 3;
+            return;
         case 0x28:
             s.p = (pop(s) & ~F.B) | F.U;
             // Removed setZN call - the PLP instruction doesn't affect Z/N based on A
-            return 4;
-
+            return;
         /* ---------- INC / DEC memory (zero-page) ---------- */
         case 0xe6: {
             const addr = zp(s);
             const res = (rd(s, addr) + 1) & 0xff;
             wr(s, addr, res);
             setZN(s, res);
-            return 5;
+            return;
         }
         case 0xc6: {
             const addr = zp(s);
             const res = (rd(s, addr) - 1) & 0xff;
             wr(s, addr, res);
             setZN(s, res);
-            return 5;
+            return;
         }
 
         /* ---------- Flag ops ---------- */
         case 0x18: // CLC
             s.p &= ~F.C;
-            return 2;
+            return;
         case 0x38: // SEC (already elsewhere but ensure reachability)
             s.p |= F.C;
-            return 2;
-
+            return;
         case 0x58: // CLI – clear Interrupt Disable
             s.p &= ~F.I;
-            return 2;
+            return;
         case 0x78: // SEI – set Interrupt Disable
             s.p |= F.I;
-            return 2;
-
+            return;
         case 0xb8: // CLV – clear overflow
             s.p &= ~F.V;
-            return 2;
+            return;
         case 0xf8: // SED – set decimal flag
             s.p |= F.D;
-            return 2;
+            return;
         case 0xd8: // CLD – clear decimal flag
             s.p &= ~F.D;
-            return 2;
-
+            return;
         /* ---------- Branches ---------- */
         case 0x90: {
             // BCC
@@ -1380,41 +1367,41 @@ export async function step6502(
                 const rel = off < 0x80 ? off : off - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
             }
-            return 2;
+            return;
         }
 
         /* DEX - Decrement X register */
         case 0xca: {
             s.x = (s.x - 1) & 0xff;
             setZN(s, s.x);
-            return 2;
+            return;
         }
 
         /* AND immediate */
         case 0x29: {
             const value = imm8(s);
             s.a = setZN(s, s.a & value);
-            return 2;
+            return;
         }
 
         /* INY - Increment Y register */
         case 0xc8: {
             s.y = (s.y + 1) & 0xff;
             setZN(s, s.y);
-            return 2;
+            return;
         }
 
         /* DEY - Decrement Y register */
         case 0x88: {
             s.y = (s.y - 1) & 0xff;
             setZN(s, s.y);
-            return 2;
+            return;
         }
     }
 
     // NOP - No Operation
     if (op === 0xea) {
-        return 2;
+        return;
     }
 
     throw new Error(

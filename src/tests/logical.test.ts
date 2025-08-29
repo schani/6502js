@@ -12,11 +12,11 @@ describe("Logical operations", () => {
     await cpu.loadByte(0, 0x29); // AND immediate
     await cpu.loadByte(1, 0x0F); // Value to AND with accumulator
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await getAccumulator(cpu), 0x00); // 0xF0 & 0x0F = 0x00
     assert.strictEqual(await getProgramCounter(cpu), 2);
-    assert.strictEqual(cycles, 2);
+    
     assert.strictEqual(await getStatusRegister(cpu) & ZERO, ZERO); // Zero flag should be set
   });
   
@@ -31,11 +31,11 @@ describe("Logical operations", () => {
     await cpu.loadByte(1, 0x42); // Zero page address
     await cpu.loadByte(0x42, 0x0F); // Value to AND with accumulator
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await getAccumulator(cpu), 0x00); // 0xF0 & 0x0F = 0x00
     assert.strictEqual(await getProgramCounter(cpu), 2);
-    assert.strictEqual(cycles, 3);
+    
     assert.strictEqual(await getStatusRegister(cpu) & ZERO, ZERO); // Zero flag should be set
   });
 
@@ -51,11 +51,11 @@ describe("Logical operations", () => {
     await cpu.loadByte(1, 0x42); // Zero page address
     await cpu.loadByte(0x47, 0x0F); // Value at (zero page address + X)
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await getAccumulator(cpu), 0x00); // 0xF0 & 0x0F = 0x00
     assert.strictEqual(await getProgramCounter(cpu), 2);
-    assert.strictEqual(cycles, 4);
+    
     assert.strictEqual(await getStatusRegister(cpu) & ZERO, ZERO); // Zero flag should be set
   });
 
@@ -71,11 +71,11 @@ describe("Logical operations", () => {
     await cpu.loadByte(2, 0x12); // High byte of address
     await cpu.loadByte(0x1234, 0x0F); // Value at absolute address
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await getAccumulator(cpu), 0x00); // 0xF0 & 0x0F = 0x00
     assert.strictEqual(await getProgramCounter(cpu), 3);
-    assert.strictEqual(cycles, 4);
+    
     assert.strictEqual(await getStatusRegister(cpu) & ZERO, ZERO); // Zero flag should be set
   });
   
@@ -89,11 +89,11 @@ describe("Logical operations", () => {
     await cpu.loadByte(0, 0x09); // ORA immediate
     await cpu.loadByte(1, 0x0F); // Value to OR with accumulator
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await getAccumulator(cpu), 0xFF); // 0xF0 | 0x0F = 0xFF
     assert.strictEqual(await getProgramCounter(cpu), 2);
-    assert.strictEqual(cycles, 2);
+    
     assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, NEGATIVE); // Negative flag should be set
   });
   
@@ -108,11 +108,11 @@ describe("Logical operations", () => {
     await cpu.loadByte(1, 0x42); // Zero page address
     await cpu.loadByte(0x42, 0x0F); // Value to OR with accumulator
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await getAccumulator(cpu), 0xFF); // 0xF0 | 0x0F = 0xFF
     assert.strictEqual(await getProgramCounter(cpu), 2);
-    assert.strictEqual(cycles, 3);
+    
     assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, NEGATIVE); // Negative flag should be set
   });
   
@@ -128,11 +128,11 @@ describe("Logical operations", () => {
     await cpu.loadByte(2, 0x12); // High byte of address
     await cpu.loadByte(0x1234, 0x0F); // Value at absolute address
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await getAccumulator(cpu), 0xFF); // 0xF0 | 0x0F = 0xFF
     assert.strictEqual(await getProgramCounter(cpu), 3);
-    assert.strictEqual(cycles, 4);
+    
     assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, NEGATIVE); // Negative flag should be set
   });
   
@@ -146,11 +146,11 @@ describe("Logical operations", () => {
     await cpu.loadByte(0, 0x49); // EOR immediate
     await cpu.loadByte(1, 0xF0); // Value to XOR with accumulator
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await getAccumulator(cpu), 0x0F); // 0xFF ^ 0xF0 = 0x0F
     assert.strictEqual(await getProgramCounter(cpu), 2);
-    assert.strictEqual(cycles, 2);
+    
   });
   
   it("should perform EOR zero page instruction", async () => {
@@ -164,11 +164,11 @@ describe("Logical operations", () => {
     await cpu.loadByte(1, 0x42); // Zero page address
     await cpu.loadByte(0x42, 0xF0); // Value to XOR with accumulator
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await getAccumulator(cpu), 0x0F); // 0xFF ^ 0xF0 = 0x0F
     assert.strictEqual(await getProgramCounter(cpu), 2);
-    assert.strictEqual(cycles, 3);
+    
   });
   
   it("should perform EOR absolute instruction", async () => {
@@ -183,11 +183,11 @@ describe("Logical operations", () => {
     await cpu.loadByte(2, 0x12); // High byte of address
     await cpu.loadByte(0x1234, 0xF0); // Value at absolute address
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await getAccumulator(cpu), 0x0F); // 0xFF ^ 0xF0 = 0x0F
     assert.strictEqual(await getProgramCounter(cpu), 3);
-    assert.strictEqual(cycles, 4);
+    
   });
   
   it("should perform BIT zero page instruction", async () => {
@@ -202,7 +202,7 @@ describe("Logical operations", () => {
     await cpu.loadByte(1, 0x20); // Zero page address
     await cpu.loadByte(0x20, 0xC0); // Test value (bits 7 and 6 are set)
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     // BIT sets N and V from bits 7 and 6 of memory
     assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, NEGATIVE); // Bit 7 of memory -> N flag
@@ -214,7 +214,7 @@ describe("Logical operations", () => {
     // Accumulator should not be modified
     assert.strictEqual(await getAccumulator(cpu), 0x0F);
     assert.strictEqual(await getProgramCounter(cpu), 2);
-    assert.strictEqual(cycles, 3);
+    
   });
   
   it("should perform BIT absolute instruction", async () => {
@@ -230,7 +230,7 @@ describe("Logical operations", () => {
     await cpu.loadByte(2, 0x12); // High byte of address
     await cpu.loadByte(0x1234, 0xC0); // Test value (bits 7 and 6 are set)
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     // BIT sets N and V from bits 7 and 6 of memory
     assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, NEGATIVE); // Bit 7 of memory -> N flag
@@ -242,7 +242,7 @@ describe("Logical operations", () => {
     // Accumulator should not be modified
     assert.strictEqual(await getAccumulator(cpu), 0x0F);
     assert.strictEqual(await getProgramCounter(cpu), 3);
-    assert.strictEqual(cycles, 4);
+    
   });
   
   it("should correctly handle BIT with matching bits", async () => {
@@ -257,7 +257,7 @@ describe("Logical operations", () => {
     await cpu.loadByte(1, 0x20); // Zero page address
     await cpu.loadByte(0x20, 0xC0); // Test value (bits 7 and 6 are set)
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     // BIT sets N and V from bits 7 and 6 of memory
     assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, NEGATIVE); // Bit 7 of memory -> N flag
@@ -269,6 +269,6 @@ describe("Logical operations", () => {
     // Accumulator should not be modified
     assert.strictEqual(await getAccumulator(cpu), 0xC0);
     assert.strictEqual(await getProgramCounter(cpu), 2);
-    assert.strictEqual(cycles, 3);
+    
   });
 });

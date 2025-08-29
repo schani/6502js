@@ -16,9 +16,9 @@ describe("BIT instruction extensive tests", async () => {
         await cpu.clearStatusFlag(OVERFLOW | NEGATIVE | ZERO); // Clear all flags
         await cpu.setProgramCounter(0x1000);
 
-        let cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 3);
+        
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Bit 7 of memory is 1
         assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, true); // Bit 6 of memory is 1
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // A & M is zero (0x01 & 0xC0 = 0x00)
@@ -32,9 +32,9 @@ describe("BIT instruction extensive tests", async () => {
         await cpu.clearStatusFlag(OVERFLOW | NEGATIVE | ZERO); // Clear all flags
         await cpu.setProgramCounter(0x1002);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 3);
+        
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, false); // Bit 7 of memory is 0
         assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, false); // Bit 6 of memory is 0
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // A & M is non-zero (0x01 & 0x01 = 0x01)
@@ -48,9 +48,9 @@ describe("BIT instruction extensive tests", async () => {
         await cpu.clearStatusFlag(OVERFLOW | NEGATIVE | ZERO); // Clear all flags
         await cpu.setProgramCounter(0x1004);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 3);
+        
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Bit 7 of memory is 1
         assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, true); // Bit 6 of memory is 1
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // A & M is zero (0x01 & 0xC0 = 0x00)
@@ -69,9 +69,9 @@ describe("BIT instruction extensive tests", async () => {
         await cpu.clearStatusFlag(OVERFLOW | NEGATIVE | ZERO); // Clear all flags
         await cpu.setProgramCounter(0x1000);
 
-        let cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 4);
+        
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Bit 7 of memory is 1
         assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, true); // Bit 6 of memory is 1
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // A & M is non-zero (0xFF & 0xFF = 0xFF)
@@ -86,9 +86,9 @@ describe("BIT instruction extensive tests", async () => {
         await cpu.clearStatusFlag(OVERFLOW | NEGATIVE | ZERO); // Clear all flags
         await cpu.setProgramCounter(0x1003);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 4);
+        
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Bit 7 of memory is 1
         assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, false); // Bit 6 of memory is 0
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // A & M is zero (0x7F & 0x80 = 0x00)
@@ -103,9 +103,9 @@ describe("BIT instruction extensive tests", async () => {
         await cpu.clearStatusFlag(OVERFLOW | NEGATIVE | ZERO); // Clear all flags
         await cpu.setProgramCounter(0x1006);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 4);
+        
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, false); // Bit 7 of memory is 0
         assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, true); // Bit 6 of memory is 1
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // A & M is non-zero (0x40 & 0x40 = 0x40)

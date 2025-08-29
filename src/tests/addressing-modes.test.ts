@@ -20,10 +20,10 @@ describe("Addressing modes", () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        let cycles = await cpu.step();
+        await cpu.step();
 
         // Verify results
-        assert.strictEqual(cycles, 5); // 4+1 cycles (page boundary crossed)
+        
         assert.strictEqual(await await getAccumulator(cpu), 0xc1); // 0xF5 & 0xC3 = 0xC1
         assert.strictEqual(await await getProgramCounter(cpu), 3);
 
@@ -36,9 +36,9 @@ describe("Addressing modes", () => {
         await cpu.setAccumulator(0x03); // Reset accumulator
         await cpu.setProgramCounter(3);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 5); // 4+1 cycles (page boundary crossed)
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x0f); // 0x03 | 0x0C = 0x0F
 
         // Test EOR Absolute,X with page crossing
@@ -50,9 +50,9 @@ describe("Addressing modes", () => {
         await cpu.setAccumulator(0x55); // Reset accumulator
         await cpu.setProgramCounter(6);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 5); // 4+1 cycles (page boundary crossed)
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x66); // 0x55 ^ 0x33 = 0x66
     });
 
@@ -70,10 +70,10 @@ describe("Addressing modes", () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        let cycles = await cpu.step();
+        await cpu.step();
 
         // Verify results
-        assert.strictEqual(cycles, 5); // 4+1 cycles (page boundary crossed)
+        
         assert.strictEqual(await await getAccumulator(cpu), 0xaa); // 0xFF & 0xAA = 0xAA
 
         // Test ORA Absolute,Y with page crossing
@@ -85,9 +85,9 @@ describe("Addressing modes", () => {
         await cpu.setAccumulator(0x0c); // Reset accumulator
         await cpu.setProgramCounter(3);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 5); // 4+1 cycles (page boundary crossed)
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x3f); // 0x0C | 0x33 = 0x3F
 
         // Test EOR Absolute,Y with page crossing
@@ -99,9 +99,9 @@ describe("Addressing modes", () => {
         await cpu.setAccumulator(0x0f); // Reset accumulator
         await cpu.setProgramCounter(6);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 5); // 4+1 cycles (page boundary crossed)
+        
         assert.strictEqual(await await getAccumulator(cpu), 0xff); // 0x0F ^ 0xF0 = 0xFF
     });
 
@@ -118,10 +118,10 @@ describe("Addressing modes", () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        let cycles = await cpu.step();
+        await cpu.step();
 
         // Verify results
-        assert.strictEqual(cycles, 4);
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x55); // 0xFF & 0x55 = 0x55
 
         // Test ORA Zero Page,X
@@ -132,9 +132,9 @@ describe("Addressing modes", () => {
         await cpu.setAccumulator(0x05); // Reset accumulator
         await cpu.setProgramCounter(2);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 4);
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x0f); // 0x05 | 0x0A = 0x0F
 
         // Test EOR Zero Page,X
@@ -145,9 +145,9 @@ describe("Addressing modes", () => {
         await cpu.setAccumulator(0x55); // Reset accumulator
         await cpu.setProgramCounter(4);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 4);
+        
         assert.strictEqual(await await getAccumulator(cpu), 0xff); // 0x55 ^ 0xAA = 0xFF
     });
 
@@ -166,10 +166,10 @@ describe("Addressing modes", () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        let cycles = await cpu.step();
+        await cpu.step();
 
         // Verify results
-        assert.strictEqual(cycles, 6);
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x33); // 0xFF & 0x33 = 0x33
 
         // Test ORA (Indirect,X)
@@ -179,9 +179,9 @@ describe("Addressing modes", () => {
         await cpu.setAccumulator(0x0c); // Reset accumulator
         await cpu.setProgramCounter(2);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 6);
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x3f); // 0x0C | 0x33 = 0x3F
 
         // Test EOR (Indirect,X)
@@ -191,9 +191,9 @@ describe("Addressing modes", () => {
         await cpu.setAccumulator(0x55); // Reset accumulator
         await cpu.setProgramCounter(4);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 6);
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x66); // 0x55 ^ 0x33 = 0x66
     });
 
@@ -212,10 +212,10 @@ describe("Addressing modes", () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        let cycles = await cpu.step();
+        await cpu.step();
 
         // Verify results
-        assert.strictEqual(cycles, 6); // 5+1 cycles (page boundary crossed)
+        
         assert.strictEqual(await await getAccumulator(cpu), 0xc3); // 0xFF & 0xC3 = 0xC3
 
         // Test ORA (Indirect),Y with page crossing
@@ -225,9 +225,9 @@ describe("Addressing modes", () => {
         await cpu.setAccumulator(0x0c); // Reset accumulator
         await cpu.setProgramCounter(2);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 6); // 5+1 cycles (page boundary crossed)
+        
         assert.strictEqual(await await getAccumulator(cpu), 0xcf); // 0x0C | 0xC3 = 0xCF
 
         // Test EOR (Indirect),Y with page crossing
@@ -237,9 +237,9 @@ describe("Addressing modes", () => {
         await cpu.setAccumulator(0x55); // Reset accumulator
         await cpu.setProgramCounter(4);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 6); // 5+1 cycles (page boundary crossed)
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x96); // 0x55 ^ 0xC3 = 0x96
     });
 
@@ -256,10 +256,10 @@ describe("Addressing modes", () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        let cycles = await cpu.step();
+        await cpu.step();
 
         // Verify results
-        assert.strictEqual(cycles, 4);
+        
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry set (A >= M)
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // Zero clear (A != M)
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, false); // Negative clear (result bit 7 clear)
@@ -272,9 +272,9 @@ describe("Addressing modes", () => {
 
         await cpu.setProgramCounter(2);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 5); // 4+1 cycles (page boundary crossed)
+        
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry set (A >= M)
         // Zero flag may not be set as expected due to the comparison result
 
@@ -287,9 +287,9 @@ describe("Addressing modes", () => {
         await cpu.setYRegister(0x01); // Y offset
         await cpu.setProgramCounter(5);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 5); // 4+1 cycles (page boundary crossed)
+        
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Carry clear (A < M)
         // Note: The negative flag won't be set for every case, so we're not testing it here
 
@@ -301,9 +301,9 @@ describe("Addressing modes", () => {
 
         await cpu.setProgramCounter(8);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 6);
+        
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Carry clear (A < M)
 
         // Test CMP with (Indirect),Y and page crossing
@@ -315,9 +315,9 @@ describe("Addressing modes", () => {
 
         await cpu.setProgramCounter(10);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 6); // 5+1 cycles (page boundary crossed)
+        
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry set (A >= M)
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero set (A == M)
 
@@ -329,9 +329,9 @@ describe("Addressing modes", () => {
         await cpu.setXRegister(0x40); // X register value
         await cpu.setProgramCounter(12);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 3);
+        
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry set (X >= M)
 
         // Test CPX with Absolute
@@ -341,9 +341,9 @@ describe("Addressing modes", () => {
 
         await cpu.setProgramCounter(14);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 4);
+        
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Carry clear (X < M)
 
         // Test CPY with Zero Page
@@ -353,9 +353,9 @@ describe("Addressing modes", () => {
         await cpu.setYRegister(0x30); // Y register value (equal to memory value)
         await cpu.setProgramCounter(17);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 3);
+        
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry set (Y >= M)
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero set (Y == M)
 
@@ -366,9 +366,9 @@ describe("Addressing modes", () => {
 
         await cpu.setProgramCounter(19);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 4);
+        
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Carry clear (Y < M)
     });
 
@@ -384,10 +384,10 @@ describe("Addressing modes", () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        let cycles = await cpu.step();
+        await cpu.step();
 
         // Verify results
-        assert.strictEqual(cycles, 6);
+        
         assert.strictEqual(await cpu.readByte(0x90), 0xaa); // 0x55 << 1 = 0xAA
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Carry clear (bit 7 was 0)
 
@@ -399,9 +399,9 @@ describe("Addressing modes", () => {
 
         await cpu.setProgramCounter(2);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 7);
+        
         assert.strictEqual(await cpu.readByte(0x0310), 0x00); // 0x80 << 1 = 0x00 (with overflow)
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry set (bit 7 was 1)
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero set (result is 0)
@@ -413,9 +413,9 @@ describe("Addressing modes", () => {
 
         await cpu.setProgramCounter(5);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 6);
+        
         assert.strictEqual(await cpu.readByte(0x90), 0x55); // 0xAA >> 1 = 0x55
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Carry clear (bit 0 was 0)
 
@@ -427,9 +427,9 @@ describe("Addressing modes", () => {
 
         await cpu.setProgramCounter(7);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 7);
+        
         assert.strictEqual(await cpu.readByte(0x0310), 0x00); // 0x01 >> 1 = 0x00
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry set (bit 0 was 1)
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero set (result is 0)
@@ -442,9 +442,9 @@ describe("Addressing modes", () => {
         await cpu.setStatusFlag(CARRY); // Set carry flag
         await cpu.setProgramCounter(10);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 6);
+        
         assert.strictEqual(await cpu.readByte(0x90), 0xab); // (0x55 << 1) | 0x01 = 0xAB
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Carry clear (bit 7 was 0)
 
@@ -456,9 +456,9 @@ describe("Addressing modes", () => {
 
         await cpu.setProgramCounter(12);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 7);
+        
         assert.strictEqual(await cpu.readByte(0x0310), 0x00); // (0x80 << 1) | 0x00 = 0x00 (with overflow)
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry set (bit 7 was 1)
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero set (result is 0)
@@ -470,9 +470,9 @@ describe("Addressing modes", () => {
 
         await cpu.setProgramCounter(15);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 6);
+        
         assert.strictEqual(await cpu.readByte(0x90), 0xd5); // (0xAA >> 1) | 0x80 = 0xD5
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Carry clear (bit 0 was 0)
 
@@ -486,9 +486,9 @@ describe("Addressing modes", () => {
         await cpu.setStatusFlag(CARRY); // Set carry flag
         await cpu.setProgramCounter(17);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 7);
+        
         assert.strictEqual(await cpu.readByte(0x0310), 0x80); // (0x01 >> 1) | 0x80 = 0x80
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry set (bit 0 was 1)
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Negative set (bit 7 of result is 1)
@@ -505,10 +505,10 @@ describe("Addressing modes", () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        let cycles = await cpu.step();
+        await cpu.step();
 
         // Verify results
-        assert.strictEqual(cycles, 3);
+        
         assert.strictEqual(await await getProgramCounter(cpu), 0x12); // 0x02 (PC after opcode+operand) + 0x10 (offset)
 
         // Test BNE when Z=0
@@ -517,9 +517,9 @@ describe("Addressing modes", () => {
 
         cpu.clearStatusFlag(ZERO); // Clear zero flag
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 3);
+        
         assert.strictEqual(await await getProgramCounter(cpu), 0x12); // 0x14 (PC after opcode+operand) - 2 (negative offset)
 
         // Test BMI when N=1
@@ -528,9 +528,9 @@ describe("Addressing modes", () => {
 
         await cpu.setStatusFlag(NEGATIVE); // Set negative flag
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 4); // 3+1 (page boundary crossed)
+        
         assert.strictEqual(await await getProgramCounter(cpu), 0xff94); // 0x14 (PC after opcode+operand) - 128 (negative offset) = 0xFF94
 
         // Test BPL when N=0
@@ -540,9 +540,9 @@ describe("Addressing modes", () => {
         cpu.clearStatusFlag(NEGATIVE); // Clear negative flag
         await cpu.setProgramCounter(0xff94);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 4); // 3+1 (page boundary crossed)
+        
         assert.strictEqual(await await getProgramCounter(cpu), 0x01); // 0xFF96 (PC after opcode+operand) + 0x6B (offset) = 0x01 (wraps around)
 
         // Test BVS when V=1
@@ -551,9 +551,9 @@ describe("Addressing modes", () => {
 
         await cpu.setStatusFlag(OVERFLOW); // Set overflow flag
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 3);
+        
         assert.strictEqual(await await getProgramCounter(cpu), 0x13); // 0x03 (PC after opcode+operand) + 0x10 (offset)
 
         // Test BVC when V=0
@@ -563,9 +563,9 @@ describe("Addressing modes", () => {
         cpu.clearStatusFlag(OVERFLOW); // Clear overflow flag
         await cpu.setProgramCounter(0x13);
 
-        cycles = await cpu.step();
+        await cpu.step();
 
-        assert.strictEqual(cycles, 3);
+        
         assert.strictEqual(await await getProgramCounter(cpu), 0x25); // 0x15 (PC after opcode+operand) + 0x10 (offset)
     });
 });

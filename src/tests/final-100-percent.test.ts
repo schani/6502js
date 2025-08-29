@@ -397,11 +397,10 @@ describe("Final 100% coverage tests", async () => {
         await cpu.loadByte(0x1005, 0x00); // Value to load
 
         // Execute instruction
-        const cycles1 = await cpu.step();
+        await cpu.step();
 
         // Check results
-        assert.strictEqual(cycles1, 4); // No page crossing
-        assert.strictEqual(await getXRegister(cpu), 0x00);
+                assert.strictEqual(await getXRegister(cpu), 0x00);
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true);
 
         // Test with page crossing, loading negative value
@@ -413,11 +412,10 @@ describe("Final 100% coverage tests", async () => {
         await cpu.loadByte(0x1100, 0x80); // Value to load (negative)
 
         // Execute instruction
-        const cycles2 = await cpu.step();
+        await cpu.step();
 
         // Check results
-        assert.strictEqual(cycles2, 5); // Page crossing adds a cycle
-        assert.strictEqual(await getXRegister(cpu), 0x80);
+                assert.strictEqual(await getXRegister(cpu), 0x80);
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true);
 
         // Test without page crossing, loading positive value

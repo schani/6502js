@@ -13,8 +13,8 @@ describe("Missing opcodes tests for 100% coverage", () => {
         await cpu.loadByte(2, 0x10); // High byte of address
         await cpu.loadByte(0x1000, 0x00); // Value to load
 
-        let cycles = await cpu.step();
-        assert.strictEqual(cycles, 4); // Always 4 cycles for LDX Absolute
+        await cpu.step();
+        
         assert.strictEqual((await cpu.getState()).x, 0x00);
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
 
@@ -25,8 +25,8 @@ describe("Missing opcodes tests for 100% coverage", () => {
         await cpu.loadByte(2, 0x10); // High byte of address
         await cpu.loadByte(0x1000, 0x42); // Value to load
 
-        cycles = await cpu.step();
-        assert.strictEqual(cycles, 4);
+        await cpu.step();
+        
         assert.strictEqual((await cpu.getState()).x, 0x42);
         assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Zero flag should be cleared
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Negative flag should be cleared
@@ -38,8 +38,8 @@ describe("Missing opcodes tests for 100% coverage", () => {
         await cpu.loadByte(2, 0x10); // High byte of address
         await cpu.loadByte(0x1000, 0x80); // Value to load (negative because bit 7 is set)
 
-        cycles = await cpu.step();
-        assert.strictEqual(cycles, 4);
+        await cpu.step();
+        
         assert.strictEqual((await cpu.getState()).x, 0x80);
         assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Zero flag should be cleared
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Negative flag should be set
@@ -56,8 +56,8 @@ describe("Missing opcodes tests for 100% coverage", () => {
         await cpu.loadByte(0x1000, 0x42); // Value to compare
         await cpu.setAccumulator(0x42); // A equals memory
 
-        let cycles = await cpu.step();
-        assert.strictEqual(cycles, 4); // Always 4 cycles for CMP Absolute
+        await cpu.step();
+        
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag set (values are equal)
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry flag set (A >= M)
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Negative flag clear
@@ -70,8 +70,8 @@ describe("Missing opcodes tests for 100% coverage", () => {
         await cpu.loadByte(0x1000, 0x30); // Value to compare
         await cpu.setAccumulator(0x42); // A greater than memory
 
-        cycles = await cpu.step();
-        assert.strictEqual(cycles, 4);
+        await cpu.step();
+        
         assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Zero flag clear (values are not equal)
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Carry flag set (A >= M)
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Negative flag clear
@@ -84,8 +84,8 @@ describe("Missing opcodes tests for 100% coverage", () => {
         await cpu.loadByte(0x1000, 0x60); // Value to compare
         await cpu.setAccumulator(0x42); // A less than memory
 
-        cycles = await cpu.step();
-        assert.strictEqual(cycles, 4);
+        await cpu.step();
+        
         assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Zero flag clear (values are not equal)
         assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // Carry flag clear (A < M)
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Negative flag may be set based on result

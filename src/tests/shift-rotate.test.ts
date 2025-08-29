@@ -12,15 +12,13 @@ describe("Shift and rotate instructions", () => {
     // Set up memory
     await cpu.loadByte(0, 0x0A); // ASL A
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual((await cpu.getState()).a, 0x82); // 10000010
     assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // Bit 7 was 0
     assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result has bit 7 set
     assert.strictEqual((await cpu.getState()).pc, 1);
-    assert.strictEqual(cycles, 2);
     
-    // Test with carry out
     await cpu.setProgramCounter(0);
     await cpu.setAccumulator(0x81); // 10000001
     
@@ -39,13 +37,13 @@ describe("Shift and rotate instructions", () => {
     await cpu.loadByte(1, 0x42); // Zero page address
     await cpu.loadByte(0x42, 0x41); // Value to shift
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await cpu.readByte(0x42), 0x82); // 10000010
     assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // Bit 7 was 0
     assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result has bit 7 set
     assert.strictEqual((await cpu.getState()).pc, 2);
-    assert.strictEqual(cycles, 5);
+    
   });
   
   it("should perform ASL absolute instruction", async () => {
@@ -57,13 +55,13 @@ describe("Shift and rotate instructions", () => {
     await cpu.loadByte(2, 0x12); // High byte of address
     await cpu.loadByte(0x1234, 0x41); // Value to shift
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await cpu.readByte(0x1234), 0x82); // 10000010
     assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // Bit 7 was 0
     assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result has bit 7 set
     assert.strictEqual((await cpu.getState()).pc, 3);
-    assert.strictEqual(cycles, 6);
+    
   });
   
   it("should perform LSR A instruction", async () => {
@@ -75,15 +73,13 @@ describe("Shift and rotate instructions", () => {
     // Set up memory
     await cpu.loadByte(0, 0x4A); // LSR A
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual((await cpu.getState()).a, 0x20); // 00100000
     assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Bit 0 was 1
     assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Bit 7 is always cleared
     assert.strictEqual((await cpu.getState()).pc, 1);
-    assert.strictEqual(cycles, 2);
     
-    // Test with zero result
     await cpu.setProgramCounter(0);
     await cpu.setAccumulator(0x01); // 00000001
     
@@ -102,13 +98,13 @@ describe("Shift and rotate instructions", () => {
     await cpu.loadByte(1, 0x42); // Zero page address
     await cpu.loadByte(0x42, 0x41); // Value to shift
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await cpu.readByte(0x42), 0x20); // 00100000
     assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Bit 0 was 1
     assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Bit 7 is always cleared
     assert.strictEqual((await cpu.getState()).pc, 2);
-    assert.strictEqual(cycles, 5);
+    
   });
   
   it("should perform LSR absolute instruction", async () => {
@@ -120,13 +116,13 @@ describe("Shift and rotate instructions", () => {
     await cpu.loadByte(2, 0x12); // High byte of address
     await cpu.loadByte(0x1234, 0x41); // Value to shift
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await cpu.readByte(0x1234), 0x20); // 00100000
     assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Bit 0 was 1
     assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Bit 7 is always cleared
     assert.strictEqual((await cpu.getState()).pc, 3);
-    assert.strictEqual(cycles, 6);
+    
   });
   
   it("should perform ROL A instruction", async () => {
@@ -139,15 +135,13 @@ describe("Shift and rotate instructions", () => {
     // Set up memory
     await cpu.loadByte(0, 0x2A); // ROL A
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual((await cpu.getState()).a, 0x82); // 10000010
     assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // Old bit 7 was 0
     assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result has bit 7 set
     assert.strictEqual((await cpu.getState()).pc, 1);
-    assert.strictEqual(cycles, 2);
     
-    // Test with carry in and out
     await cpu.setProgramCounter(0);
     await cpu.setAccumulator(0x81); // 10000001
     await cpu.setStatusFlag(CARRY); // Set carry flag
@@ -170,13 +164,13 @@ describe("Shift and rotate instructions", () => {
     await cpu.loadByte(1, 0x42); // Zero page address
     await cpu.loadByte(0x42, 0x41); // Value to rotate
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await cpu.readByte(0x42), 0x82); // 10000010
     assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // Old bit 7 was 0
     assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result has bit 7 set
     assert.strictEqual((await cpu.getState()).pc, 2);
-    assert.strictEqual(cycles, 5);
+    
   });
   
   it("should perform ROL absolute instruction", async () => {
@@ -191,13 +185,13 @@ describe("Shift and rotate instructions", () => {
     await cpu.loadByte(2, 0x12); // High byte of address
     await cpu.loadByte(0x1234, 0x41); // Value to rotate
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await cpu.readByte(0x1234), 0x82); // 10000010
     assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // Old bit 7 was 0
     assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result has bit 7 set
     assert.strictEqual((await cpu.getState()).pc, 3);
-    assert.strictEqual(cycles, 6);
+    
   });
   
   it("should perform ROR A instruction", async () => {
@@ -210,15 +204,13 @@ describe("Shift and rotate instructions", () => {
     // Set up memory
     await cpu.loadByte(0, 0x6A); // ROR A
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual((await cpu.getState()).a, 0x20); // 00100000
     assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Old bit 0 was 1
     assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Result has bit 7 clear
     assert.strictEqual((await cpu.getState()).pc, 1);
-    assert.strictEqual(cycles, 2);
     
-    // Test with carry in
     await cpu.setProgramCounter(0);
     await cpu.setAccumulator(0x01); // 00000001
     await cpu.setStatusFlag(CARRY); // Set carry flag
@@ -241,13 +233,13 @@ describe("Shift and rotate instructions", () => {
     await cpu.loadByte(1, 0x42); // Zero page address
     await cpu.loadByte(0x42, 0x41); // Value to rotate
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await cpu.readByte(0x42), 0x20); // 00100000
     assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Old bit 0 was 1
     assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Result has bit 7 clear
     assert.strictEqual((await cpu.getState()).pc, 2);
-    assert.strictEqual(cycles, 5);
+    
   });
   
   it("should perform ROR absolute instruction", async () => {
@@ -262,13 +254,13 @@ describe("Shift and rotate instructions", () => {
     await cpu.loadByte(2, 0x12); // High byte of address
     await cpu.loadByte(0x1234, 0x41); // Value to rotate
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await cpu.readByte(0x1234), 0x20); // 00100000
     assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Old bit 0 was 1
     assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Result has bit 7 clear
     assert.strictEqual((await cpu.getState()).pc, 3);
-    assert.strictEqual(cycles, 6);
+    
   });
   
   it("should handle ASL with zero result", async () => {
@@ -280,13 +272,13 @@ describe("Shift and rotate instructions", () => {
     // Set up memory
     await cpu.loadByte(0, 0x0A); // ASL A
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual((await cpu.getState()).a, 0x00); // 00000000
     assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // Bit 7 was 1
     assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Result is zero
     assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Result is not negative
     assert.strictEqual((await cpu.getState()).pc, 1);
-    assert.strictEqual(cycles, 2);
+    
   });
 });

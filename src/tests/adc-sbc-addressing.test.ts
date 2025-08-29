@@ -27,10 +27,10 @@ describe("ADC and SBC with different addressing modes", async () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Verify
-        assert.strictEqual(cycles, 3);
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x52); // 0x10 + 0x42 = 0x52
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // No carry out
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // Result is not zero
@@ -52,10 +52,10 @@ describe("ADC and SBC with different addressing modes", async () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Verify
-        assert.strictEqual(cycles, 4);
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x53); // 0x10 + 0x42 + 0x01 (carry) = 0x53
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // No carry out
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // Result is not zero
@@ -77,10 +77,10 @@ describe("ADC and SBC with different addressing modes", async () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Verify
-        assert.strictEqual(cycles, 4);
+        
         assert.strictEqual(await await getAccumulator(cpu), 0xe0); // 0x10 + 0xD0 = 0xE0
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // No carry out
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // Result is not zero
@@ -103,10 +103,10 @@ describe("ADC and SBC with different addressing modes", async () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Verify
-        assert.strictEqual(cycles, 4); // No page boundary crossed
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x50); // 0x10 + 0x40 = 0x50
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // No carry out
     });
@@ -126,10 +126,10 @@ describe("ADC and SBC with different addressing modes", async () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Verify
-        assert.strictEqual(cycles, 5); // +1 cycle for page boundary crossing
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x50); // 0x10 + 0x40 = 0x50
     });
 
@@ -148,10 +148,10 @@ describe("ADC and SBC with different addressing modes", async () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Verify
-        assert.strictEqual(cycles, 4); // No page boundary crossed
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x80); // 0x10 + 0x70 = 0x80
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result is negative (bit 7 set)
     });
@@ -172,10 +172,10 @@ describe("ADC and SBC with different addressing modes", async () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Verify
-        assert.strictEqual(cycles, 6);
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x45); // 0x10 + 0x35 = 0x45
     });
 
@@ -195,10 +195,10 @@ describe("ADC and SBC with different addressing modes", async () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Verify
-        assert.strictEqual(cycles, 5); // No page boundary crossed
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x35); // 0x10 + 0x25 = 0x35
     });
 
@@ -218,10 +218,10 @@ describe("ADC and SBC with different addressing modes", async () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Verify
-        assert.strictEqual(cycles, 6); // +1 cycle for page boundary crossing
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x35); // 0x10 + 0x25 = 0x35
     });
 
@@ -239,10 +239,10 @@ describe("ADC and SBC with different addressing modes", async () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Verify
-        assert.strictEqual(cycles, 3);
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x30); // 0x50 - 0x20 = 0x30
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // No borrow (carry set)
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // Result is not zero
@@ -264,10 +264,10 @@ describe("ADC and SBC with different addressing modes", async () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Verify
-        assert.strictEqual(cycles, 4);
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x2f); // 0x50 - 0x20 - 0x01 (borrow) = 0x2F
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // No borrow out (carry set after operation)
     });
@@ -286,10 +286,10 @@ describe("ADC and SBC with different addressing modes", async () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Verify
-        assert.strictEqual(cycles, 4);
+        
         assert.strictEqual(await await getAccumulator(cpu), 0xe0); // 0x40 - 0x60 = 0xE0
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Borrow out (carry clear)
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result is negative
@@ -310,10 +310,10 @@ describe("ADC and SBC with different addressing modes", async () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Verify
-        assert.strictEqual(cycles, 4); // No page boundary crossed
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x30); // 0x50 - 0x20 = 0x30
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // No borrow out (carry set)
     });
@@ -333,10 +333,10 @@ describe("ADC and SBC with different addressing modes", async () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Verify
-        assert.strictEqual(cycles, 5); // +1 cycle for page boundary crossing
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x30); // 0x50 - 0x20 = 0x30
     });
 
@@ -355,10 +355,10 @@ describe("ADC and SBC with different addressing modes", async () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Verify
-        assert.strictEqual(cycles, 4); // No page boundary crossed
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x30); // 0x50 - 0x20 = 0x30
     });
 
@@ -378,10 +378,10 @@ describe("ADC and SBC with different addressing modes", async () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Verify
-        assert.strictEqual(cycles, 6);
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x2b); // 0x50 - 0x25 = 0x2B
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // No borrow out (carry set)
     });
@@ -402,10 +402,10 @@ describe("ADC and SBC with different addressing modes", async () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Verify
-        assert.strictEqual(cycles, 5); // No page boundary crossed
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x40); // 0x50 - 0x10 = 0x40
     });
 
@@ -425,10 +425,10 @@ describe("ADC and SBC with different addressing modes", async () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Verify
-        assert.strictEqual(cycles, 6); // +1 cycle for page boundary crossing
+        
         assert.strictEqual(await await getAccumulator(cpu), 0x40); // 0x50 - 0x10 = 0x40
     });
 });

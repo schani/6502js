@@ -16,10 +16,10 @@ describe("LDY with different addressing modes", async () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Verify
-        assert.strictEqual(cycles, 4);
+        
         assert.strictEqual(await await getYRegister(cpu), 0x42);
         assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Result is not zero
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Result is not negative
@@ -37,10 +37,10 @@ describe("LDY with different addressing modes", async () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Verify
-        assert.strictEqual(cycles, 4);
+        
         assert.strictEqual(await await getYRegister(cpu), 0x80);
         assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Result is not zero
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result is negative (bit 7 set)
@@ -59,10 +59,10 @@ describe("LDY with different addressing modes", async () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Verify
-        assert.strictEqual(cycles, 4); // No page boundary crossed
+        
         assert.strictEqual(await await getYRegister(cpu), 0x00);
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Result is zero
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) === 0, true); // Result is not negative
@@ -81,10 +81,10 @@ describe("LDY with different addressing modes", async () => {
         await cpu.setProgramCounter(0);
 
         // Execute
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Verify
-        assert.strictEqual(cycles, 5); // +1 cycle for page boundary crossing
+        
         assert.strictEqual(await await getYRegister(cpu), 0xff);
         assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Result is not zero
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result is negative (bit 7 set)

@@ -21,16 +21,13 @@ describe("Remaining branch and flag operations", async () => {
         await cpu.setStatusFlag(CARRY); // Set carry flag for branch to be taken
 
         // Execute BCS
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Branch calculation: PC (after fetching instruction) + offset
         // PC after fetching: 0x10F0 + 2 = 0x10F2
         // Effective PC: 0x10F2 + 0x10 = 0x1102 (crosses page boundary)
 
-        // Check cycles (should be 4 due to page crossing)
-        assert.strictEqual(cycles, 4);
-
-        // Check if PC was set correctly
+                
         assert.strictEqual(await await getProgramCounter(cpu), 0x1102);
     });
 
@@ -44,16 +41,13 @@ describe("Remaining branch and flag operations", async () => {
         await cpu.setStatusFlag(ZERO); // Set zero flag for branch to be taken
 
         // Execute BEQ
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Branch calculation: PC (after fetching instruction) + offset
         // PC after fetching: 0x10F0 + 2 = 0x10F2
         // Effective PC: 0x10F2 + 0x10 = 0x1102 (crosses page boundary)
 
-        // Check cycles (should be 4 due to page crossing)
-        assert.strictEqual(cycles, 4);
-
-        // Check if PC was set correctly
+                
         assert.strictEqual(await await getProgramCounter(cpu), 0x1102);
     });
 
@@ -67,16 +61,13 @@ describe("Remaining branch and flag operations", async () => {
         await cpu.setStatusFlag(NEGATIVE); // Set negative flag for branch to be taken
 
         // Execute BMI
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Branch calculation: PC (after fetching instruction) + offset
         // PC after fetching: 0x10F0 + 2 = 0x10F2
         // Effective PC: 0x10F2 + 0x10 = 0x1102 (crosses page boundary)
 
-        // Check cycles (should be 4 due to page crossing)
-        assert.strictEqual(cycles, 4);
-
-        // Check if PC was set correctly
+                
         assert.strictEqual(await await getProgramCounter(cpu), 0x1102);
     });
 
@@ -90,16 +81,13 @@ describe("Remaining branch and flag operations", async () => {
         await cpu.setStatusFlag(OVERFLOW); // Set overflow flag for branch to be taken
 
         // Execute BVS
-        const cycles = await cpu.step();
+        await cpu.step();
 
         // Branch calculation: PC (after fetching instruction) + offset
         // PC after fetching: 0x10F0 + 2 = 0x10F2
         // Effective PC: 0x10F2 + 0x10 = 0x1102 (crosses page boundary)
 
-        // Check cycles (should be 4 due to page crossing)
-        assert.strictEqual(cycles, 4);
-
-        // Check if PC was set correctly
+                
         assert.strictEqual(await await getProgramCounter(cpu), 0x1102);
     });
 

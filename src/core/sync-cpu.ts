@@ -31,12 +31,12 @@ export class SyncCPU implements CPU {
     }
 
     /** Execute one instruction on all three CPUs and verify they match */
-    async step(trace = false): Promise<number> {
-        const cycles1 = await this.cpu1.step(trace);
+    async step(trace = false): Promise<void> {
+        await this.cpu1.step(trace);
         await this.cpu2.step(false);
         await this.pgcpu.step(false);
         await this.compareStates();
-        return cycles1;
+        return;
     }
 
     // Memory accessors

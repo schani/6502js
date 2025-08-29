@@ -9,11 +9,10 @@ describe("System functions", () => {
     // Set up memory
     await cpu.loadByte(0, 0xEA); // NOP
     
-    const cycles = await cpu.step();
+    await cpu.step();
     
     assert.strictEqual(await getProgramCounter(cpu), 1);
-    assert.strictEqual(cycles, 2);
-    // NOP should not affect any registers or flags
+    
   });
 
   it("should allow trace logging", async () => {
@@ -23,10 +22,10 @@ describe("System functions", () => {
     await cpu.loadByte(0, 0xEA); // NOP
     
     // With trace logging enabled
-    const cycles = await cpu.step(true);
+    await cpu.step(true);
     
     assert.strictEqual(await getProgramCounter(cpu), 1);
-    assert.strictEqual(cycles, 2);
+    
   });
 
   // Add test for unknown opcodes

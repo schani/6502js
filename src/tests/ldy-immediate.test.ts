@@ -13,10 +13,10 @@ describe("LDY immediate mode comprehensive tests", async () => {
     await cpu.setProgramCounter(0x1000);
     
     // Execute
-    const cycles = await cpu.step();
+    await cpu.step();
     
     // Verify
-    assert.strictEqual(cycles, 2);
+    
     assert.strictEqual(await getYRegister(cpu), 0); // Should be 0 from uninitialized memory
     assert.strictEqual(await getStatusRegister(cpu) & ZERO, ZERO); // Zero flag should be set
     assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, 0); // Negative flag should be clear
@@ -36,10 +36,10 @@ describe("LDY immediate mode comprehensive tests", async () => {
     await cpu.setProgramCounter(0x1000);
     
     // Execute
-    const cycles = await cpu.step();
+    await cpu.step();
     
     // Verify
-    assert.strictEqual(cycles, 2);
+    
     assert.strictEqual(await getYRegister(cpu), 0);
     assert.strictEqual(await getStatusRegister(cpu) & ZERO, ZERO); // Zero flag should be set
     assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, 0); // Negative flag should be clear
@@ -59,10 +59,10 @@ describe("LDY immediate mode comprehensive tests", async () => {
     await cpu.setProgramCounter(0x1000);
     
     // Execute
-    const cycles = await cpu.step();
+    await cpu.step();
     
     // Verify
-    assert.strictEqual(cycles, 2);
+    
     assert.strictEqual(await getYRegister(cpu), 0x80);
     assert.strictEqual(await getStatusRegister(cpu) & ZERO, 0); // Zero flag should be clear
     assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, NEGATIVE); // Negative flag should be set

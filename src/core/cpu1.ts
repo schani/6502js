@@ -38,9 +38,9 @@ export class CPU1 implements CPU {
      * @param trace Whether to log trace information during execution
      * @returns Number of clock cycles consumed by the instruction
      */
-    async step(trace = false): Promise<number> {
+    async step(trace = false): Promise<void> {
         CURRENT_MEM_CPU1 = this.mem;
-        return await step6502(this.state, this, trace);
+        await step6502(this.state, this, trace);
     }
     
     /**
@@ -461,7 +461,7 @@ function getStatusString(cpu: CPUState): string {
     );
 }
 
-export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = false): Promise<number /* cycles */> {
+export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = false): Promise<void> {
     // Save the current PC for trace output before it gets incremented
     const currentPC = cpu.pc;
 
@@ -2177,5 +2177,4 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             throw new Error(`Unknown opcode: ${opcode.toString(16)}`);
     }
 
-    return cycles;
 }

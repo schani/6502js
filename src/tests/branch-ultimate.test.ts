@@ -13,8 +13,8 @@ describe("Additional branch instruction tests", () => {
         await cpu.loadByte(0x1001, 0x05); // Offset (positive, small)
         await cpu.clearStatusFlag(NEGATIVE); // Clear negative (condition true)
         await cpu.setProgramCounter(0x1000);
-        let cycles = await cpu.step();
-        assert.strictEqual(cycles, 3); // 3 cycles, no page cross
+        await cpu.step();
+        
         assert.strictEqual(await await getProgramCounter(cpu), 0x1007); // 0x1002 + 0x05 = 0x1007
 
         // BVC - Branch on Overflow Clear
@@ -22,8 +22,8 @@ describe("Additional branch instruction tests", () => {
         await cpu.loadByte(0x2001, 0x05); // Offset (positive, small)
         await cpu.clearStatusFlag(OVERFLOW); // Clear overflow (condition true)
         await cpu.setProgramCounter(0x2000);
-        cycles = await cpu.step();
-        assert.strictEqual(cycles, 3); // 3 cycles, no page cross
+        await cpu.step();
+        
         assert.strictEqual(await await getProgramCounter(cpu), 0x2007); // 0x2002 + 0x05 = 0x2007
 
         // BVS - Branch on Overflow Set
@@ -31,8 +31,8 @@ describe("Additional branch instruction tests", () => {
         await cpu.loadByte(0x3001, 0x05); // Offset (positive, small)
         cpu.setStatusFlag(OVERFLOW); // Set overflow (condition true)
         await cpu.setProgramCounter(0x3000);
-        cycles = await cpu.step();
-        assert.strictEqual(cycles, 3); // 3 cycles, no page cross
+        await cpu.step();
+        
         assert.strictEqual(await await getProgramCounter(cpu), 0x3007); // 0x3002 + 0x05 = 0x3007
     });
 
@@ -44,8 +44,8 @@ describe("Additional branch instruction tests", () => {
         await cpu.loadByte(0x1011, 0xfd); // Offset (negative, -3 in 2's complement)
         await cpu.clearStatusFlag(CARRY); // Clear carry (condition true)
         await cpu.setProgramCounter(0x1010);
-        let cycles = await cpu.step();
-        assert.strictEqual(cycles, 3); // 3 cycles, no page cross
+        await cpu.step();
+        
         assert.strictEqual(await await getProgramCounter(cpu), 0x100f); // 0x1012 - 3 = 0x100F
 
         // BCS - Branch on Carry Set
@@ -53,8 +53,8 @@ describe("Additional branch instruction tests", () => {
         await cpu.loadByte(0x2011, 0xfd); // Offset (negative, -3 in 2's complement)
         cpu.setStatusFlag(CARRY); // Set carry (condition true)
         await cpu.setProgramCounter(0x2010);
-        cycles = await cpu.step();
-        assert.strictEqual(cycles, 3); // 3 cycles, no page cross
+        await cpu.step();
+        
         assert.strictEqual(await await getProgramCounter(cpu), 0x200f); // 0x2012 - 3 = 0x200F
 
         // BEQ - Branch on Equal (Zero Set)
@@ -62,8 +62,8 @@ describe("Additional branch instruction tests", () => {
         await cpu.loadByte(0x3011, 0xfd); // Offset (negative, -3 in 2's complement)
         cpu.setStatusFlag(ZERO); // Set zero (condition true)
         await cpu.setProgramCounter(0x3010);
-        cycles = await cpu.step();
-        assert.strictEqual(cycles, 3); // 3 cycles, no page cross
+        await cpu.step();
+        
         assert.strictEqual(await await getProgramCounter(cpu), 0x300f); // 0x3012 - 3 = 0x300F
 
         // BNE - Branch on Not Equal (Zero Clear)
@@ -71,8 +71,8 @@ describe("Additional branch instruction tests", () => {
         await cpu.loadByte(0x4011, 0xfd); // Offset (negative, -3 in 2's complement)
         await cpu.clearStatusFlag(ZERO); // Clear zero (condition true)
         await cpu.setProgramCounter(0x4010);
-        cycles = await cpu.step();
-        assert.strictEqual(cycles, 3); // 3 cycles, no page cross
+        await cpu.step();
+        
         assert.strictEqual(await await getProgramCounter(cpu), 0x400f); // 0x4012 - 3 = 0x400F
 
         // BMI - Branch on Minus (Negative Set)
@@ -80,8 +80,8 @@ describe("Additional branch instruction tests", () => {
         await cpu.loadByte(0x5011, 0xfd); // Offset (negative, -3 in 2's complement)
         cpu.setStatusFlag(NEGATIVE); // Set negative (condition true)
         await cpu.setProgramCounter(0x5010);
-        cycles = await cpu.step();
-        assert.strictEqual(cycles, 3); // 3 cycles, no page cross
+        await cpu.step();
+        
         assert.strictEqual(await await getProgramCounter(cpu), 0x500f); // 0x5012 - 3 = 0x500F
     });
 });

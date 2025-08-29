@@ -21,11 +21,11 @@ describe("Store instructions", () => {
         await cpu.loadByte(0, 0x85); // STA zero page
         await cpu.loadByte(1, 0x30); // Zero page address
 
-        const cycles = await cpu.step();
+        await cpu.step();
 
         assert.strictEqual(await cpu.readByte(0x30), 0x42);
         assert.strictEqual(await getProgramCounter(cpu), 2);
-        assert.strictEqual(cycles, 3);
+        
     });
 
     it("should perform STA zero page,X instruction", async () => {
@@ -39,11 +39,11 @@ describe("Store instructions", () => {
         await cpu.loadByte(0, 0x95); // STA zero page,X
         await cpu.loadByte(1, 0x30); // Zero page address
 
-        const cycles = await cpu.step();
+        await cpu.step();
 
         assert.strictEqual(await cpu.readByte(0x35), 0x42); // Value at address 0x30 + 0x05
         assert.strictEqual(await getProgramCounter(cpu), 2);
-        assert.strictEqual(cycles, 4);
+        
     });
 
     it("should perform STA absolute instruction", async () => {
@@ -57,11 +57,11 @@ describe("Store instructions", () => {
         await cpu.loadByte(1, 0x34); // Low byte of address
         await cpu.loadByte(2, 0x12); // High byte of address
 
-        const cycles = await cpu.step();
+        await cpu.step();
 
         assert.strictEqual(await cpu.readByte(0x1234), 0x42);
         assert.strictEqual(await getProgramCounter(cpu), 3);
-        assert.strictEqual(cycles, 4);
+        
     });
 
     it("should perform STA absolute,X instruction", async () => {
@@ -76,11 +76,11 @@ describe("Store instructions", () => {
         await cpu.loadByte(1, 0x34); // Low byte of address
         await cpu.loadByte(2, 0x12); // High byte of address
 
-        const cycles = await cpu.step();
+        await cpu.step();
 
         assert.strictEqual(await cpu.readByte(0x1239), 0x42); // Value at address 0x1234 + 0x05
         assert.strictEqual(await getProgramCounter(cpu), 3);
-        assert.strictEqual(cycles, 5); // Always 5 cycles, regardless of page crossing
+        
     });
 
     it("should perform STA absolute,Y instruction", async () => {
@@ -95,11 +95,11 @@ describe("Store instructions", () => {
         await cpu.loadByte(1, 0x34); // Low byte of address
         await cpu.loadByte(2, 0x12); // High byte of address
 
-        const cycles = await cpu.step();
+        await cpu.step();
 
         assert.strictEqual(await cpu.readByte(0x1239), 0x42); // Value at address 0x1234 + 0x05
         assert.strictEqual(await getProgramCounter(cpu), 3);
-        assert.strictEqual(cycles, 5); // Always 5 cycles, regardless of page crossing
+        
     });
 
     it("should perform STA (indirect,X) instruction", async () => {
@@ -117,11 +117,11 @@ describe("Store instructions", () => {
         await cpu.loadByte(0x24, 0x74); // Low byte of effective address
         await cpu.loadByte(0x25, 0x20); // High byte of effective address
 
-        const cycles = await cpu.step();
+        await cpu.step();
 
         assert.strictEqual(await cpu.readByte(0x2074), 0x42); // Value at effective address
         assert.strictEqual(await getProgramCounter(cpu), 2);
-        assert.strictEqual(cycles, 6);
+        
     });
 
     it("should perform STA (indirect),Y instruction", async () => {
@@ -139,11 +139,11 @@ describe("Store instructions", () => {
         await cpu.loadByte(0x20, 0x74); // Low byte of base address
         await cpu.loadByte(0x21, 0x20); // High byte of base address
 
-        const cycles = await cpu.step();
+        await cpu.step();
 
         assert.strictEqual(await cpu.readByte(0x2084), 0x42); // Value at (base address + Y)
         assert.strictEqual(await getProgramCounter(cpu), 2);
-        assert.strictEqual(cycles, 6); // Always 6 cycles, regardless of page crossing
+        
     });
 
     it("should perform STX zero page instruction", async () => {
@@ -156,11 +156,11 @@ describe("Store instructions", () => {
         await cpu.loadByte(0, 0x86); // STX zero page
         await cpu.loadByte(1, 0x30); // Zero page address
 
-        const cycles = await cpu.step();
+        await cpu.step();
 
         assert.strictEqual(await cpu.readByte(0x30), 0x42);
         assert.strictEqual(await getProgramCounter(cpu), 2);
-        assert.strictEqual(cycles, 3);
+        
     });
 
     it("should perform STX zero page,Y instruction", async () => {
@@ -174,11 +174,11 @@ describe("Store instructions", () => {
         await cpu.loadByte(0, 0x96); // STX zero page,Y
         await cpu.loadByte(1, 0x30); // Zero page address
 
-        const cycles = await cpu.step();
+        await cpu.step();
 
         assert.strictEqual(await cpu.readByte(0x35), 0x42); // Value at address 0x30 + 0x05
         assert.strictEqual(await getProgramCounter(cpu), 2);
-        assert.strictEqual(cycles, 4);
+        
     });
 
     it("should perform STX absolute instruction", async () => {
@@ -192,11 +192,11 @@ describe("Store instructions", () => {
         await cpu.loadByte(1, 0x34); // Low byte of address
         await cpu.loadByte(2, 0x12); // High byte of address
 
-        const cycles = await cpu.step();
+        await cpu.step();
 
         assert.strictEqual(await cpu.readByte(0x1234), 0x42);
         assert.strictEqual(await getProgramCounter(cpu), 3);
-        assert.strictEqual(cycles, 4);
+        
     });
 
     it("should perform STY zero page instruction", async () => {
@@ -209,11 +209,11 @@ describe("Store instructions", () => {
         await cpu.loadByte(0, 0x84); // STY zero page
         await cpu.loadByte(1, 0x30); // Zero page address
 
-        const cycles = await cpu.step();
+        await cpu.step();
 
         assert.strictEqual(await cpu.readByte(0x30), 0x42);
         assert.strictEqual(await getProgramCounter(cpu), 2);
-        assert.strictEqual(cycles, 3);
+        
     });
 
     it("should perform STY zero page,X instruction", async () => {
@@ -227,11 +227,11 @@ describe("Store instructions", () => {
         await cpu.loadByte(0, 0x94); // STY zero page,X
         await cpu.loadByte(1, 0x30); // Zero page address
 
-        const cycles = await cpu.step();
+        await cpu.step();
 
         assert.strictEqual(await cpu.readByte(0x35), 0x42); // Value at address 0x30 + 0x05
         assert.strictEqual(await getProgramCounter(cpu), 2);
-        assert.strictEqual(cycles, 4);
+        
     });
 
     it("should perform STY absolute instruction", async () => {
@@ -245,10 +245,10 @@ describe("Store instructions", () => {
         await cpu.loadByte(1, 0x34); // Low byte of address
         await cpu.loadByte(2, 0x12); // High byte of address
 
-        const cycles = await cpu.step();
+        await cpu.step();
 
         assert.strictEqual(await cpu.readByte(0x1234), 0x42);
         assert.strictEqual(await getProgramCounter(cpu), 3);
-        assert.strictEqual(cycles, 4);
+        
     });
 });

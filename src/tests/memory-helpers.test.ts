@@ -16,10 +16,10 @@ describe("Memory helper functions", () => {
     await cpu.setProgramCounter(0);
     
     // Execute LDA Absolute to read from 0xFFFF
-    const cycles = await cpu.step();
+    await cpu.step();
     
     // Verify the result
-    assert.strictEqual(cycles, 4);
+    
     assert.strictEqual(await getAccumulator(cpu), 0x42);
     
     // Test boundary by writing to 0xFFFF
@@ -31,11 +31,10 @@ describe("Memory helper functions", () => {
     await cpu.setProgramCounter(3);
     
     // Execute STA Absolute to write to 0xFFFF
-    const cycles2 = await cpu.step();
+    await cpu.step();
     
     // Verify the result
-    assert.strictEqual(cycles2, 4);
-    assert.strictEqual(await cpu.readByte(0xFFFF), 0x84);
+        assert.strictEqual(await cpu.readByte(0xFFFF), 0x84);
   });
   
   it("should correctly handle writeWord at memory boundary", async () => {
@@ -49,21 +48,20 @@ describe("Memory helper functions", () => {
     await cpu.setProgramCounter(0);
     
     // Execute JSR instruction which will write return address (PC+2-1) to stack
-    const cycles = await cpu.step();
+    await cpu.step();
     
     // JSR pushes return address (PC+2-1) to stack and jumps to target address
-    assert.strictEqual(cycles, 6);
+    
     assert.strictEqual(await getProgramCounter(cpu), 0xFFFF);
     
     // Pull the address from the stack to verify it was stored correctly
     await cpu.loadByte(0xFFFF, 0x60); // RTS
     
     // Execute RTS to pull address from stack and jump back
-    const cycles2 = await cpu.step();
+    await cpu.step();
     
     // RTS pulls address from stack, adds 1, and sets PC
-    assert.strictEqual(cycles2, 6);
-    assert.strictEqual(await getProgramCounter(cpu), 3); // Since JSR saves PC+2-1=2, RTS adds 1 to get 3
+        assert.strictEqual(await getProgramCounter(cpu), 3); // Since JSR saves PC+2-1=2, RTS adds 1 to get 3
   });
   
 });

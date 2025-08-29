@@ -30,12 +30,9 @@ describe("System instructions", () => {
         await cpu.loadByte(0x1000, 0x00); // BRK
 
         // Execute BRK
-        const cycles = await cpu.step();
+        await cpu.step();
 
-        // Check cycles
-        assert.strictEqual(cycles, 7);
-
-        // Check PC was set to IRQ/BRK vector
+                
         assert.strictEqual((await cpu.getState()).pc, 0x2000);
 
         // Check stack has status and return address pushed correctly
@@ -70,12 +67,9 @@ describe("System instructions", () => {
         await cpu.loadByte(0x2000, 0x40); // RTI
 
         // Execute RTI
-        const cycles = await cpu.step();
+        await cpu.step();
 
-        // Check cycles
-        assert.strictEqual(cycles, 6);
-
-        // Check PC was restored correctly
+                
         assert.strictEqual((await cpu.getState()).pc, 0x1002);
 
         // Check status was restored (B flag should be ignored)
