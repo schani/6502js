@@ -33,10 +33,8 @@ export class PGCPU implements CPU {
       );
 
       CREATE TABLE IF NOT EXISTS memory (
-        cpu_id integer NOT NULL,
-        address integer NOT NULL CHECK (address BETWEEN 0 AND 65535),
-        byte smallint NOT NULL CHECK (byte BETWEEN 0 AND 255),
-        PRIMARY KEY (cpu_id, address)
+        address integer PRIMARY KEY CHECK (address BETWEEN 0 AND 65535),
+        byte smallint NOT NULL CHECK (byte BETWEEN 0 AND 255)
       );
 
       -- Helper: mask8
@@ -56,7 +54,7 @@ export class PGCPU implements CPU {
       DECLARE v integer;
       BEGIN
         addr := mask16(addr);
-        SELECT byte INTO v FROM memory WHERE cpu_id = cpu AND address = addr;
+        SELECT byte INTO v FROM memory WHERE address = addr;
         RETURN COALESCE(v, 0);
       END; $$ LANGUAGE plpgsql;
 
@@ -64,8 +62,8 @@ export class PGCPU implements CPU {
       BEGIN
         addr := mask16(addr);
         val := mask8(val);
-        INSERT INTO memory(cpu_id, address, byte) VALUES (cpu, addr, val)
-        ON CONFLICT (cpu_id, address) DO UPDATE SET byte = EXCLUDED.byte;
+        INSERT INTO memory(address, byte) VALUES (addr, val)
+        ON CONFLICT (address) DO UPDATE SET byte = EXCLUDED.byte;
       END; $$ LANGUAGE plpgsql;
 
       CREATE OR REPLACE FUNCTION read_word(cpu integer, addr integer) RETURNS integer AS $$
