@@ -1,32 +1,36 @@
 # Repository Guidelines
 
 ## Project Structure & Modules
-- `*.ts` (root): Core source. Notables: `6502.ts` (exports types/utilities), `cpu1.ts`/`cpu2.ts` (two implementations), `sync-cpu.ts` (lockstep validator), `disasm.ts` (disassembler), `basic-runner.ts` (MS‑BASIC runner).
-- `tests/`: Comprehensive 6502 behavior tests. Some legacy tests also live at repo root (e.g., `disasm.test.ts`).
-- Docs/assets: `README.md`, `SYNC-CPU-SUMMARY.md`, `6502.md`, ROMs like `kb9.bin`, `osi.bin`.
+- `src/core/`: `cpu-interface.ts` (shared async `CPU` interface), `cpu1.ts`/`cpu2.ts` (two TypeScript implementations), `pgcpu.ts` (PostgreSQL/PGlite implementation), `sync-cpu.ts` (lockstep validator), `constants.ts` (status flag bits).
+- `src/runners/`: `basic-runner.ts` (interactive MS-BASIC), `dsl-runner.ts` (scripted BASIC sessions, see `example.dsl`).
+- `src/tests/`: Comprehensive 6502 behavior tests plus shared `utils.ts`/`compat.ts`.
+- `src/utils/`: `disasm.ts` (disassembler), `6502.ts` (legacy re-exports).
+- `src/web/`: Browser-based debugger UI.
+- Docs/assets: `README.md`, `SYNC-CPU-SUMMARY.md`, `README-SYNC-CPU.md`, `BASIC-RUNNER-README.md`, `6502.md` (the instruction-set spec), ROMs in `data/` (`osi.bin`, `kb9.bin`).
 
 ## Build, Test, and Development
-- Type check: `bunx tsc --noEmit` (or `bun run typecheck`).
-- Run tests: `bun test` (all) or `bun test tests/arithmetic.test.ts` (single file). Add `--coverage` for coverage.
-- Run BASIC demo: `bun run basic-runner.ts`.
-- Tooling: Bun + TypeScript (ESNext). See `tsconfig.json` for strict flags.
+- Runtime: Node (version in `.nvmrc`) with `--experimental-strip-types`; run `npm install` first.
+- Type check: `npm run typecheck`.
+- Run tests: `npm test` (all) or `node --experimental-strip-types --test src/tests/arithmetic.test.ts` (single file). Coverage: `npm run test:coverage`.
+- Run BASIC demo: `npm run basic` (flags: `--cpu1|--cpu2|--pgcpu|--sync|--debug|--trace`).
+- Run DSL script: `npm run dsl example.dsl`.
 
 ## Coding Style & Naming
 - TypeScript, ESNext modules, strict mode. Prefer explicit types at public boundaries.
-- Indentation: 2 spaces; keep lines focused and readable.
-- Files: kebab-case for modules (`disasm.ts`), `PascalCase` for classes (`CPU1`, `CPU2`, `SyncCPU`).
-- Tests: name `*.test.ts`; colocate in `tests/` unless touching root-only modules.
+- Import with explicit `.ts` extensions (required for `--experimental-strip-types`).
+- Files: kebab-case for modules (`sync-cpu.ts`), `PascalCase` for classes (`CPU1`, `CPU2`, `PGCPU`, `SyncCPU`).
+- Tests: name `*.test.ts`; place in `src/tests/`.
 
 ## Testing Guidelines
-- Framework: Bun test runner (`bun test`).
-- Write deterministic, minimal tests; cover new addressing modes/flags and cycle counts.
-- When changing CPU behavior, add parallel tests for both implementations and, if relevant, a `SyncCPU` check.
-- Aim to keep coverage high; use `--coverage` locally before PRs.
+- Framework: Node's built-in test runner (`node --test`).
+- Write deterministic, minimal tests; cover new addressing modes and flag behavior.
+- When changing CPU behavior, keep all implementations consistent and, if relevant, add a `SyncCPU` check.
+- Aim to keep coverage high; use `npm run test:coverage` locally before PRs.
 
 ## Commit & Pull Request Guidelines
 - Commits: short, imperative, scoped when helpful (e.g., "Fix missing opcodes in CPU2").
 - PRs must include: what/why, affected opcodes/modes, added tests, and any trace snippets when debugging CPU divergence.
-- Checklist: `bunx tsc --noEmit` passes; `bun test` is green; no large binaries or secrets added; docs updated when behavior changes.
+- Checklist: `npm run typecheck` passes; `npm test` is green; no large binaries or secrets added; docs updated when behavior changes.
 
 ## Architecture Overview
-- Two CPU implementations (`CPU1`, `CPU2`) validated by `SyncCPU` running both in lockstep and comparing state each step. Prefer fixes that keep both consistent or document divergences with tests and rationale.
+- Three CPU implementations (`CPU1`, `CPU2`, `PGCPU`) validated by `SyncCPU`, which runs all of them in lockstep and compares register state after each step. Divergences are bugs: consult the spec in `6502.md` to determine which implementation is correct, and fix it.

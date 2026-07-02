@@ -1,21 +1,20 @@
 /**
- * basic-runner.ts – minimal host glue to launch Microsoft BASIC (KIM-1
- * kb9.bin build) inside the JS 6502 core.
+ * basic-runner.ts – minimal host glue to launch Microsoft BASIC (OSI
+ * build, data/osi.bin) inside the JS 6502 core.
  *
  * Usage:
- *   bun run basic-runner.ts            # interactive prompt
- *   bun run basic-runner.ts --debug    # run with CPU state divergence detection
+ *   npm run basic              # interactive prompt (CPU1)
+ *   npm run basic -- --sync    # run CPU1, CPU2, and PGCPU in lockstep
+ *   npm run basic -- --debug   # sync mode with divergence logging
  *
  * Prerequisites:
- *   – Place kb9.bin (8 KiB image built with CONFIG_KIM) in repo root.
+ *   – data/osi.bin (OSI BASIC ROM image, included in the repository).
  *
  * Implementation details
- *   • Loads kb9.bin at $2000.
- *   • Writes tiny stubs (RTS or CLC; RTS) into the five monitor
- *     vectors BASIC expects.
- *   • Runs step() until the PC reaches a stub address, at which point
- *     the runner performs the corresponding host I/O and emulates RTS by
- *     popping the return address from the 6502 stack.
+ *   • Loads osi.bin at $A000 and starts at the cold-start entry ($BD11).
+ *   • Runs step() until the PC reaches a monitor vector address, at which
+ *     point the runner performs the corresponding host I/O and emulates
+ *     RTS by popping the return address from the 6502 stack.
  */
 
 import { readFileSync, appendFileSync } from "fs";

@@ -356,3 +356,40 @@ These improvements will help ensure that both CPU implementations correctly impl
 - Implemented a SIGINT event listener that properly terminates the process when Ctrl-C is pressed
 - This provides a better user experience by allowing clean exit without needing to force-quit the terminal
 - The system now shows a friendly "Exiting MS-BASIC emulator..." message when terminated
+
+## 2026-07-02
+
+### Documentation Audit and Refresh
+
+Audited all documentation against the actual state of the codebase and found it
+badly out of date. What had changed since the docs were written:
+
+- **Bun → Node migration**: All docs still said `bun test` / `bun run basic-runner.ts`.
+  The project now runs on Node (`.nvmrc`: v24.6.0) with `--experimental-strip-types`
+  and npm scripts (`npm test`, `npm run basic`, etc.).
+- **Cycle counting was removed** (commit aad0c0b), but README/AGENTS/sync docs still
+  advertised "accurate cycle counting" and listed cycle-count divergences as open bugs.
+- **PGCPU was added** (commits 5df2214..c61be39): a third 6502 implementation written
+  as PostgreSQL stored procedures on PGlite, with CPU state and memory in DB tables.
+  SyncCPU now runs three CPUs (CPU1, CPU2, PGCPU) in lockstep, not two.
+- **BASIC works now**: the docs described divergences (JSR/RTS, stack pointer, missing
+  opcodes) as open issues, but fixing the trap addresses (commit 954e2f3) fixed BASIC.
+  Verified today: `npm run basic -- --sync` boots OSI BASIC 1.0 REV 3.2 and runs
+  `PRINT 2+3` with zero divergences across all three CPUs. All 268 tests pass.
+- **ROM changed**: the BASIC runner loads `data/osi.bin` at $A000 (cold start $BD11),
+  not KIM-1 `kb9.bin` at $2000 as the docs (and the runner's own header comment) claimed.
+- **Repo layout changed** (commit 338cda0): sources moved from repo root into
+  `src/core`, `src/runners`, `src/tests`, `src/utils`, `src/web`.
+- **The const-enum note in CLAUDE.md was stale**: no const enums remain in src/, and
+  the test suite runs fine under `--experimental-strip-types`.
+
+Updated: README.md, BASIC-RUNNER-README.md, README-SYNC-CPU.md, SYNC-CPU-SUMMARY.md,
+AGENTS.md, CLAUDE.md, TODO.md, and the header comments of basic-runner.ts/dsl-runner.ts.
+
+### Known Issue Discovered: src/web fails typecheck
+
+`npm run typecheck` currently reports 32 errors, all in `src/web/`: `serve.ts` still
+uses `Bun.serve` (so `npm run web:serve`, which invokes it with Node, cannot work),
+and `main.ts` uses browser globals (`requestAnimationFrame`) without DOM lib types.
+The rest of the codebase typechecks cleanly. Added a task to TODO.md to port serve.ts
+to Node and fix the web tsconfig.

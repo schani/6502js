@@ -130,18 +130,27 @@
     - [x] EOR absolute (0x4D)
   - [x] Handle cycle counting differences for indexed addressing with page boundary crossing
 
-- [ ] Future work for CPU synchronization
-  - [ ] Complete harmonization of JSR/RTS implementation between CPU1 and CPU2
-  - [ ] Fix the program counter differences after RTS operation
-  - [ ] Implement any missing opcodes in CPU implementations
-    - [ ] Implement opcode 0x63 (currently missing in both CPUs)
-    - [ ] Fix cycle count differences for ROL Accumulator (0x2A)
-    - [ ] Fix cycle count differences for PHA (0x48) and PLA (0x68)
-    - [ ] Fix accumulator value differences for multiple opcodes
+- [x] CPU synchronization (resolved — BASIC runs in --sync mode with no divergences)
+  - [x] Harmonize JSR/RTS implementation between CPU1 and CPU2
+  - [x] Fix the program counter differences after RTS operation
+  - [x] Fix the trap addresses in the BASIC runner (this finally fixed BASIC)
+  - Note: opcode 0x63 is undocumented; the project only implements the documented
+    instruction set, so it will not be implemented
+  - Note: cycle counting was removed from the project, so all cycle-count
+    discrepancy tasks are obsolete
+
+- [x] Add PGCPU (6502 in PostgreSQL stored procedures via PGlite)
+  - [x] Support PGCPU in SyncCPU (all three CPUs run in lockstep)
+  - [x] Support PGCPU in the BASIC runner (--pgcpu flag)
+
+- [ ] Fix typecheck errors in src/web/ and re-include it in the root typecheck
+      (currently excluded via tsconfig.json "exclude")
+  - [ ] Port src/web/serve.ts from Bun.serve to Node (npm run web:serve currently requires Bun)
+  - [ ] Fix missing DOM/browser types in src/web/main.ts (requestAnimationFrame etc.)
 
 - [ ] Potential future improvements:
   - [ ] Add more examples of running simple 6502 programs
   - [x] Improve debugging with memory dump and trace functionality
   - [x] Add proper SIGINT (Ctrl-C) handling to basic-runner.ts
-  - [ ] Add a memory visualization feature
+  - [x] Add a memory visualization feature (web debugger in src/web/)
   - [ ] Consider implementing decimal mode for ADC and SBC

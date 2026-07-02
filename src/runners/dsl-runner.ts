@@ -10,7 +10,7 @@ import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStack
  *  - wait: run CPU until BASIC requests input (MONRDKEY)
  *
  * Usage:
- *   bun run dsl-runner.ts path/to/script.dsl [--cpu1|--cpu2|--sync] [--debug]
+ *   npm run dsl path/to/script.dsl [-- --cpu1|--cpu2|--sync]
  */
 
 import { readFileSync } from "fs";
