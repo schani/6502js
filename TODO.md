@@ -148,6 +148,30 @@
   - [ ] Port src/web/serve.ts from Bun.serve to Node (npm run web:serve currently requires Bun)
   - [ ] Fix missing DOM/browser types in src/web/main.ts (requestAnimationFrame etc.)
 
+- [ ] Code cleanup from 2026-07-02 review (repetition/inconsistency audit)
+  - [x] Delete dead files: `src/utils/6502.ts`, `src/core/cpu.ts`, `src/tests/compat.ts`
+  - [ ] Remove legacy synchronous getters if unused (CPU1/CPU2/SyncCPU)
+  - [ ] cpu1.ts: remove dead `cycles` plumbing (cycle counting was removed)
+  - [ ] pgcpu.ts: remove dead page-cross (`crossed`/`oldpc`) remnants
+  - [ ] cpu2.ts: remove 9 unreachable duplicate `case` labels
+  - [ ] cpu2.ts: dedupe `shiftMem2` into `shiftMemOp`; move NOP into the switch; drop IIFE handlers
+  - [ ] cpu2.ts: use shared flag constants from `constants.ts` instead of local `F`
+  - [ ] cpu2.ts: factor a `compare()` helper for CMP/CPX/CPY
+  - [ ] cpu1.ts/cpu2.ts: factor a shared branch helper for the 8 branch opcodes
+  - [ ] sync-cpu.ts: loop over CPUs for fan-out and over register fields in compareStates
+  - [ ] Extract shared BASIC harness (ROM load, reset, pop16, trap dispatch) used by
+        basic-runner and dsl-runner; fix dsl-runner/web trap addresses (ROM calls
+        $FFF1 for ISCNTC, not $FFB7 — verified by disassembling osi.bin); drop
+        dsl-runner's import from src/tests; remove push16/unused imports/stale
+        Bun and KIM-1 comments
+  - [ ] web/main.ts: shared trap constants, fix missing awaits (disassemble, readByte), ROM path
+  - [ ] Tests: consolidate LDY cluster (5 files → 1; remove weakened assertion)
+  - [ ] Tests: consolidate branch cluster (4 files + stragglers → 1)
+  - [ ] Tests: consolidate shift cluster (+ final-ror-test)
+  - [ ] Tests: merge unknown-opcodes/trace-functionality into system tests
+  - [ ] Tests: fold unique cases out of the coverage-push grab-bag files, then delete them
+  - [ ] pgcpu.ts: add `set_zn` (and ADC/SBC/CMP flag) SQL helpers to kill ~60x repetition
+
 - [ ] Potential future improvements:
   - [ ] Add more examples of running simple 6502 programs
   - [x] Improve debugging with memory dump and trace functionality
