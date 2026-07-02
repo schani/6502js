@@ -99,26 +99,6 @@ export class SyncCPU implements CPU {
         await this.pgcpu.clearStatusFlag(mask);
     }
 
-    // Legacy getters preserved for tests (not part of CPU interface)
-    getProgramCounter(): number {
-        return this.cpu1.getProgramCounter();
-    }
-    getAccumulator(): number {
-        return this.cpu1.getAccumulator();
-    }
-    getXRegister(): number {
-        return this.cpu1.getXRegister();
-    }
-    getYRegister(): number {
-        return this.cpu1.getYRegister();
-    }
-    getStackPointer(): number {
-        return this.cpu1.getStackPointer();
-    }
-    getStatusRegister(): number {
-        return this.cpu1.getStatusRegister();
-    }
-
     // Compare CPU states (registers only) across all three CPUs
     private async compareStates(): Promise<void> {
         const s1 = await this.cpu1.getState();

@@ -146,53 +146,6 @@ export class CPU2 implements CPU {
         this.state.p &= ~(mask & 0xff);
     }
 
-    /**
-     * Get the program counter value
-     * @returns Current program counter
-     */
-    getProgramCounter(): number {
-        return this.state.pc;
-    }
-
-    /**
-     * Get the accumulator value
-     * @returns Current accumulator value
-     */
-    getAccumulator(): number {
-        return this.state.a;
-    }
-
-    /**
-     * Get the X register value
-     * @returns Current X register value
-     */
-    getXRegister(): number {
-        return this.state.x;
-    }
-
-    /**
-     * Get the Y register value
-     * @returns Current Y register value
-     */
-    getYRegister(): number {
-        return this.state.y;
-    }
-
-    /**
-     * Get the stack pointer value
-     * @returns Current stack pointer value
-     */
-    getStackPointer(): number {
-        return this.state.sp;
-    }
-
-    /**
-     * Get the status register value
-     * @returns Current status register value
-     */
-    getStatusRegister(): number {
-        return this.state.p;
-    }
 }
 
 /* status-flag bit masks */

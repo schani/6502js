@@ -150,7 +150,7 @@
 
 - [ ] Code cleanup from 2026-07-02 review (repetition/inconsistency audit)
   - [x] Delete dead files: `src/utils/6502.ts`, `src/core/cpu.ts`, `src/tests/compat.ts`
-  - [ ] Remove legacy synchronous getters if unused (CPU1/CPU2/SyncCPU)
+  - [x] Remove legacy synchronous getters if unused (CPU1/CPU2/SyncCPU)
   - [ ] cpu1.ts: remove dead `cycles` plumbing (cycle counting was removed)
   - [ ] pgcpu.ts: remove dead page-cross (`crossed`/`oldpc`) remnants
   - [ ] cpu2.ts: remove 9 unreachable duplicate `case` labels
