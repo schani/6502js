@@ -13,25 +13,25 @@ describe("Register transfer instructions", () => {
     
     await cpu.step();
     
-    assert.strictEqual(await await getXRegister(cpu), 0x42);
-    assert.strictEqual(await await getProgramCounter(cpu), 1);
+    assert.strictEqual(await getXRegister(cpu), 0x42);
+    assert.strictEqual(await getProgramCounter(cpu), 1);
     
-    assert.strictEqual((await await getStatusRegister(cpu)) & ZERO, 0);
-    assert.strictEqual((await await getStatusRegister(cpu)) & NEGATIVE, 0);
+    assert.strictEqual((await getStatusRegister(cpu)) & ZERO, 0);
+    assert.strictEqual((await getStatusRegister(cpu)) & NEGATIVE, 0);
     
     // Test zero flag
     await cpu.setProgramCounter(0);
     await cpu.setAccumulator(0);
     await cpu.step();
-    assert.strictEqual(await await getXRegister(cpu), 0);
-    assert.strictEqual((await await getStatusRegister(cpu)) & ZERO, ZERO);
+    assert.strictEqual(await getXRegister(cpu), 0);
+    assert.strictEqual((await getStatusRegister(cpu)) & ZERO, ZERO);
     
     // Test negative flag
     await cpu.setProgramCounter(0);
     await cpu.setAccumulator(0x80);
     await cpu.step();
     assert.strictEqual(await getXRegister(cpu), 0x80);
-    assert.strictEqual((await await getStatusRegister(cpu)) & NEGATIVE, NEGATIVE);
+    assert.strictEqual((await getStatusRegister(cpu)) & NEGATIVE, NEGATIVE);
   });
   
   it("should perform TAY instruction", async () => {
@@ -45,8 +45,8 @@ describe("Register transfer instructions", () => {
     
     await cpu.step();
     
-    assert.strictEqual(await await getYRegister(cpu), 0x42);
-    assert.strictEqual(await await getProgramCounter(cpu), 1);
+    assert.strictEqual(await getYRegister(cpu), 0x42);
+    assert.strictEqual(await getProgramCounter(cpu), 1);
     
   });
   
@@ -61,8 +61,8 @@ describe("Register transfer instructions", () => {
     
     await cpu.step();
     
-    assert.strictEqual(await await getAccumulator(cpu), 0x42);
-    assert.strictEqual(await await getProgramCounter(cpu), 1);
+    assert.strictEqual(await getAccumulator(cpu), 0x42);
+    assert.strictEqual(await getProgramCounter(cpu), 1);
     
   });
   
@@ -77,8 +77,8 @@ describe("Register transfer instructions", () => {
     
     await cpu.step();
     
-    assert.strictEqual(await await getAccumulator(cpu), 0x42);
-    assert.strictEqual(await await getProgramCounter(cpu), 1);
+    assert.strictEqual(await getAccumulator(cpu), 0x42);
+    assert.strictEqual(await getProgramCounter(cpu), 1);
     
   });
   
@@ -93,11 +93,11 @@ describe("Register transfer instructions", () => {
     
     await cpu.step();
     
-    assert.strictEqual(await await getXRegister(cpu), 0x42);
-    assert.strictEqual(await await getProgramCounter(cpu), 1);
+    assert.strictEqual(await getXRegister(cpu), 0x42);
+    assert.strictEqual(await getProgramCounter(cpu), 1);
     
-    assert.strictEqual((await await getStatusRegister(cpu)) & ZERO, 0); // Result is not zero
-    assert.strictEqual((await await getStatusRegister(cpu)) & NEGATIVE, 0); // Result is not negative
+    assert.strictEqual((await getStatusRegister(cpu)) & ZERO, 0); // Result is not zero
+    assert.strictEqual((await getStatusRegister(cpu)) & NEGATIVE, 0); // Result is not negative
   });
   
   it("should perform TXS instruction", async () => {
@@ -111,9 +111,9 @@ describe("Register transfer instructions", () => {
     
     await cpu.step();
     
-    assert.strictEqual(await await getStackPointer(cpu), 0x42);
-    assert.strictEqual(await await getProgramCounter(cpu), 1);
+    assert.strictEqual(await getStackPointer(cpu), 0x42);
+    assert.strictEqual(await getProgramCounter(cpu), 1);
     
-    assert.strictEqual(await await getStatusRegister(cpu), INTERRUPT | UNUSED); // Original status
+    assert.strictEqual(await getStatusRegister(cpu), INTERRUPT | UNUSED); // Original status
   });
 });

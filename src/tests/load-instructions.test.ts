@@ -19,14 +19,14 @@ describe("Load instructions", async () => {
     
     // Test zero flag
     await cpu.setProgramCounter(0);
-    cpu.loadByte(1, 0x00);
+    await cpu.loadByte(1, 0x00);
     await cpu.step();
     assert.strictEqual(await getAccumulator(cpu), 0);
     assert.strictEqual(await getStatusRegister(cpu) & ZERO, ZERO); // Zero flag should be set
     
     // Test negative flag
     await cpu.setProgramCounter(0);
-    cpu.loadByte(1, 0x80);
+    await cpu.loadByte(1, 0x80);
     await cpu.step();
     assert.strictEqual(await getAccumulator(cpu), 0x80);
     assert.strictEqual(await getStatusRegister(cpu) & NEGATIVE, NEGATIVE); // Negative flag should be set
@@ -36,8 +36,8 @@ describe("Load instructions", async () => {
     const cpu = createCPU();
     
     // LDX #$42 - Load X register with value 0x42
-    cpu.loadByte(0, 0xA2); // LDX immediate
-    cpu.loadByte(1, 0x42); // Value to load
+    await cpu.loadByte(0, 0xA2); // LDX immediate
+    await cpu.loadByte(1, 0x42); // Value to load
 
     await cpu.step();
     
@@ -52,8 +52,8 @@ describe("Load instructions", async () => {
     const cpu = createCPU();
     
     // LDY #$42 - Load Y register with value 0x42
-    cpu.loadByte(0, 0xA0); // LDY immediate
-    cpu.loadByte(1, 0x42); // Value to load
+    await cpu.loadByte(0, 0xA0); // LDY immediate
+    await cpu.loadByte(1, 0x42); // Value to load
 
     await cpu.step();
     
@@ -68,9 +68,9 @@ describe("Load instructions", async () => {
     const cpu = createCPU();
     
     // Set up memory
-    cpu.loadByte(0, 0xA5); // LDA zero page
-    cpu.loadByte(1, 0x42); // Zero page address
-    cpu.loadByte(0x42, 0x37); // Value at zero page address
+    await cpu.loadByte(0, 0xA5); // LDA zero page
+    await cpu.loadByte(1, 0x42); // Zero page address
+    await cpu.loadByte(0x42, 0x37); // Value at zero page address
     
     await cpu.step();
     
@@ -83,9 +83,9 @@ describe("Load instructions", async () => {
     const cpu = createCPU();
     
     // Set up memory
-    cpu.loadByte(0, 0xA6); // LDX zero page
-    cpu.loadByte(1, 0x42); // Zero page address
-    cpu.loadByte(0x42, 0x37); // Value at zero page address
+    await cpu.loadByte(0, 0xA6); // LDX zero page
+    await cpu.loadByte(1, 0x42); // Zero page address
+    await cpu.loadByte(0x42, 0x37); // Value at zero page address
     
     await cpu.step();
     
@@ -102,9 +102,9 @@ describe("Load instructions", async () => {
     await cpu.setXRegister(0x05);
     
     // Set up memory
-    cpu.loadByte(0, 0xB5); // LDA zero page,X
-    cpu.loadByte(1, 0x20); // Zero page address
-    cpu.loadByte(0x25, 0x42); // Value at (zero page address + X)
+    await cpu.loadByte(0, 0xB5); // LDA zero page,X
+    await cpu.loadByte(1, 0x20); // Zero page address
+    await cpu.loadByte(0x25, 0x42); // Value at (zero page address + X)
     
     await cpu.step();
     
@@ -120,9 +120,9 @@ describe("Load instructions", async () => {
     await cpu.setXRegister(0xFF);
     
     // Set up memory
-    cpu.loadByte(0, 0xB5); // LDA zero page,X
-    cpu.loadByte(1, 0x80); // Zero page address
-    cpu.loadByte(0x7F, 0x42); // Value at (0x80 + 0xFF) & 0xFF = 0x7F (wrap around)
+    await cpu.loadByte(0, 0xB5); // LDA zero page,X
+    await cpu.loadByte(1, 0x80); // Zero page address
+    await cpu.loadByte(0x7F, 0x42); // Value at (0x80 + 0xFF) & 0xFF = 0x7F (wrap around)
     
     await cpu.step();
     
@@ -138,9 +138,9 @@ describe("Load instructions", async () => {
     await cpu.setYRegister(0x05);
     
     // Set up memory
-    cpu.loadByte(0, 0xB6); // LDX zero page,Y
-    cpu.loadByte(1, 0x20); // Zero page address
-    cpu.loadByte(0x25, 0x42); // Value at (zero page address + Y)
+    await cpu.loadByte(0, 0xB6); // LDX zero page,Y
+    await cpu.loadByte(1, 0x20); // Zero page address
+    await cpu.loadByte(0x25, 0x42); // Value at (zero page address + Y)
     
     await cpu.step();
     
@@ -154,10 +154,10 @@ describe("Load instructions", async () => {
     const cpu = createCPU();
     
     // Set up memory
-    cpu.loadByte(0, 0xAD); // LDA absolute
-    cpu.loadByte(1, 0x34); // Low byte of address
-    cpu.loadByte(2, 0x12); // High byte of address
-    cpu.loadByte(0x1234, 0x42); // Value at absolute address
+    await cpu.loadByte(0, 0xAD); // LDA absolute
+    await cpu.loadByte(1, 0x34); // Low byte of address
+    await cpu.loadByte(2, 0x12); // High byte of address
+    await cpu.loadByte(0x1234, 0x42); // Value at absolute address
     
     await cpu.step();
     
@@ -173,10 +173,10 @@ describe("Load instructions", async () => {
     await cpu.setXRegister(0x05);
     
     // Set up memory
-    cpu.loadByte(0, 0xBD); // LDA absolute,X
-    cpu.loadByte(1, 0x34); // Low byte of address
-    cpu.loadByte(2, 0x12); // High byte of address
-    cpu.loadByte(0x1239, 0x42); // Value at (absolute address + X)
+    await cpu.loadByte(0, 0xBD); // LDA absolute,X
+    await cpu.loadByte(1, 0x34); // Low byte of address
+    await cpu.loadByte(2, 0x12); // High byte of address
+    await cpu.loadByte(0x1239, 0x42); // Value at (absolute address + X)
     
     await cpu.step();
     
@@ -192,10 +192,10 @@ describe("Load instructions", async () => {
     await cpu.setXRegister(0xFF);
     
     // Set up memory
-    cpu.loadByte(0, 0xBD); // LDA absolute,X
-    cpu.loadByte(1, 0x01); // Low byte of address
-    cpu.loadByte(2, 0x12); // High byte of address
-    cpu.loadByte(0x1300, 0x42); // Value at (0x1201 + 0xFF) = 0x1300 (page boundary crossed)
+    await cpu.loadByte(0, 0xBD); // LDA absolute,X
+    await cpu.loadByte(1, 0x01); // Low byte of address
+    await cpu.loadByte(2, 0x12); // High byte of address
+    await cpu.loadByte(0x1300, 0x42); // Value at (0x1201 + 0xFF) = 0x1300 (page boundary crossed)
     
     await cpu.step();
     
@@ -211,10 +211,10 @@ describe("Load instructions", async () => {
     await cpu.setYRegister(0x05);
     
     // Set up memory
-    cpu.loadByte(0, 0xB9); // LDA absolute,Y
-    cpu.loadByte(1, 0x34); // Low byte of address
-    cpu.loadByte(2, 0x12); // High byte of address
-    cpu.loadByte(0x1239, 0x42); // Value at (absolute address + Y)
+    await cpu.loadByte(0, 0xB9); // LDA absolute,Y
+    await cpu.loadByte(1, 0x34); // Low byte of address
+    await cpu.loadByte(2, 0x12); // High byte of address
+    await cpu.loadByte(0x1239, 0x42); // Value at (absolute address + Y)
     
     await cpu.step();
     

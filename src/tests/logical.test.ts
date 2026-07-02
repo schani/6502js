@@ -44,7 +44,7 @@ describe("Logical operations", () => {
     
     // Set up CPU state
     await cpu.setAccumulator(0xF0);
-    cpu.setXRegister(0x05);
+    await cpu.setXRegister(0x05);
     
     // Set up memory
     await cpu.loadByte(0, 0x35); // AND zero page,X

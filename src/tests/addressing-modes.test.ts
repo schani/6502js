@@ -24,8 +24,8 @@ describe("Addressing modes", () => {
 
         // Verify results
         
-        assert.strictEqual(await await getAccumulator(cpu), 0xc1); // 0xF5 & 0xC3 = 0xC1
-        assert.strictEqual(await await getProgramCounter(cpu), 3);
+        assert.strictEqual(await getAccumulator(cpu), 0xc1); // 0xF5 & 0xC3 = 0xC1
+        assert.strictEqual(await getProgramCounter(cpu), 3);
 
         // Test ORA Absolute,X with page crossing
         await cpu.loadByte(3, 0x1d); // ORA Absolute,X
@@ -39,7 +39,7 @@ describe("Addressing modes", () => {
         await cpu.step();
 
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x0f); // 0x03 | 0x0C = 0x0F
+        assert.strictEqual(await getAccumulator(cpu), 0x0f); // 0x03 | 0x0C = 0x0F
 
         // Test EOR Absolute,X with page crossing
         await cpu.loadByte(6, 0x5d); // EOR Absolute,X
@@ -53,7 +53,7 @@ describe("Addressing modes", () => {
         await cpu.step();
 
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x66); // 0x55 ^ 0x33 = 0x66
+        assert.strictEqual(await getAccumulator(cpu), 0x66); // 0x55 ^ 0x33 = 0x66
     });
 
     it("should perform AND/ORA/EOR with absolute,Y addressing and page crossing", async () => {
@@ -74,7 +74,7 @@ describe("Addressing modes", () => {
 
         // Verify results
         
-        assert.strictEqual(await await getAccumulator(cpu), 0xaa); // 0xFF & 0xAA = 0xAA
+        assert.strictEqual(await getAccumulator(cpu), 0xaa); // 0xFF & 0xAA = 0xAA
 
         // Test ORA Absolute,Y with page crossing
         await cpu.loadByte(3, 0x19); // ORA Absolute,Y
@@ -88,7 +88,7 @@ describe("Addressing modes", () => {
         await cpu.step();
 
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x3f); // 0x0C | 0x33 = 0x3F
+        assert.strictEqual(await getAccumulator(cpu), 0x3f); // 0x0C | 0x33 = 0x3F
 
         // Test EOR Absolute,Y with page crossing
         await cpu.loadByte(6, 0x59); // EOR Absolute,Y
@@ -102,7 +102,7 @@ describe("Addressing modes", () => {
         await cpu.step();
 
         
-        assert.strictEqual(await await getAccumulator(cpu), 0xff); // 0x0F ^ 0xF0 = 0xFF
+        assert.strictEqual(await getAccumulator(cpu), 0xff); // 0x0F ^ 0xF0 = 0xFF
     });
 
     it("should perform AND/ORA/EOR with zero page,X addressing", async () => {
@@ -122,7 +122,7 @@ describe("Addressing modes", () => {
 
         // Verify results
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x55); // 0xFF & 0x55 = 0x55
+        assert.strictEqual(await getAccumulator(cpu), 0x55); // 0xFF & 0x55 = 0x55
 
         // Test ORA Zero Page,X
         await cpu.loadByte(2, 0x15); // ORA Zero Page,X
@@ -135,7 +135,7 @@ describe("Addressing modes", () => {
         await cpu.step();
 
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x0f); // 0x05 | 0x0A = 0x0F
+        assert.strictEqual(await getAccumulator(cpu), 0x0f); // 0x05 | 0x0A = 0x0F
 
         // Test EOR Zero Page,X
         await cpu.loadByte(4, 0x55); // EOR Zero Page,X
@@ -148,7 +148,7 @@ describe("Addressing modes", () => {
         await cpu.step();
 
         
-        assert.strictEqual(await await getAccumulator(cpu), 0xff); // 0x55 ^ 0xAA = 0xFF
+        assert.strictEqual(await getAccumulator(cpu), 0xff); // 0x55 ^ 0xAA = 0xFF
     });
 
     it("should perform AND/ORA/EOR with (Indirect,X) addressing", async () => {
@@ -170,7 +170,7 @@ describe("Addressing modes", () => {
 
         // Verify results
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x33); // 0xFF & 0x33 = 0x33
+        assert.strictEqual(await getAccumulator(cpu), 0x33); // 0xFF & 0x33 = 0x33
 
         // Test ORA (Indirect,X)
         await cpu.loadByte(2, 0x01); // ORA (Indirect,X)
@@ -182,7 +182,7 @@ describe("Addressing modes", () => {
         await cpu.step();
 
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x3f); // 0x0C | 0x33 = 0x3F
+        assert.strictEqual(await getAccumulator(cpu), 0x3f); // 0x0C | 0x33 = 0x3F
 
         // Test EOR (Indirect,X)
         await cpu.loadByte(4, 0x41); // EOR (Indirect,X)
@@ -194,7 +194,7 @@ describe("Addressing modes", () => {
         await cpu.step();
 
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x66); // 0x55 ^ 0x33 = 0x66
+        assert.strictEqual(await getAccumulator(cpu), 0x66); // 0x55 ^ 0x33 = 0x66
     });
 
     it("should perform AND/ORA/EOR with (Indirect),Y addressing and page crossing", async () => {
@@ -216,7 +216,7 @@ describe("Addressing modes", () => {
 
         // Verify results
         
-        assert.strictEqual(await await getAccumulator(cpu), 0xc3); // 0xFF & 0xC3 = 0xC3
+        assert.strictEqual(await getAccumulator(cpu), 0xc3); // 0xFF & 0xC3 = 0xC3
 
         // Test ORA (Indirect),Y with page crossing
         await cpu.loadByte(2, 0x11); // ORA (Indirect),Y
@@ -228,7 +228,7 @@ describe("Addressing modes", () => {
         await cpu.step();
 
         
-        assert.strictEqual(await await getAccumulator(cpu), 0xcf); // 0x0C | 0xC3 = 0xCF
+        assert.strictEqual(await getAccumulator(cpu), 0xcf); // 0x0C | 0xC3 = 0xCF
 
         // Test EOR (Indirect),Y with page crossing
         await cpu.loadByte(4, 0x51); // EOR (Indirect),Y
@@ -240,7 +240,7 @@ describe("Addressing modes", () => {
         await cpu.step();
 
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x96); // 0x55 ^ 0xC3 = 0x96
+        assert.strictEqual(await getAccumulator(cpu), 0x96); // 0x55 ^ 0xC3 = 0x96
     });
 
     it("should perform CMP/CPX/CPY with various addressing modes", async () => {
@@ -509,18 +509,18 @@ describe("Addressing modes", () => {
 
         // Verify results
         
-        assert.strictEqual(await await getProgramCounter(cpu), 0x12); // 0x02 (PC after opcode+operand) + 0x10 (offset)
+        assert.strictEqual(await getProgramCounter(cpu), 0x12); // 0x02 (PC after opcode+operand) + 0x10 (offset)
 
         // Test BNE when Z=0
         await cpu.loadByte(0x12, 0xd0); // BNE
         await cpu.loadByte(0x13, 0xfe); // Branch offset (-2 in two's complement)
 
-        cpu.clearStatusFlag(ZERO); // Clear zero flag
+        await cpu.clearStatusFlag(ZERO); // Clear zero flag
 
         await cpu.step();
 
         
-        assert.strictEqual(await await getProgramCounter(cpu), 0x12); // 0x14 (PC after opcode+operand) - 2 (negative offset)
+        assert.strictEqual(await getProgramCounter(cpu), 0x12); // 0x14 (PC after opcode+operand) - 2 (negative offset)
 
         // Test BMI when N=1
         await cpu.loadByte(0x12, 0x30); // BMI
@@ -531,19 +531,19 @@ describe("Addressing modes", () => {
         await cpu.step();
 
         
-        assert.strictEqual(await await getProgramCounter(cpu), 0xff94); // 0x14 (PC after opcode+operand) - 128 (negative offset) = 0xFF94
+        assert.strictEqual(await getProgramCounter(cpu), 0xff94); // 0x14 (PC after opcode+operand) - 128 (negative offset) = 0xFF94
 
         // Test BPL when N=0
         await cpu.loadByte(0xff94, 0x10); // BPL
         await cpu.loadByte(0xff95, 0x6b); // Branch offset
 
-        cpu.clearStatusFlag(NEGATIVE); // Clear negative flag
+        await cpu.clearStatusFlag(NEGATIVE); // Clear negative flag
         await cpu.setProgramCounter(0xff94);
 
         await cpu.step();
 
         
-        assert.strictEqual(await await getProgramCounter(cpu), 0x01); // 0xFF96 (PC after opcode+operand) + 0x6B (offset) = 0x01 (wraps around)
+        assert.strictEqual(await getProgramCounter(cpu), 0x01); // 0xFF96 (PC after opcode+operand) + 0x6B (offset) = 0x01 (wraps around)
 
         // Test BVS when V=1
         await cpu.loadByte(0x01, 0x70); // BVS
@@ -554,18 +554,18 @@ describe("Addressing modes", () => {
         await cpu.step();
 
         
-        assert.strictEqual(await await getProgramCounter(cpu), 0x13); // 0x03 (PC after opcode+operand) + 0x10 (offset)
+        assert.strictEqual(await getProgramCounter(cpu), 0x13); // 0x03 (PC after opcode+operand) + 0x10 (offset)
 
         // Test BVC when V=0
         await cpu.loadByte(0x13, 0x50); // BVC
         await cpu.loadByte(0x14, 0x10); // Branch offset
 
-        cpu.clearStatusFlag(OVERFLOW); // Clear overflow flag
+        await cpu.clearStatusFlag(OVERFLOW); // Clear overflow flag
         await cpu.setProgramCounter(0x13);
 
         await cpu.step();
 
         
-        assert.strictEqual(await await getProgramCounter(cpu), 0x25); // 0x15 (PC after opcode+operand) + 0x10 (offset)
+        assert.strictEqual(await getProgramCounter(cpu), 0x25); // 0x15 (PC after opcode+operand) + 0x10 (offset)
     });
 });

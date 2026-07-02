@@ -41,12 +41,12 @@ describe("SyncCPU", () => {
         // Execute LDA #42
         await syncCpu.step();
         
-        assert.strictEqual(await await getAccumulator(syncCpu), 0x2a);
+        assert.strictEqual(await getAccumulator(syncCpu), 0x2a);
 
         // Execute ADC #13
         await syncCpu.step();
         
-        assert.strictEqual(await await getAccumulator(syncCpu), 0x37); // 42 + 13 = 55 (0x37)
+        assert.strictEqual(await getAccumulator(syncCpu), 0x37); // 42 + 13 = 55 (0x37)
 
         // We successfully executed both steps, which means the states matched
     });
@@ -90,22 +90,22 @@ describe("SyncCPU", () => {
         // Execute JSR $0500
         await syncCpu.step();
         
-        assert.strictEqual(await await getProgramCounter(syncCpu), 0x0500);
+        assert.strictEqual(await getProgramCounter(syncCpu), 0x0500);
 
         // Execute LDA #$FF
         await syncCpu.step();
         
-        assert.strictEqual(await await getAccumulator(syncCpu), 0xff);
+        assert.strictEqual(await getAccumulator(syncCpu), 0xff);
 
         // Execute RTS
         await syncCpu.step();
         
-        assert.strictEqual(await await getProgramCounter(syncCpu), 0x0403);
+        assert.strictEqual(await getProgramCounter(syncCpu), 0x0403);
 
         // Execute INX
         await syncCpu.step();
         
-        assert.strictEqual(await await getXRegister(syncCpu), 1);
+        assert.strictEqual(await getXRegister(syncCpu), 1);
 
         // We successfully executed the program with JSR/RTS, which means both CPUs handle stack operations correctly
     });
@@ -131,7 +131,7 @@ describe("SyncCPU", () => {
         // Execute ADC #$80
         await syncCpu.step();
         // 0x80 + 0x80 = 0x00 with carry and overflow
-        assert.strictEqual(await await getAccumulator(syncCpu), 0x00);
+        assert.strictEqual(await getAccumulator(syncCpu), 0x00);
         assert.strictEqual(((await syncCpu.getState()).p & CARRY) !== 0, true);
         assert.strictEqual(((await syncCpu.getState()).p & ZERO) !== 0, true);
         assert.strictEqual(((await syncCpu.getState()).p & OVERFLOW) !== 0, true);

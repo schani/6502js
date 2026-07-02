@@ -28,7 +28,7 @@ describe("Internal helper functions", () => {
     await cpu.loadByte(0x2001, 0x37); // High byte
     
     // Now setup a JMP indirect instruction
-    cpu.setProgramCounter(0);
+    await cpu.setProgramCounter(0);
     await cpu.loadByte(0, 0x6C); // JMP indirect
     await cpu.loadByte(1, 0x00); // Low byte of pointer
     await cpu.loadByte(2, 0x20); // High byte of pointer

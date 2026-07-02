@@ -28,9 +28,9 @@ describe("INC and DEC with all addressing modes", async () => {
     const cpu = createCPU();
     
     // Setup
-    cpu.loadByte(0, 0xEE); // INC Absolute
-    cpu.loadByte(1, 0x00); // Low byte of address
-    cpu.loadByte(2, 0x20); // High byte of address (0x2000)
+    await cpu.loadByte(0, 0xEE); // INC Absolute
+    await cpu.loadByte(1, 0x00); // Low byte of address
+    await cpu.loadByte(2, 0x20); // High byte of address (0x2000)
     await cpu.loadByte(0x2000, 0xFF); // Value at absolute address
     
     await cpu.setProgramCounter(0);
@@ -49,9 +49,9 @@ describe("INC and DEC with all addressing modes", async () => {
     const cpu = createCPU();
     
     // Setup
-    cpu.loadByte(0, 0xFE); // INC Absolute,X
-    cpu.loadByte(1, 0x00); // Low byte of address
-    cpu.loadByte(2, 0x20); // High byte of address (0x2000)
+    await cpu.loadByte(0, 0xFE); // INC Absolute,X
+    await cpu.loadByte(1, 0x00); // Low byte of address
+    await cpu.loadByte(2, 0x20); // High byte of address (0x2000)
     await cpu.loadByte(0x2010, 0x7F); // Value at 0x2000 + 0x10 = 0x2010
     
     await cpu.setXRegister(0x10); // X offset
@@ -71,7 +71,7 @@ describe("INC and DEC with all addressing modes", async () => {
     const cpu = createCPU();
     
     // Setup
-    cpu.loadByte(0, 0xD6); // DEC Zero Page,X
+    await cpu.loadByte(0, 0xD6); // DEC Zero Page,X
     await cpu.loadByte(1, 0x80); // Zero page address
     await cpu.loadByte(0x90, 0x42); // Value at 0x80 + 0x10 (with zero page wrap-around)
     
@@ -92,10 +92,10 @@ describe("INC and DEC with all addressing modes", async () => {
     const cpu = createCPU();
     
     // Setup
-    cpu.loadByte(0, 0xCE); // DEC Absolute
-    cpu.loadByte(1, 0x00); // Low byte of address
-    cpu.loadByte(2, 0x20); // High byte of address (0x2000)
-    cpu.loadByte(0x2000, 0x01); // Value at absolute address
+    await cpu.loadByte(0, 0xCE); // DEC Absolute
+    await cpu.loadByte(1, 0x00); // Low byte of address
+    await cpu.loadByte(2, 0x20); // High byte of address (0x2000)
+    await cpu.loadByte(0x2000, 0x01); // Value at absolute address
     
     await cpu.setProgramCounter(0);
     
@@ -113,9 +113,9 @@ describe("INC and DEC with all addressing modes", async () => {
     const cpu = createCPU();
     
     // Setup
-    cpu.loadByte(0, 0xDE); // DEC Absolute,X
-    cpu.loadByte(1, 0x00); // Low byte of address
-    cpu.loadByte(2, 0x20); // High byte of address (0x2000)
+    await cpu.loadByte(0, 0xDE); // DEC Absolute,X
+    await cpu.loadByte(1, 0x00); // Low byte of address
+    await cpu.loadByte(2, 0x20); // High byte of address (0x2000)
     await cpu.loadByte(0x2010, 0x00); // Value at 0x2000 + 0x10 = 0x2010
     
     await cpu.setXRegister(0x10); // X offset

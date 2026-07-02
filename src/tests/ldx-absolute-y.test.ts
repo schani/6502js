@@ -21,10 +21,10 @@ describe("LDX Absolute,Y addressing mode", () => {
         await cpu.step();
 
                 
-        assert.strictEqual(await await getXRegister(cpu), 0x42);
+        assert.strictEqual(await getXRegister(cpu), 0x42);
 
         // Check PC was incremented correctly
-        assert.strictEqual(await await getProgramCounter(cpu), 0x1003);
+        assert.strictEqual(await getProgramCounter(cpu), 0x1003);
 
         // Now test without page crossing
         await cpu.setProgramCounter(0x1000);
@@ -41,7 +41,7 @@ describe("LDX Absolute,Y addressing mode", () => {
 
                 
         // Check if X register was loaded with the value
-        assert.strictEqual(await await getXRegister(cpu), 0x84);
+        assert.strictEqual(await getXRegister(cpu), 0x84);
 
         // Check if negative flag was set
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true);
@@ -60,7 +60,7 @@ describe("LDX Absolute,Y addressing mode", () => {
         await cpu.step();
 
         // Check if X register was loaded with the value
-        assert.strictEqual(await await getXRegister(cpu), 0x00);
+        assert.strictEqual(await getXRegister(cpu), 0x00);
 
         // Check if zero flag was set
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true);

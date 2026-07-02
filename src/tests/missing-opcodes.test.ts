@@ -126,7 +126,7 @@ describe("Missing opcodes tests for 100% coverage", () => {
         await cpu.setAccumulator(0x00);
 
         await cpu.step();
-        assert.strictEqual(await await getAccumulator(cpu), 0x00);
+        assert.strictEqual(await getAccumulator(cpu), 0x00);
         assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // Carry should be clear
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
 
@@ -136,7 +136,7 @@ describe("Missing opcodes tests for 100% coverage", () => {
         await cpu.setAccumulator(0x00);
 
         await cpu.step();
-        assert.strictEqual(await await getAccumulator(cpu), 0x00);
+        assert.strictEqual(await getAccumulator(cpu), 0x00);
         assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // Carry should be clear
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, true); // Zero flag should be set
 
@@ -147,7 +147,7 @@ describe("Missing opcodes tests for 100% coverage", () => {
         await cpu.setStatusRegister(CARRY); // Set carry flag
 
         await cpu.step();
-        assert.strictEqual(await await getAccumulator(cpu), 0x01); // Result should be 0x01 (carry rotated into bit 0)
+        assert.strictEqual(await getAccumulator(cpu), 0x01); // Result should be 0x01 (carry rotated into bit 0)
         assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // No carry out
         assert.strictEqual(((await cpu.getState()).p & ZERO) === 0, true); // Zero flag should be clear
 
@@ -158,7 +158,7 @@ describe("Missing opcodes tests for 100% coverage", () => {
         await cpu.setStatusRegister(CARRY); // Set carry flag
 
         await cpu.step();
-        assert.strictEqual(await await getAccumulator(cpu), 0x80); // Result should be 0x80 (carry rotated into bit 7)
+        assert.strictEqual(await getAccumulator(cpu), 0x80); // Result should be 0x80 (carry rotated into bit 7)
         assert.strictEqual(((await cpu.getState()).p & CARRY) === 0, true); // No carry out
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Negative flag should be set
     });

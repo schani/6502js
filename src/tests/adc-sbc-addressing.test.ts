@@ -31,7 +31,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         // Verify
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x52); // 0x10 + 0x42 = 0x52
+        assert.strictEqual(await getAccumulator(cpu), 0x52); // 0x10 + 0x42 = 0x52
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // No carry out
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // Result is not zero
         assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, false); // No signed overflow
@@ -48,7 +48,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         await cpu.setAccumulator(0x10); // Initial value in A
         await cpu.setXRegister(0x10); // X offset
-        cpu.setStatusFlag(CARRY); // Set carry flag
+        await cpu.setStatusFlag(CARRY); // Set carry flag
         await cpu.setProgramCounter(0);
 
         // Execute
@@ -56,7 +56,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         // Verify
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x53); // 0x10 + 0x42 + 0x01 (carry) = 0x53
+        assert.strictEqual(await getAccumulator(cpu), 0x53); // 0x10 + 0x42 + 0x01 (carry) = 0x53
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // No carry out
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // Result is not zero
         assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, false); // No signed overflow
@@ -81,7 +81,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         // Verify
         
-        assert.strictEqual(await await getAccumulator(cpu), 0xe0); // 0x10 + 0xD0 = 0xE0
+        assert.strictEqual(await getAccumulator(cpu), 0xe0); // 0x10 + 0xD0 = 0xE0
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // No carry out
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // Result is not zero
         assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, false); // No signed overflow
@@ -107,7 +107,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         // Verify
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x50); // 0x10 + 0x40 = 0x50
+        assert.strictEqual(await getAccumulator(cpu), 0x50); // 0x10 + 0x40 = 0x50
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // No carry out
     });
 
@@ -130,7 +130,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         // Verify
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x50); // 0x10 + 0x40 = 0x50
+        assert.strictEqual(await getAccumulator(cpu), 0x50); // 0x10 + 0x40 = 0x50
     });
 
     it("should perform ADC with absolute,Y addressing", async () => {
@@ -152,7 +152,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         // Verify
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x80); // 0x10 + 0x70 = 0x80
+        assert.strictEqual(await getAccumulator(cpu), 0x80); // 0x10 + 0x70 = 0x80
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result is negative (bit 7 set)
     });
 
@@ -176,7 +176,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         // Verify
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x45); // 0x10 + 0x35 = 0x45
+        assert.strictEqual(await getAccumulator(cpu), 0x45); // 0x10 + 0x35 = 0x45
     });
 
     it("should perform ADC with (Indirect),Y addressing", async () => {
@@ -199,7 +199,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         // Verify
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x35); // 0x10 + 0x25 = 0x35
+        assert.strictEqual(await getAccumulator(cpu), 0x35); // 0x10 + 0x25 = 0x35
     });
 
     it("should perform ADC with (Indirect),Y addressing and page crossing", async () => {
@@ -222,7 +222,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         // Verify
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x35); // 0x10 + 0x25 = 0x35
+        assert.strictEqual(await getAccumulator(cpu), 0x35); // 0x10 + 0x25 = 0x35
     });
 
     // Test SBC with all addressing modes
@@ -235,7 +235,7 @@ describe("ADC and SBC with different addressing modes", async () => {
         await cpu.loadByte(0x80, 0x20); // Value at zero page address
 
         await cpu.setAccumulator(0x50); // Initial value in A
-        cpu.setStatusFlag(CARRY); // Set carry flag (no borrow)
+        await cpu.setStatusFlag(CARRY); // Set carry flag (no borrow)
         await cpu.setProgramCounter(0);
 
         // Execute
@@ -243,7 +243,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         // Verify
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x30); // 0x50 - 0x20 = 0x30
+        assert.strictEqual(await getAccumulator(cpu), 0x30); // 0x50 - 0x20 = 0x30
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // No borrow (carry set)
         assert.strictEqual(((await cpu.getState()).p & ZERO) !== 0, false); // Result is not zero
         assert.strictEqual(((await cpu.getState()).p & OVERFLOW) !== 0, false); // No signed overflow
@@ -268,7 +268,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         // Verify
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x2f); // 0x50 - 0x20 - 0x01 (borrow) = 0x2F
+        assert.strictEqual(await getAccumulator(cpu), 0x2f); // 0x50 - 0x20 - 0x01 (borrow) = 0x2F
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // No borrow out (carry set after operation)
     });
 
@@ -282,7 +282,7 @@ describe("ADC and SBC with different addressing modes", async () => {
         await cpu.loadByte(0x2000, 0x60); // Value at absolute address
 
         await cpu.setAccumulator(0x40); // Initial value in A
-        cpu.setStatusFlag(CARRY); // Set carry flag (no borrow)
+        await cpu.setStatusFlag(CARRY); // Set carry flag (no borrow)
         await cpu.setProgramCounter(0);
 
         // Execute
@@ -290,7 +290,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         // Verify
         
-        assert.strictEqual(await await getAccumulator(cpu), 0xe0); // 0x40 - 0x60 = 0xE0
+        assert.strictEqual(await getAccumulator(cpu), 0xe0); // 0x40 - 0x60 = 0xE0
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, false); // Borrow out (carry clear)
         assert.strictEqual(((await cpu.getState()).p & NEGATIVE) !== 0, true); // Result is negative
     });
@@ -306,7 +306,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         await cpu.setAccumulator(0x50); // Initial value in A
         await cpu.setXRegister(0x10); // X offset
-        cpu.setStatusFlag(CARRY); // Set carry flag (no borrow)
+        await cpu.setStatusFlag(CARRY); // Set carry flag (no borrow)
         await cpu.setProgramCounter(0);
 
         // Execute
@@ -314,7 +314,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         // Verify
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x30); // 0x50 - 0x20 = 0x30
+        assert.strictEqual(await getAccumulator(cpu), 0x30); // 0x50 - 0x20 = 0x30
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // No borrow out (carry set)
     });
 
@@ -329,7 +329,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         await cpu.setAccumulator(0x50); // Initial value in A
         await cpu.setXRegister(0x10); // X offset
-        cpu.setStatusFlag(CARRY); // Set carry flag (no borrow)
+        await cpu.setStatusFlag(CARRY); // Set carry flag (no borrow)
         await cpu.setProgramCounter(0);
 
         // Execute
@@ -337,7 +337,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         // Verify
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x30); // 0x50 - 0x20 = 0x30
+        assert.strictEqual(await getAccumulator(cpu), 0x30); // 0x50 - 0x20 = 0x30
     });
 
     it("should perform SBC with absolute,Y addressing", async () => {
@@ -351,7 +351,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         await cpu.setAccumulator(0x50); // Initial value in A
         await cpu.setYRegister(0x10); // Y offset
-        cpu.setStatusFlag(CARRY); // Set carry flag (no borrow)
+        await cpu.setStatusFlag(CARRY); // Set carry flag (no borrow)
         await cpu.setProgramCounter(0);
 
         // Execute
@@ -359,7 +359,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         // Verify
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x30); // 0x50 - 0x20 = 0x30
+        assert.strictEqual(await getAccumulator(cpu), 0x30); // 0x50 - 0x20 = 0x30
     });
 
     it("should perform SBC with (Indirect,X) addressing", async () => {
@@ -374,7 +374,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         await cpu.setAccumulator(0x50); // Initial value in A
         await cpu.setXRegister(0x10); // X offset
-        cpu.setStatusFlag(CARRY); // Set carry flag (no borrow)
+        await cpu.setStatusFlag(CARRY); // Set carry flag (no borrow)
         await cpu.setProgramCounter(0);
 
         // Execute
@@ -382,7 +382,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         // Verify
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x2b); // 0x50 - 0x25 = 0x2B
+        assert.strictEqual(await getAccumulator(cpu), 0x2b); // 0x50 - 0x25 = 0x2B
         assert.strictEqual(((await cpu.getState()).p & CARRY) !== 0, true); // No borrow out (carry set)
     });
 
@@ -398,7 +398,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         await cpu.setAccumulator(0x50); // Initial value in A
         await cpu.setYRegister(0x10); // Y offset
-        cpu.setStatusFlag(CARRY); // Set carry flag (no borrow)
+        await cpu.setStatusFlag(CARRY); // Set carry flag (no borrow)
         await cpu.setProgramCounter(0);
 
         // Execute
@@ -406,7 +406,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         // Verify
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x40); // 0x50 - 0x10 = 0x40
+        assert.strictEqual(await getAccumulator(cpu), 0x40); // 0x50 - 0x10 = 0x40
     });
 
     it("should perform SBC with (Indirect),Y addressing and page crossing", async () => {
@@ -421,7 +421,7 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         await cpu.setAccumulator(0x50); // Initial value in A
         await cpu.setYRegister(0x10); // Y offset
-        cpu.setStatusFlag(CARRY); // Set carry flag (no borrow)
+        await cpu.setStatusFlag(CARRY); // Set carry flag (no borrow)
         await cpu.setProgramCounter(0);
 
         // Execute
@@ -429,6 +429,6 @@ describe("ADC and SBC with different addressing modes", async () => {
 
         // Verify
         
-        assert.strictEqual(await await getAccumulator(cpu), 0x40); // 0x50 - 0x10 = 0x40
+        assert.strictEqual(await getAccumulator(cpu), 0x40); // 0x50 - 0x10 = 0x40
     });
 });

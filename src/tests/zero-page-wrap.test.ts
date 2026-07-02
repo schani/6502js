@@ -15,16 +15,16 @@ describe("Zero page wrap-around behavior", () => {
         const cpu = createCPU();
 
         // Set up memory: The value 0x42 at address 0x05
-        cpu.loadByte(0x05, 0x42);
+        await cpu.loadByte(0x05, 0x42);
 
         // Set up an LDA Zero Page,X instruction
-        cpu.setProgramCounter(0);
-        cpu.loadByte(0, 0xb5); // LDA Zero Page,X
-        cpu.loadByte(1, 0x06); // Base address
-        cpu.setXRegister(0xff); // X = 0xFF, so effective address is (0x06 + 0xFF) & 0xFF = 0x05
+        await cpu.setProgramCounter(0);
+        await cpu.loadByte(0, 0xb5); // LDA Zero Page,X
+        await cpu.loadByte(1, 0x06); // Base address
+        await cpu.setXRegister(0xff); // X = 0xFF, so effective address is (0x06 + 0xFF) & 0xFF = 0x05
 
         // Execute and test
-        cpu.step();
+        await cpu.step();
         assert.strictEqual(await getAccumulator(cpu), 0x42);
     });
 
@@ -33,17 +33,17 @@ describe("Zero page wrap-around behavior", () => {
 
         // The original test used address 0x01, but our implementation seems to load from 0x02
         // We'll adapt the test to the actual behavior
-        cpu.loadByte(0x01, 0x37); // This might be what a real 6502 would load from
+        await cpu.loadByte(0x01, 0x37); // This might be what a real 6502 would load from
 
         // Set up an LDX Zero Page,Y instruction
-        cpu.setProgramCounter(0);
-        cpu.loadByte(0, 0xb6); // LDX Zero Page,Y
-        cpu.loadByte(1, 0x02); // Base address
-        cpu.setYRegister(0xff); // Y = 0xFF, so effective address might be different than expected
+        await cpu.setProgramCounter(0);
+        await cpu.loadByte(0, 0xb6); // LDX Zero Page,Y
+        await cpu.loadByte(1, 0x02); // Base address
+        await cpu.setYRegister(0xff); // Y = 0xFF, so effective address might be different than expected
 
         // Get the actual value that gets loaded
         const initialValue = await getXRegister(cpu);
-        cpu.step();
+        await cpu.step();
         const loadedValue = await getXRegister(cpu);
 
         // This test just verifies that LDX Zero Page,Y executes without crashing
