@@ -176,6 +176,16 @@ const setZN = (s: CPUState, v: number) => {
     return v;
 };
 
+/* CMP/CPX/CPY: set C/Z/N from reg - v */
+const compare = (s: CPUState, reg: number, v: number) => {
+    const r = (reg - v) & 0x1ff;
+    s.p =
+        (s.p & ~(CARRY | ZERO | NEGATIVE)) |
+        (r < 0x100 ? CARRY : 0) |
+        ((r & 0xff) === 0 ? ZERO : 0) |
+        (r & 0x80);
+};
+
 /* ADC / SBC with BCD if D-flag set */
 const adc = (s: CPUState, v: number) => {
     const c = s.p & CARRY ? 1 : 0;
@@ -512,161 +522,25 @@ export async function step6502(
             return;
         }
 
-        /* CMP #imm */
-        case 0xc9: {
-            const val = imm8(s);
-            const r = (s.a - val) & 0x1ff;
-            s.p =
-                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
-                (r < 0x100 ? CARRY : 0) |
-                ((r & 0xff) === 0 ? ZERO : 0) |
-                (r & 0x80);
-            return;
-        }
+        /* CMP - Compare Accumulator */
+        case 0xc9: compare(s, s.a, imm8(s)); return;
+        case 0xc5: compare(s, s.a, rd(s, zp(s))); return;
+        case 0xd5: compare(s, s.a, rd(s, zpx(s))); return;
+        case 0xcd: compare(s, s.a, rd(s, abs16(s))); return;
+        case 0xdd: compare(s, s.a, rd(s, absx(s))); return;
+        case 0xd9: compare(s, s.a, rd(s, absy(s))); return;
+        case 0xc1: compare(s, s.a, rd(s, indx(s))); return;
+        case 0xd1: compare(s, s.a, rd(s, indy(s))); return;
 
-        /* CPX #imm */
-        case 0xe0: {
-            const val = imm8(s);
-            const r = (s.x - val) & 0x1ff;
-            s.p =
-                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
-                (r < 0x100 ? CARRY : 0) |
-                ((r & 0xff) === 0 ? ZERO : 0) |
-                (r & 0x80);
-            return;
-        }
+        /* CPX - Compare X Register */
+        case 0xe0: compare(s, s.x, imm8(s)); return;
+        case 0xe4: compare(s, s.x, rd(s, zp(s))); return;
+        case 0xec: compare(s, s.x, rd(s, abs16(s))); return;
 
-        /* CPX zero-page */
-        case 0xe4: {
-            const val = rd(s, zp(s));
-            const r = (s.x - val) & 0x1ff;
-            s.p =
-                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
-                (r < 0x100 ? CARRY : 0) |
-                ((r & 0xff) === 0 ? ZERO : 0) |
-                (r & 0x80);
-            return;
-        }
-
-        /* CPX absolute */
-        case 0xec: {
-            const val = rd(s, abs16(s));
-            const r = (s.x - val) & 0x1ff;
-            s.p =
-                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
-                (r < 0x100 ? CARRY : 0) |
-                ((r & 0xff) === 0 ? ZERO : 0) |
-                (r & 0x80);
-            return;
-        }
-
-        /* CPY absolute */
-        case 0xcc: {
-            const val = rd(s, abs16(s));
-            const r = (s.y - val) & 0x1ff;
-            s.p =
-                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
-                (r < 0x100 ? CARRY : 0) |
-                ((r & 0xff) === 0 ? ZERO : 0) |
-                (r & 0x80);
-            return;
-        }
-
-        /* CMP memory addressing modes */
-        case 0xc5: {
-            const val = rd(s, zp(s));
-            const r = (s.a - val) & 0x1ff;
-            s.p =
-                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
-                (r < 0x100 ? CARRY : 0) |
-                (r & 0xff ? 0 : ZERO) |
-                (r & 0x80);
-            return;
-        }
-        case 0xd5: {
-            const val = rd(s, zpx(s));
-            const r = (s.a - val) & 0x1ff;
-            s.p =
-                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
-                (r < 0x100 ? CARRY : 0) |
-                (r & 0xff ? 0 : ZERO) |
-                (r & 0x80);
-            return;
-        }
-        case 0xcd: {
-            const val = rd(s, abs16(s));
-            const r = (s.a - val) & 0x1ff;
-            s.p =
-                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
-                (r < 0x100 ? CARRY : 0) |
-                (r & 0xff ? 0 : ZERO) |
-                (r & 0x80);
-            return;
-        }
-        case 0xdd: {
-            const val = rd(s, absx(s));
-            const r = (s.a - val) & 0x1ff;
-            s.p =
-                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
-                (r < 0x100 ? CARRY : 0) |
-                (r & 0xff ? 0 : ZERO) |
-                (r & 0x80);
-            return;
-        }
-        case 0xd9: {
-            const val = rd(s, absy(s));
-            const r = (s.a - val) & 0x1ff;
-            s.p =
-                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
-                (r < 0x100 ? CARRY : 0) |
-                (r & 0xff ? 0 : ZERO) |
-                (r & 0x80);
-            return;
-        }
-        case 0xc1: {
-            const val = rd(s, indx(s));
-            const r = (s.a - val) & 0x1ff;
-            s.p =
-                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
-                (r < 0x100 ? CARRY : 0) |
-                (r & 0xff ? 0 : ZERO) |
-                (r & 0x80);
-            return;
-        }
-        case 0xd1: {
-            const val = rd(s, indy(s));
-            const r = (s.a - val) & 0x1ff;
-            s.p =
-                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
-                (r < 0x100 ? CARRY : 0) |
-                (r & 0xff ? 0 : ZERO) |
-                (r & 0x80);
-            return;
-        }
-
-        /* CPY #imm */
-        case 0xc0: {
-            const val = imm8(s);
-            const r = (s.y - val) & 0x1ff;
-            s.p =
-                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
-                (r < 0x100 ? CARRY : 0) |
-                ((r & 0xff) === 0 ? ZERO : 0) |
-                (r & 0x80);
-            return;
-        }
-
-        /* CPY zero-page */
-        case 0xc4: {
-            const val = rd(s, zp(s));
-            const r = (s.y - val) & 0x1ff;
-            s.p =
-                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
-                (r < 0x100 ? CARRY : 0) |
-                ((r & 0xff) === 0 ? ZERO : 0) |
-                (r & 0x80);
-            return;
-        }
+        /* CPY - Compare Y Register */
+        case 0xc0: compare(s, s.y, imm8(s)); return;
+        case 0xc4: compare(s, s.y, rd(s, zp(s))); return;
+        case 0xcc: compare(s, s.y, rd(s, abs16(s))); return;
 
         /* BNE – branch if zero clear (relative) */
         case 0xd0: {
