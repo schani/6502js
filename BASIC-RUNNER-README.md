@@ -73,4 +73,4 @@ For reproducible, scripted BASIC sessions (useful when debugging), use the DSL r
 npm run dsl example.dsl
 ```
 
-The DSL supports `input <text>` (queue keystrokes, `\n` for Enter), `wait` (run until BASIC requests input), and `trace on|off`. It accepts the same `--cpu1|--cpu2|--sync` flags.
+The DSL supports `input <text>` (queue keystrokes, `\n` for Enter), `wait` (run until BASIC requests input), and `trace on|off`. It accepts the same `--cpu1|--cpu2|--pgcpu|--sync` flags.

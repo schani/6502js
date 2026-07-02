@@ -30,7 +30,7 @@ See [SYNC-CPU-SUMMARY.md](SYNC-CPU-SUMMARY.md) for details on the multi-CPU arch
 ## Project Structure
 
 - `src/core/` — CPU interface, the three CPU implementations, SyncCPU, status flag constants
-- `src/runners/` — `basic-runner.ts` (interactive MS-BASIC) and `dsl-runner.ts` (scripted BASIC sessions, see `example.dsl`)
+- `src/runners/` — `basic-runner.ts` (interactive MS-BASIC), `dsl-runner.ts` (scripted BASIC sessions, see `example.dsl`), and the shared BASIC host glue (`basic-harness.ts` for Node, `basic-traps.ts` environment-independent, also used by the web debugger)
 - `src/tests/` — the test suite
 - `src/utils/` — disassembler and legacy re-exports
 - `src/web/` — browser-based debugger UI

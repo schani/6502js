@@ -393,3 +393,74 @@ uses `Bun.serve` (so `npm run web:serve`, which invokes it with Node, cannot wor
 and `main.ts` uses browser globals (`requestAnimationFrame`) without DOM lib types.
 The rest of the codebase typechecks cleanly. Added a task to TODO.md to port serve.ts
 to Node and fix the web tsconfig.
+
+
+## 2026-07-02 / Repetition & Inconsistency Cleanup
+
+A full review of the codebase for repetition and inconsistency, followed by a
+cleanup in ~20 individual commits. Everything below was verified after each
+commit with `npm run typecheck`, `npm test`, and (for core/runner changes) a
+BASIC `--sync` smoke session.
+
+### Real bugs found via the duplication
+
+- **Trap-address drift**: the BASIC harness existed as three drifted copies
+  (basic-runner, dsl-runner, web/main). basic-runner trapped ISCNTC/LOAD/SAVE at
+  $FFF1/$FFF4/$FFF7, the other two at $FFB7/$FFB9/$FFBC. Disassembling osi.bin
+  settled it: the ROM tail-jumps `JMP $FFF1` at $A629 and never references any
+  $FFBx address (an apparent $FFB9 match is `LDA $00FF,Y` data). basic-runner
+  was right.
+- **dsl-runner double-pop**: it popped the RTS return address from the 6502
+  stack *before* checking whether input was available, so every wait/input
+  cycle corrupted the stack. Symptom: programs entered via DSL scripts were
+  silently mangled — `LIST` printed nothing and `RUN` did nothing. The shared
+  harness checks for input first; example.dsl now LISTs and RUNs correctly.
+- **CPU2 had a lone BCD implementation**: CPU1 and PGCPU ignore the D flag
+  (decimal mode is an open TODO), so `SED` + `ADC` under `--sync` diverged
+  immediately (`CPU1/CPU2 divergence: A 60 != 66`, demonstrated by a test
+  before the fix). Removed; a test now pins binary-only behavior everywhere.
+- **src/web was entirely broken**: web:build failed with 14 type errors,
+  main.ts called async `disassemble()`/`readByte()` without await, read a
+  nonexistent `_state` field (register pane always showed zeros), fetched the
+  ROM from a path that no longer exists, and serve.ts used `Bun.serve` with
+  pre-src-reorg paths. All fixed; serve.ts ported to node:http; the web build
+  now uses TS 5.8 `rewriteRelativeImportExtensions` and `npm run typecheck`
+  checks src/web again (via its own tsconfig).
+
+### Dead code removed
+
+- `src/utils/6502.ts`, `src/core/cpu.ts`, `src/tests/compat.ts` (unreachable).
+- Legacy synchronous getters in CPU1/CPU2/SyncCPU (no callers).
+- CPU1's dead `cycles` plumbing (~160 assignments) and PGCPU's `crossed`/`oldpc`
+  leftovers from the removed cycle counting.
+- CPU2's 9 unreachable duplicate `case` labels and the `shiftMem2` duplicate of
+  `shiftMemOp`; CPU1's unused internal `writeWord` + "export for testing".
+
+### Deduplication
+
+- Shared BASIC harness: `basic-traps.ts` (environment-independent) +
+  `basic-harness.ts` (Node glue), used by both runners and the web debugger.
+- CPU2 now uses the shared flag constants, a `compare()` helper (was inlined
+  14x), and both TS cores got a `branch()` helper (8x copy-paste each).
+- SyncCPU loops over an array of CPUs and register names instead of 9 repeated
+  fan-outs and 12 if-throw blocks; adding a 4th CPU is now a one-line change.
+- PGCPU got plpgsql flag helpers (set_zn/set_czn/compare_flags/adc_flags/
+  sbc_flags/bit_flags) replacing 112 repeated inline flag computations.
+
+### Test-suite consolidation
+
+Deleted/merged ~25 accreted coverage-chasing files (five LDY files, six branch
+files, four shift files, the 10-file "coverage-push" grab-bag, three writeWord
+files, unknown-opcodes/trace duplicates) into table-driven feature suites.
+Lesson: verify such deletions against **raw V8 coverage ranges**, not the
+percentage table — the percentage denominator shifts with execution patterns,
+and per-process block boundaries produce false positives in naive range diffs
+(three "newly uncovered" ranges turned out fine on point queries, while one
+real gap — the SBC signed-overflow branch — was only caught by the summary
+table and got a dedicated test). Also fixed 84 `await await` doubles, added
+111 missing awaits, and removed a deliberately weakened assertion
+(`assert.ok([0, 0x37].includes(...))`) that accepted wrong results.
+
+Coverage went from 98.17% lines overall to **100% lines and functions on every
+source file** (the differential suite never exercised CPU2/PGCPU reads, traces,
+or SyncCPU's divergence throw — now tested directly).
