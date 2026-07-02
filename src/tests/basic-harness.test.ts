@@ -12,6 +12,7 @@ import {
     ISCNTC,
     buildCPU,
     initBasic,
+    initBasicFromRom,
     pop16,
     handleTrap,
     type TrapIO,
@@ -76,6 +77,12 @@ describe("initBasic", () => {
     it("should throw for a missing ROM file", async () => {
         const cpu = new CPU1();
         await assert.rejects(initBasic(cpu, "./no-such-rom.bin"));
+    });
+
+    it("should reject a ROM that does not fit above ROM_ADDR", async () => {
+        const cpu = new CPU1();
+        const oversized = new Uint8Array(0x10000 - ROM_ADDR + 1);
+        await assert.rejects(initBasicFromRom(cpu, oversized), /too large/);
     });
 });
 
