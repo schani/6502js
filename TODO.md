@@ -148,7 +148,7 @@
   - [x] Port src/web/serve.ts from Bun.serve to Node
   - [x] Fix missing DOM/browser types and missing awaits in src/web/main.ts
 
-- [ ] Code cleanup from 2026-07-02 review (repetition/inconsistency audit)
+- [x] Code cleanup from 2026-07-02 review (repetition/inconsistency audit)
   - [x] Delete dead files: `src/utils/6502.ts`, `src/core/cpu.ts`, `src/tests/compat.ts`
   - [x] Remove legacy synchronous getters if unused (CPU1/CPU2/SyncCPU)
   - [x] cpu1.ts: remove dead `cycles` plumbing (cycle counting was removed)
@@ -173,7 +173,8 @@
   - [x] Tests: merge unknown-opcodes/trace-functionality into system tests
   - [x] Tests: delete the coverage-push grab-bag files (verified via raw V8
         coverage data that nothing became uncovered)
-  - [ ] pgcpu.ts: add `set_zn` (and ADC/SBC/CMP flag) SQL helpers to kill ~60x repetition
+  - [x] pgcpu.ts: add `set_zn`/`set_czn`/`compare_flags`/`adc_flags`/`sbc_flags`/`bit_flags`
+        SQL helpers (replaced 112 repeated inline flag computations)
 
 - [ ] Potential future improvements:
   - [ ] Add more examples of running simple 6502 programs

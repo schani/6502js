@@ -49,6 +49,57 @@ export class PGCPU implements CPU {
         RETURN (v & 65535);
       END; $$ LANGUAGE plpgsql IMMUTABLE;
 
+      -- Helper: set Z and N in status p from 8-bit value v
+      CREATE OR REPLACE FUNCTION set_zn(p integer, v integer) RETURNS integer AS $$
+      BEGIN
+        RETURN (p & ~(2|128))
+             | (CASE WHEN (v & 255) = 0 THEN 2 ELSE 0 END)
+             | (CASE WHEN (v & 128) <> 0 THEN 128 ELSE 0 END);
+      END; $$ LANGUAGE plpgsql IMMUTABLE;
+
+      -- Helper: set C (from bit c), Z, and N in status p from 8-bit value v
+      CREATE OR REPLACE FUNCTION set_czn(p integer, c integer, v integer) RETURNS integer AS $$
+      BEGIN
+        RETURN (set_zn(p, v) & (~1)) | c;
+      END; $$ LANGUAGE plpgsql IMMUTABLE;
+
+      -- Helper: CMP/CPX/CPY flags — C/Z/N from reg - v (8-bit operands)
+      CREATE OR REPLACE FUNCTION compare_flags(p integer, reg integer, v integer) RETURNS integer AS $$
+      BEGIN
+        RETURN set_czn(p, CASE WHEN reg >= v THEN 1 ELSE 0 END, (reg - v) & 255);
+      END; $$ LANGUAGE plpgsql IMMUTABLE;
+
+      -- Helper: ADC flags — C/Z/V/N from original accumulator a8, operand v,
+      -- unmasked sum, and 8-bit result res
+      CREATE OR REPLACE FUNCTION adc_flags(p integer, a8 integer, v integer, sum integer, res integer) RETURNS integer AS $$
+      BEGIN
+        RETURN (p & ~(1|2|64|128))
+             | (CASE WHEN sum > 255 THEN 1 ELSE 0 END)
+             | (CASE WHEN res = 0 THEN 2 ELSE 0 END)
+             | (CASE WHEN ((~(a8 # v) & (a8 # res)) & 128) <> 0 THEN 64 ELSE 0 END)
+             | (CASE WHEN (res & 128) <> 0 THEN 128 ELSE 0 END);
+      END; $$ LANGUAGE plpgsql IMMUTABLE;
+
+      -- Helper: SBC flags — C/Z/V/N from original accumulator a8, operand v,
+      -- signed difference diff, and 8-bit result res
+      CREATE OR REPLACE FUNCTION sbc_flags(p integer, a8 integer, v integer, diff integer, res integer) RETURNS integer AS $$
+      BEGIN
+        RETURN (p & ~(1|2|64|128))
+             | (CASE WHEN diff >= 0 THEN 1 ELSE 0 END)
+             | (CASE WHEN res = 0 THEN 2 ELSE 0 END)
+             | (CASE WHEN (((a8 # res) & (a8 # v)) & 128) <> 0 THEN 64 ELSE 0 END)
+             | (CASE WHEN (res & 128) <> 0 THEN 128 ELSE 0 END);
+      END; $$ LANGUAGE plpgsql IMMUTABLE;
+
+      -- Helper: BIT flags — Z from a & v, V/N copied from bits 6/7 of v
+      CREATE OR REPLACE FUNCTION bit_flags(p integer, a integer, v integer) RETURNS integer AS $$
+      BEGIN
+        RETURN (p & ~(2|64|128))
+             | (CASE WHEN (a & v & 255) = 0 THEN 2 ELSE 0 END)
+             | (CASE WHEN (v & 64) <> 0 THEN 64 ELSE 0 END)
+             | (CASE WHEN (v & 128) <> 0 THEN 128 ELSE 0 END);
+      END; $$ LANGUAGE plpgsql IMMUTABLE;
+
       -- Memory helpers
       CREATE OR REPLACE FUNCTION read_byte(cpu integer, addr integer) RETURNS integer AS $$
       DECLARE v integer;
@@ -178,7 +229,7 @@ export class PGCPU implements CPU {
             rpc := (rpc + 1) & 65535;
             ra := v & 255;
             -- update Z and N in rp
-            rp := (rp & ~(2|128)) | (CASE WHEN ra = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ra & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, ra);
 
             IF trace THEN RAISE NOTICE 'LDA #$% at PC=%', v, rpc - 2; END IF;
           END;
@@ -188,7 +239,7 @@ export class PGCPU implements CPU {
             v2 := read_byte(cpu, rpc);
             rpc := (rpc + 1) & 65535;
             rx := v2 & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN rx = 0 THEN 2 ELSE 0 END) | (CASE WHEN (rx & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, rx);
 
             IF trace THEN RAISE NOTICE 'LDX #$% at PC=%', v2, rpc - 2; END IF;
           END;
@@ -198,7 +249,7 @@ export class PGCPU implements CPU {
             v3 := read_byte(cpu, rpc);
             rpc := (rpc + 1) & 65535;
             ry := v3 & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN ry = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ry & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, ry);
 
             IF trace THEN RAISE NOTICE 'LDY #$% at PC=%', v3, rpc - 2; END IF;
           END;
@@ -209,7 +260,7 @@ export class PGCPU implements CPU {
             rpc := (rpc + 1) & 65535;
             v4 := read_byte(cpu, zpaddr);
             ra := v4 & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN ra = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ra & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, ra);
 
             IF trace THEN RAISE NOTICE 'LDA $%02x', zpaddr; END IF;
           END;
@@ -220,7 +271,7 @@ export class PGCPU implements CPU {
             rpc := (rpc + 1) & 65535;
             v5 := read_byte(cpu, zpaddr2);
             rx := v5 & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN rx = 0 THEN 2 ELSE 0 END) | (CASE WHEN (rx & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, rx);
 
           END;
         ELSIF opcode = 164 THEN -- 0xA4 LDY zp
@@ -230,7 +281,7 @@ export class PGCPU implements CPU {
             rpc := (rpc + 1) & 65535;
             v6 := read_byte(cpu, zpaddr3);
             ry := v6 & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN ry = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ry & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, ry);
 
           END;
         ELSIF opcode = 180 THEN -- 0xB4 LDY zp,X
@@ -240,7 +291,7 @@ export class PGCPU implements CPU {
             rpc := (rpc + 1) & 65535;
             v := read_byte(cpu, zpaddr);
             ry := v & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN ry = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ry & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, ry);
 
           END;
         ELSIF opcode = 172 THEN -- 0xAC LDY abs
@@ -250,7 +301,7 @@ export class PGCPU implements CPU {
             rpc := (rpc + 2) & 65535;
             v := read_byte(cpu, addr);
             ry := v & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN ry = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ry & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, ry);
 
           END;
         ELSIF opcode = 188 THEN -- 0xBC LDY abs,X
@@ -261,7 +312,7 @@ export class PGCPU implements CPU {
             eff := (base + rx) & 65535;
             v := read_byte(cpu, eff);
             ry := v & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN ry = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ry & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, ry);
 
           END;
         ELSIF opcode = 181 THEN -- 0xB5 LDA zp,X
@@ -271,7 +322,7 @@ export class PGCPU implements CPU {
             rpc := (rpc + 1) & 65535;
             v7 := read_byte(cpu, zpaddrx);
             ra := v7 & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN ra = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ra & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, ra);
 
           END;
         ELSIF opcode = 182 THEN -- 0xB6 LDX zp,Y
@@ -281,7 +332,7 @@ export class PGCPU implements CPU {
             rpc := (rpc + 1) & 65535;
             v8 := read_byte(cpu, zpaddry);
             rx := v8 & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN rx = 0 THEN 2 ELSE 0 END) | (CASE WHEN (rx & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, rx);
 
           END;
         ELSIF opcode = 173 THEN -- 0xAD LDA abs
@@ -291,7 +342,7 @@ export class PGCPU implements CPU {
             rpc := (rpc + 2) & 65535;
             v9 := read_byte(cpu, addr);
             ra := v9 & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN ra = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ra & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, ra);
 
           END;
         ELSIF opcode = 189 THEN -- 0xBD LDA abs,X
@@ -302,7 +353,7 @@ export class PGCPU implements CPU {
             eff := (base + rx) & 65535;
             v10 := read_byte(cpu, eff);
             ra := v10 & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN ra = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ra & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, ra);
 
           END;
         ELSIF opcode = 185 THEN -- 0xB9 LDA abs,Y
@@ -313,7 +364,7 @@ export class PGCPU implements CPU {
             eff2 := (base2 + ry) & 65535;
             v11 := read_byte(cpu, eff2);
             ra := v11 & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN ra = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ra & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, ra);
 
           END;
         ELSIF opcode = 105 THEN -- 0x69 ADC #imm
@@ -326,7 +377,7 @@ export class PGCPU implements CPU {
             sum := a8 + v + carry_in;
             res := sum & 255;
             -- set flags: N, Z, C, V (binary mode)
-            rp := (rp & ~((1)|2|64|128)) | (CASE WHEN (sum > 255) THEN 1 ELSE 0 END) | (CASE WHEN res = 0 THEN 2 ELSE 0 END) | (CASE WHEN ((~(a8 # v) & (a8 # res)) & 128) <> 0 THEN 64 ELSE 0 END) | (CASE WHEN (res & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := adc_flags(rp, a8, v, sum, res);
             ra := res;
 
           END;
@@ -340,7 +391,7 @@ export class PGCPU implements CPU {
             carry_in := CASE WHEN (rp & 1) <> 0 THEN 1 ELSE 0 END;
             sum := a8 + v + carry_in;
             res := sum & 255;
-            rp := (rp & ~((1)|2|64|128)) | (CASE WHEN (sum > 255) THEN 1 ELSE 0 END) | (CASE WHEN res = 0 THEN 2 ELSE 0 END) | (CASE WHEN ((~(a8 # v) & (a8 # res)) & 128) <> 0 THEN 64 ELSE 0 END) | (CASE WHEN (res & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := adc_flags(rp, a8, v, sum, res);
             ra := res;
 
           END;
@@ -354,7 +405,7 @@ export class PGCPU implements CPU {
             carry_in := CASE WHEN (rp & 1) <> 0 THEN 1 ELSE 0 END;
             sum := a8 + v + carry_in;
             res := sum & 255;
-            rp := (rp & ~((1)|2|64|128)) | (CASE WHEN (sum > 255) THEN 1 ELSE 0 END) | (CASE WHEN res = 0 THEN 2 ELSE 0 END) | (CASE WHEN ((~(a8 # v) & (a8 # res)) & 128) <> 0 THEN 64 ELSE 0 END) | (CASE WHEN (res & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := adc_flags(rp, a8, v, sum, res);
             ra := res;
 
           END;
@@ -368,7 +419,7 @@ export class PGCPU implements CPU {
             carry_in := CASE WHEN (rp & 1) <> 0 THEN 1 ELSE 0 END;
             sum := a8 + v + carry_in;
             res := sum & 255;
-            rp := (rp & ~((1)|2|64|128)) | (CASE WHEN (sum > 255) THEN 1 ELSE 0 END) | (CASE WHEN res = 0 THEN 2 ELSE 0 END) | (CASE WHEN ((~(a8 # v) & (a8 # res)) & 128) <> 0 THEN 64 ELSE 0 END) | (CASE WHEN (res & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := adc_flags(rp, a8, v, sum, res);
             ra := res;
 
           END;
@@ -383,7 +434,7 @@ export class PGCPU implements CPU {
             carry_in := CASE WHEN (rp & 1) <> 0 THEN 1 ELSE 0 END;
             sum := a8 + v + carry_in;
             res := sum & 255;
-            rp := (rp & ~((1)|2|64|128)) | (CASE WHEN (sum > 255) THEN 1 ELSE 0 END) | (CASE WHEN res = 0 THEN 2 ELSE 0 END) | (CASE WHEN ((~(a8 # v) & (a8 # res)) & 128) <> 0 THEN 64 ELSE 0 END) | (CASE WHEN (res & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := adc_flags(rp, a8, v, sum, res);
             ra := res;
 
           END;
@@ -398,7 +449,7 @@ export class PGCPU implements CPU {
             carry_in := CASE WHEN (rp & 1) <> 0 THEN 1 ELSE 0 END;
             sum := a8 + v + carry_in;
             res := sum & 255;
-            rp := (rp & ~((1)|2|64|128)) | (CASE WHEN (sum > 255) THEN 1 ELSE 0 END) | (CASE WHEN res = 0 THEN 2 ELSE 0 END) | (CASE WHEN ((~(a8 # v) & (a8 # res)) & 128) <> 0 THEN 64 ELSE 0 END) | (CASE WHEN (res & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := adc_flags(rp, a8, v, sum, res);
             ra := res;
 
           END;
@@ -415,7 +466,7 @@ export class PGCPU implements CPU {
             carry_in := CASE WHEN (rp & 1) <> 0 THEN 1 ELSE 0 END;
             sum := a8 + v + carry_in;
             res := sum & 255;
-            rp := (rp & ~((1)|2|64|128)) | (CASE WHEN (sum > 255) THEN 1 ELSE 0 END) | (CASE WHEN res = 0 THEN 2 ELSE 0 END) | (CASE WHEN ((~(a8 # v) & (a8 # res)) & 128) <> 0 THEN 64 ELSE 0 END) | (CASE WHEN (res & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := adc_flags(rp, a8, v, sum, res);
             ra := res;
 
           END;
@@ -433,7 +484,7 @@ export class PGCPU implements CPU {
             carry_in := CASE WHEN (rp & 1) <> 0 THEN 1 ELSE 0 END;
             sum := a8 + v + carry_in;
             res := sum & 255;
-            rp := (rp & ~((1)|2|64|128)) | (CASE WHEN (sum > 255) THEN 1 ELSE 0 END) | (CASE WHEN res = 0 THEN 2 ELSE 0 END) | (CASE WHEN ((~(a8 # v) & (a8 # res)) & 128) <> 0 THEN 64 ELSE 0 END) | (CASE WHEN (res & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := adc_flags(rp, a8, v, sum, res);
             ra := res;
 
           END;
@@ -553,7 +604,7 @@ export class PGCPU implements CPU {
         ELSIF opcode = 170 THEN -- 0xAA TAX
           BEGIN
             rx := ra & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN rx = 0 THEN 2 ELSE 0 END) | (CASE WHEN (rx & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, rx);
 
             IF trace THEN RAISE NOTICE 'TAX'; END IF;
           END;
@@ -564,7 +615,7 @@ export class PGCPU implements CPU {
             rpc := (rpc + 2) & 65535;
             v := read_byte(cpu, addr);
             rx := v & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN rx = 0 THEN 2 ELSE 0 END) | (CASE WHEN (rx & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, rx);
 
           END;
         ELSIF opcode = 190 THEN -- 0xBE LDX abs,Y
@@ -575,7 +626,7 @@ export class PGCPU implements CPU {
             eff := (base + ry) & 65535;
             v := read_byte(cpu, eff);
             rx := v & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN rx = 0 THEN 2 ELSE 0 END) | (CASE WHEN (rx & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, rx);
 
           END;
         ELSIF opcode = 72 THEN -- 0x48 PHA
@@ -590,7 +641,7 @@ export class PGCPU implements CPU {
             rsp := (rsp + 1) & 255;
             v := read_byte(cpu, 256 + rsp);
             ra := v & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN ra = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ra & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, ra);
 
           END;
         ELSIF opcode = 8 THEN -- 0x08 PHP
@@ -675,7 +726,7 @@ export class PGCPU implements CPU {
             carry_out := (ra >> 7) & 1;
             r := (ra << 1) & 255;
             ra := r;
-            rp := (rp & ~((1)|2|128)) | carry_out | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_czn(rp, carry_out, r);
 
           END;
         ELSIF opcode = 6 THEN -- 0x06 ASL zp
@@ -687,7 +738,7 @@ export class PGCPU implements CPU {
             carry_out := (v >> 7) & 1;
             r := (v << 1) & 255;
             PERFORM load_byte(cpu, zpaddr, r);
-            rp := (rp & ~((1)|2|128)) | carry_out | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_czn(rp, carry_out, r);
 
           END;
         ELSIF opcode = 14 THEN -- 0x0E ASL abs
@@ -699,7 +750,7 @@ export class PGCPU implements CPU {
             carry_out := (v >> 7) & 1;
             r := (v << 1) & 255;
             PERFORM load_byte(cpu, addr, r);
-            rp := (rp & ~((1)|2|128)) | carry_out | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_czn(rp, carry_out, r);
 
           END;
         ELSIF opcode = 22 THEN -- 0x16 ASL zp,X
@@ -711,7 +762,7 @@ export class PGCPU implements CPU {
             carry_out := (v >> 7) & 1;
             r := (v << 1) & 255;
             PERFORM load_byte(cpu, zpaddr, r);
-            rp := (rp & ~((1)|2|128)) | carry_out | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_czn(rp, carry_out, r);
 
           END;
         ELSIF opcode = 30 THEN -- 0x1E ASL abs,X
@@ -724,7 +775,7 @@ export class PGCPU implements CPU {
             carry_out := (v >> 7) & 1;
             r := (v << 1) & 255;
             PERFORM load_byte(cpu, addr, r);
-            rp := (rp & ~((1)|2|128)) | carry_out | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_czn(rp, carry_out, r);
 
           END;
         ELSIF opcode = 74 THEN -- 0x4A LSR A
@@ -733,7 +784,7 @@ export class PGCPU implements CPU {
             carry_out := (ra & 1);
             r := (ra >> 1) & 255;
             ra := r;
-            rp := (rp & ~((1)|2|128)) | carry_out | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_czn(rp, carry_out, r);
 
           END;
         ELSIF opcode = 70 THEN -- 0x46 LSR zp
@@ -745,7 +796,7 @@ export class PGCPU implements CPU {
             carry_out := (v & 1);
             r := (v >> 1) & 255;
             PERFORM load_byte(cpu, zpaddr, r);
-            rp := (rp & ~((1)|2|128)) | carry_out | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_czn(rp, carry_out, r);
 
           END;
         ELSIF opcode = 86 THEN -- 0x56 LSR zp,X
@@ -757,7 +808,7 @@ export class PGCPU implements CPU {
             carry_out := (v & 1);
             r := (v >> 1) & 255;
             PERFORM load_byte(cpu, zpaddr, r);
-            rp := (rp & ~((1)|2|128)) | carry_out | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_czn(rp, carry_out, r);
 
           END;
         ELSIF opcode = 78 THEN -- 0x4E LSR abs
@@ -769,7 +820,7 @@ export class PGCPU implements CPU {
             carry_out := (v & 1);
             r := (v >> 1) & 255;
             PERFORM load_byte(cpu, addr, r);
-            rp := (rp & ~((1)|2|128)) | carry_out | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_czn(rp, carry_out, r);
 
           END;
         ELSIF opcode = 94 THEN -- 0x5E LSR abs,X
@@ -782,7 +833,7 @@ export class PGCPU implements CPU {
             carry_out := (v & 1);
             r := (v >> 1) & 255;
             PERFORM load_byte(cpu, addr, r);
-            rp := (rp & ~((1)|2|128)) | carry_out | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_czn(rp, carry_out, r);
 
           END;
         ELSIF opcode = 42 THEN -- 0x2A ROL A
@@ -792,7 +843,7 @@ export class PGCPU implements CPU {
             carry_out := (ra >> 7) & 1;
             r := ((ra << 1) | carry_in) & 255;
             ra := r;
-            rp := (rp & ~((1)|2|128)) | carry_out | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_czn(rp, carry_out, r);
 
           END;
         ELSIF opcode = 38 THEN -- 0x26 ROL zp
@@ -805,7 +856,7 @@ export class PGCPU implements CPU {
             carry_out := (v >> 7) & 1;
             r := ((v << 1) | carry_in) & 255;
             PERFORM load_byte(cpu, zpaddr, r);
-            rp := (rp & ~((1)|2|128)) | carry_out | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_czn(rp, carry_out, r);
 
           END;
         ELSIF opcode = 54 THEN -- 0x36 ROL zp,X
@@ -818,7 +869,7 @@ export class PGCPU implements CPU {
             carry_out := (v >> 7) & 1;
             r := ((v << 1) | carry_in) & 255;
             PERFORM load_byte(cpu, zpaddr, r);
-            rp := (rp & ~((1)|2|128)) | carry_out | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_czn(rp, carry_out, r);
 
           END;
         ELSIF opcode = 46 THEN -- 0x2E ROL abs
@@ -831,7 +882,7 @@ export class PGCPU implements CPU {
             carry_out := (v >> 7) & 1;
             r := ((v << 1) | carry_in) & 255;
             PERFORM load_byte(cpu, addr, r);
-            rp := (rp & ~((1)|2|128)) | carry_out | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_czn(rp, carry_out, r);
 
           END;
         ELSIF opcode = 62 THEN -- 0x3E ROL abs,X
@@ -845,7 +896,7 @@ export class PGCPU implements CPU {
             carry_out := (v >> 7) & 1;
             r := ((v << 1) | carry_in) & 255;
             PERFORM load_byte(cpu, addr, r);
-            rp := (rp & ~((1)|2|128)) | carry_out | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_czn(rp, carry_out, r);
 
           END;
         ELSIF opcode = 106 THEN -- 0x6A ROR A
@@ -855,7 +906,7 @@ export class PGCPU implements CPU {
             carry_out := (ra & 1);
             r := ((ra >> 1) | carry_in) & 255;
             ra := r;
-            rp := (rp & ~((1)|2|128)) | carry_out | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_czn(rp, carry_out, r);
 
           END;
         ELSIF opcode = 102 THEN -- 0x66 ROR zp
@@ -868,7 +919,7 @@ export class PGCPU implements CPU {
             carry_out := (v & 1);
             r := ((v >> 1) | carry_in) & 255;
             PERFORM load_byte(cpu, zpaddr, r);
-            rp := (rp & ~((1)|2|128)) | carry_out | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_czn(rp, carry_out, r);
 
           END;
         ELSIF opcode = 118 THEN -- 0x76 ROR zp,X
@@ -881,7 +932,7 @@ export class PGCPU implements CPU {
             carry_out := (v & 1);
             r := ((v >> 1) | carry_in) & 255;
             PERFORM load_byte(cpu, zpaddr, r);
-            rp := (rp & ~((1)|2|128)) | carry_out | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_czn(rp, carry_out, r);
 
           END;
         ELSIF opcode = 110 THEN -- 0x6E ROR abs
@@ -894,7 +945,7 @@ export class PGCPU implements CPU {
             carry_out := (v & 1);
             r := ((v >> 1) | carry_in) & 255;
             PERFORM load_byte(cpu, addr, r);
-            rp := (rp & ~((1)|2|128)) | carry_out | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_czn(rp, carry_out, r);
 
           END;
         ELSIF opcode = 126 THEN -- 0x7E ROR abs,X
@@ -908,7 +959,7 @@ export class PGCPU implements CPU {
             carry_out := (v & 1);
             r := ((v >> 1) | carry_in) & 255;
             PERFORM load_byte(cpu, addr, r);
-            rp := (rp & ~((1)|2|128)) | carry_out | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_czn(rp, carry_out, r);
 
           END;
         ELSIF opcode = 230 THEN -- 0xE6 INC zp
@@ -919,7 +970,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, zpaddr);
             r := (v + 1) & 255;
             PERFORM load_byte(cpu, zpaddr, r);
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 246 THEN -- 0xF6 INC zp,X
@@ -930,7 +981,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, zpaddr);
             r := (v + 1) & 255;
             PERFORM load_byte(cpu, zpaddr, r);
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 238 THEN -- 0xEE INC abs
@@ -941,7 +992,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, addr);
             r := (v + 1) & 255;
             PERFORM load_byte(cpu, addr, r);
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 254 THEN -- 0xFE INC abs,X
@@ -953,7 +1004,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, addr);
             r := (v + 1) & 255;
             PERFORM load_byte(cpu, addr, r);
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 198 THEN -- 0xC6 DEC zp
@@ -964,7 +1015,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, zpaddr);
             r := (v - 1) & 255;
             PERFORM load_byte(cpu, zpaddr, r);
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 214 THEN -- 0xD6 DEC zp,X
@@ -975,7 +1026,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, zpaddr);
             r := (v - 1) & 255;
             PERFORM load_byte(cpu, zpaddr, r);
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 206 THEN -- 0xCE DEC abs
@@ -986,7 +1037,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, addr);
             r := (v - 1) & 255;
             PERFORM load_byte(cpu, addr, r);
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 222 THEN -- 0xDE DEC abs,X
@@ -998,31 +1049,31 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, addr);
             r := (v - 1) & 255;
             PERFORM load_byte(cpu, addr, r);
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 168 THEN -- 0xA8 TAY
           BEGIN
             ry := ra & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN ry = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ry & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, ry);
 
           END;
         ELSIF opcode = 138 THEN -- 0x8A TXA
           BEGIN
             ra := rx & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN ra = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ra & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, ra);
 
           END;
         ELSIF opcode = 152 THEN -- 0x98 TYA
           BEGIN
             ra := ry & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN ra = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ra & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, ra);
 
           END;
         ELSIF opcode = 186 THEN -- 0xBA TSX
           BEGIN
             rx := rsp & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN rx = 0 THEN 2 ELSE 0 END) | (CASE WHEN (rx & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, rx);
 
           END;
         ELSIF opcode = 154 THEN -- 0x9A TXS
@@ -1033,25 +1084,25 @@ export class PGCPU implements CPU {
         ELSIF opcode = 232 THEN -- 0xE8 INX
           BEGIN
             rx := (rx + 1) & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN rx = 0 THEN 2 ELSE 0 END) | (CASE WHEN (rx & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, rx);
 
           END;
         ELSIF opcode = 200 THEN -- 0xC8 INY
           BEGIN
             ry := (ry + 1) & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN ry = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ry & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, ry);
 
           END;
         ELSIF opcode = 202 THEN -- 0xCA DEX
           BEGIN
             rx := (rx - 1) & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN rx = 0 THEN 2 ELSE 0 END) | (CASE WHEN (rx & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, rx);
 
           END;
         ELSIF opcode = 136 THEN -- 0x88 DEY
           BEGIN
             ry := (ry - 1) & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN ry = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ry & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, ry);
 
           END;
         ELSIF opcode = 41 THEN -- 0x29 AND #imm
@@ -1061,7 +1112,7 @@ export class PGCPU implements CPU {
             rpc := (rpc + 1) & 65535;
             r := (ra & v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 37 THEN -- 0x25 AND zp
@@ -1072,7 +1123,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, zpaddr);
             r := (ra & v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 53 THEN -- 0x35 AND zp,X
@@ -1083,7 +1134,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, zpaddr);
             r := (ra & v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 45 THEN -- 0x2D AND abs
@@ -1094,7 +1145,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, addr);
             r := (ra & v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 61 THEN -- 0x3D AND abs,X
@@ -1106,7 +1157,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, eff);
             r := (ra & v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 57 THEN -- 0x39 AND abs,Y
@@ -1118,7 +1169,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, eff);
             r := (ra & v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 33 THEN -- 0x21 AND (ind,X)
@@ -1132,7 +1183,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, eff);
             r := (ra & v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 49 THEN -- 0x31 AND (ind),Y
@@ -1147,7 +1198,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, eff);
             r := (ra & v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 9 THEN -- 0x09 ORA #imm
@@ -1157,7 +1208,7 @@ export class PGCPU implements CPU {
             rpc := (rpc + 1) & 65535;
             r := (ra | v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 5 THEN -- 0x05 ORA zp
@@ -1168,7 +1219,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, zpaddr);
             r := (ra | v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 13 THEN -- 0x0D ORA abs
@@ -1179,7 +1230,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, addr);
             r := (ra | v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 29 THEN -- 0x1D ORA abs,X
@@ -1191,7 +1242,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, eff);
             r := (ra | v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 25 THEN -- 0x19 ORA abs,Y
@@ -1203,7 +1254,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, eff);
             r := (ra | v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 21 THEN -- 0x15 ORA zp,X
@@ -1214,7 +1265,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, zpaddr);
             r := (ra | v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 1 THEN -- 0x01 ORA (ind,X)
@@ -1228,7 +1279,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, eff);
             r := (ra | v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 17 THEN -- 0x11 ORA (ind),Y
@@ -1243,7 +1294,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, eff);
             r := (ra | v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 73 THEN -- 0x49 EOR #imm
@@ -1253,7 +1304,7 @@ export class PGCPU implements CPU {
             rpc := (rpc + 1) & 65535;
             r := (ra # v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 69 THEN -- 0x45 EOR zp
@@ -1264,7 +1315,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, zpaddr);
             r := (ra # v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 77 THEN -- 0x4D EOR abs
@@ -1275,7 +1326,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, addr);
             r := (ra # v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 93 THEN -- 0x5D EOR abs,X
@@ -1287,7 +1338,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, eff);
             r := (ra # v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 89 THEN -- 0x59 EOR abs,Y
@@ -1299,7 +1350,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, eff);
             r := (ra # v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 85 THEN -- 0x55 EOR zp,X
@@ -1310,7 +1361,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, zpaddr);
             r := (ra # v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 65 THEN -- 0x41 EOR (ind,X)
@@ -1324,7 +1375,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, eff);
             r := (ra # v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 81 THEN -- 0x51 EOR (ind),Y
@@ -1339,7 +1390,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, eff);
             r := (ra # v) & 255;
             ra := r;
-            rp := (rp & ~(2|128)) | (CASE WHEN r = 0 THEN 2 ELSE 0 END) | (CASE WHEN (r & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, r);
 
           END;
         ELSIF opcode = 36 THEN -- 0x24 BIT zp
@@ -1348,9 +1399,7 @@ export class PGCPU implements CPU {
             zpaddr := read_byte(cpu, rpc) & 255;
             rpc := (rpc + 1) & 65535;
             v := read_byte(cpu, zpaddr);
-            zr := (ra & v) & 255;
-            -- set Z from AND, N from bit7 of v, V from bit6 of v
-            rp := (rp & ~(2|64|128)) | (CASE WHEN zr = 0 THEN 2 ELSE 0 END) | (CASE WHEN (v & 64) <> 0 THEN 64 ELSE 0 END) | (CASE WHEN (v & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := bit_flags(rp, ra, v);
 
           END;
         ELSIF opcode = 44 THEN -- 0x2C BIT abs
@@ -1359,8 +1408,7 @@ export class PGCPU implements CPU {
             addr := read_word(cpu, rpc);
             rpc := (rpc + 2) & 65535;
             v := read_byte(cpu, addr);
-            zr := (ra & v) & 255;
-            rp := (rp & ~(2|64|128)) | (CASE WHEN zr = 0 THEN 2 ELSE 0 END) | (CASE WHEN (v & 64) <> 0 THEN 64 ELSE 0 END) | (CASE WHEN (v & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := bit_flags(rp, ra, v);
 
           END;
         ELSIF opcode = 233 THEN -- 0xE9 SBC #imm
@@ -1373,7 +1421,7 @@ export class PGCPU implements CPU {
             diff := a8 - v - (1 - cin);
             res := diff & 255;
             -- C set if no borrow (diff >= 0), Z/N as usual, V if signed overflow
-            rp := (rp & ~((1)|2|64|128)) | (CASE WHEN diff >= 0 THEN 1 ELSE 0 END) | (CASE WHEN res = 0 THEN 2 ELSE 0 END) | (CASE WHEN (((a8 # res) & (a8 # v) & 128) <> 0) THEN 64 ELSE 0 END) | (CASE WHEN (res & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := sbc_flags(rp, a8, v, diff, res);
             ra := res;
 
           END;
@@ -1387,7 +1435,7 @@ export class PGCPU implements CPU {
             cin := CASE WHEN (rp & 1) <> 0 THEN 1 ELSE 0 END;
             diff := a8 - v - (1 - cin);
             res := diff & 255;
-            rp := (rp & ~((1)|2|64|128)) | (CASE WHEN diff >= 0 THEN 1 ELSE 0 END) | (CASE WHEN res = 0 THEN 2 ELSE 0 END) | (CASE WHEN (((a8 # res) & (a8 # v) & 128) <> 0) THEN 64 ELSE 0 END) | (CASE WHEN (res & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := sbc_flags(rp, a8, v, diff, res);
             ra := res;
 
           END;
@@ -1401,7 +1449,7 @@ export class PGCPU implements CPU {
             cin := CASE WHEN (rp & 1) <> 0 THEN 1 ELSE 0 END;
             diff := a8 - v - (1 - cin);
             res := diff & 255;
-            rp := (rp & ~((1)|2|64|128)) | (CASE WHEN diff >= 0 THEN 1 ELSE 0 END) | (CASE WHEN res = 0 THEN 2 ELSE 0 END) | (CASE WHEN (((a8 # res) & (a8 # v) & 128) <> 0) THEN 64 ELSE 0 END) | (CASE WHEN (res & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := sbc_flags(rp, a8, v, diff, res);
             ra := res;
 
           END;
@@ -1415,7 +1463,7 @@ export class PGCPU implements CPU {
             cin := CASE WHEN (rp & 1) <> 0 THEN 1 ELSE 0 END;
             diff := a8 - v - (1 - cin);
             res := diff & 255;
-            rp := (rp & ~((1)|2|64|128)) | (CASE WHEN diff >= 0 THEN 1 ELSE 0 END) | (CASE WHEN res = 0 THEN 2 ELSE 0 END) | (CASE WHEN (((a8 # res) & (a8 # v) & 128) <> 0) THEN 64 ELSE 0 END) | (CASE WHEN (res & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := sbc_flags(rp, a8, v, diff, res);
             ra := res;
 
           END;
@@ -1430,7 +1478,7 @@ export class PGCPU implements CPU {
             cin := CASE WHEN (rp & 1) <> 0 THEN 1 ELSE 0 END;
             diff := a8 - v - (1 - cin);
             res := diff & 255;
-            rp := (rp & ~((1)|2|64|128)) | (CASE WHEN diff >= 0 THEN 1 ELSE 0 END) | (CASE WHEN res = 0 THEN 2 ELSE 0 END) | (CASE WHEN (((a8 # res) & (a8 # v) & 128) <> 0) THEN 64 ELSE 0 END) | (CASE WHEN (res & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := sbc_flags(rp, a8, v, diff, res);
             ra := res;
 
           END;
@@ -1445,7 +1493,7 @@ export class PGCPU implements CPU {
             cin := CASE WHEN (rp & 1) <> 0 THEN 1 ELSE 0 END;
             diff := a8 - v - (1 - cin);
             res := diff & 255;
-            rp := (rp & ~((1)|2|64|128)) | (CASE WHEN diff >= 0 THEN 1 ELSE 0 END) | (CASE WHEN res = 0 THEN 2 ELSE 0 END) | (CASE WHEN (((a8 # res) & (a8 # v) & 128) <> 0) THEN 64 ELSE 0 END) | (CASE WHEN (res & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := sbc_flags(rp, a8, v, diff, res);
             ra := res;
 
           END;
@@ -1462,7 +1510,7 @@ export class PGCPU implements CPU {
             cin := CASE WHEN (rp & 1) <> 0 THEN 1 ELSE 0 END;
             diff := a8 - v - (1 - cin);
             res := diff & 255;
-            rp := (rp & ~((1)|2|64|128)) | (CASE WHEN diff >= 0 THEN 1 ELSE 0 END) | (CASE WHEN res = 0 THEN 2 ELSE 0 END) | (CASE WHEN (((a8 # res) & (a8 # v) & 128) <> 0) THEN 64 ELSE 0 END) | (CASE WHEN (res & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := sbc_flags(rp, a8, v, diff, res);
             ra := res;
 
           END;
@@ -1480,7 +1528,7 @@ export class PGCPU implements CPU {
             cin := CASE WHEN (rp & 1) <> 0 THEN 1 ELSE 0 END;
             diff := a8 - v - (1 - cin);
             res := diff & 255;
-            rp := (rp & ~((1)|2|64|128)) | (CASE WHEN diff >= 0 THEN 1 ELSE 0 END) | (CASE WHEN res = 0 THEN 2 ELSE 0 END) | (CASE WHEN (((a8 # res) & (a8 # v) & 128) <> 0) THEN 64 ELSE 0 END) | (CASE WHEN (res & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := sbc_flags(rp, a8, v, diff, res);
             ra := res;
 
           END;
@@ -1490,8 +1538,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, rpc);
             rpc := (rpc + 1) & 65535;
             a8 := ra & 255;
-            t := (a8 - v) & 255;
-            rp := (rp & ~((1)|2|128)) | (CASE WHEN a8 >= v THEN 1 ELSE 0 END) | (CASE WHEN t = 0 THEN 2 ELSE 0 END) | (CASE WHEN (t & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := compare_flags(rp, a8, v);
 
           END;
         ELSIF opcode = 197 THEN -- 0xC5 CMP zp
@@ -1501,8 +1548,7 @@ export class PGCPU implements CPU {
             rpc := (rpc + 1) & 65535;
             v := read_byte(cpu, zpaddr);
             a8 := ra & 255;
-            t := (a8 - v) & 255;
-            rp := (rp & ~((1)|2|128)) | (CASE WHEN a8 >= v THEN 1 ELSE 0 END) | (CASE WHEN t = 0 THEN 2 ELSE 0 END) | (CASE WHEN (t & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := compare_flags(rp, a8, v);
 
           END;
         ELSIF opcode = 205 THEN -- 0xCD CMP abs
@@ -1512,8 +1558,7 @@ export class PGCPU implements CPU {
             rpc := (rpc + 2) & 65535;
             v := read_byte(cpu, addr);
             a8 := ra & 255;
-            t := (a8 - v) & 255;
-            rp := (rp & ~((1)|2|128)) | (CASE WHEN a8 >= v THEN 1 ELSE 0 END) | (CASE WHEN t = 0 THEN 2 ELSE 0 END) | (CASE WHEN (t & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := compare_flags(rp, a8, v);
 
           END;
         ELSIF opcode = 213 THEN -- 0xD5 CMP zp,X
@@ -1523,8 +1568,7 @@ export class PGCPU implements CPU {
             rpc := (rpc + 1) & 65535;
             v := read_byte(cpu, zpaddr);
             a8 := ra & 255;
-            t := (a8 - v) & 255;
-            rp := (rp & ~((1)|2|128)) | (CASE WHEN a8 >= v THEN 1 ELSE 0 END) | (CASE WHEN t = 0 THEN 2 ELSE 0 END) | (CASE WHEN (t & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := compare_flags(rp, a8, v);
 
           END;
         ELSIF opcode = 221 THEN -- 0xDD CMP abs,X
@@ -1535,8 +1579,7 @@ export class PGCPU implements CPU {
             eff := (base + rx) & 65535;
             v := read_byte(cpu, eff);
             a8 := ra & 255;
-            t := (a8 - v) & 255;
-            rp := (rp & ~((1)|2|128)) | (CASE WHEN a8 >= v THEN 1 ELSE 0 END) | (CASE WHEN t = 0 THEN 2 ELSE 0 END) | (CASE WHEN (t & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := compare_flags(rp, a8, v);
 
           END;
         ELSIF opcode = 217 THEN -- 0xD9 CMP abs,Y
@@ -1547,8 +1590,7 @@ export class PGCPU implements CPU {
             eff := (base + ry) & 65535;
             v := read_byte(cpu, eff);
             a8 := ra & 255;
-            t := (a8 - v) & 255;
-            rp := (rp & ~((1)|2|128)) | (CASE WHEN a8 >= v THEN 1 ELSE 0 END) | (CASE WHEN t = 0 THEN 2 ELSE 0 END) | (CASE WHEN (t & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := compare_flags(rp, a8, v);
 
           END;
         ELSIF opcode = 193 THEN -- 0xC1 CMP (ind,X)
@@ -1561,8 +1603,7 @@ export class PGCPU implements CPU {
             eff := ((hi << 8) | lo) & 65535;
             v := read_byte(cpu, eff);
             a8 := ra & 255;
-            t := (a8 - v) & 255;
-            rp := (rp & ~((1)|2|128)) | (CASE WHEN a8 >= v THEN 1 ELSE 0 END) | (CASE WHEN t = 0 THEN 2 ELSE 0 END) | (CASE WHEN (t & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := compare_flags(rp, a8, v);
 
           END;
         ELSIF opcode = 209 THEN -- 0xD1 CMP (ind),Y
@@ -1576,8 +1617,7 @@ export class PGCPU implements CPU {
             eff := (base + ry) & 65535;
             v := read_byte(cpu, eff);
             a8 := ra & 255;
-            t := (a8 - v) & 255;
-            rp := (rp & ~((1)|2|128)) | (CASE WHEN a8 >= v THEN 1 ELSE 0 END) | (CASE WHEN t = 0 THEN 2 ELSE 0 END) | (CASE WHEN (t & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := compare_flags(rp, a8, v);
 
           END;
         ELSIF opcode = 228 THEN -- 0xE4 CPX zp
@@ -1587,8 +1627,7 @@ export class PGCPU implements CPU {
             rpc := (rpc + 1) & 65535;
             v := read_byte(cpu, zpaddr);
             x8 := rx & 255;
-            t := (x8 - v) & 255;
-            rp := (rp & ~((1)|2|128)) | (CASE WHEN x8 >= v THEN 1 ELSE 0 END) | (CASE WHEN t = 0 THEN 2 ELSE 0 END) | (CASE WHEN (t & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := compare_flags(rp, x8, v);
 
           END;
         ELSIF opcode = 236 THEN -- 0xEC CPX abs
@@ -1598,8 +1637,7 @@ export class PGCPU implements CPU {
             rpc := (rpc + 2) & 65535;
             v := read_byte(cpu, addr);
             x8 := rx & 255;
-            t := (x8 - v) & 255;
-            rp := (rp & ~((1)|2|128)) | (CASE WHEN x8 >= v THEN 1 ELSE 0 END) | (CASE WHEN t = 0 THEN 2 ELSE 0 END) | (CASE WHEN (t & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := compare_flags(rp, x8, v);
 
           END;
         ELSIF opcode = 196 THEN -- 0xC4 CPY zp
@@ -1609,8 +1647,7 @@ export class PGCPU implements CPU {
             rpc := (rpc + 1) & 65535;
             v := read_byte(cpu, zpaddr);
             y8 := ry & 255;
-            t := (y8 - v) & 255;
-            rp := (rp & ~((1)|2|128)) | (CASE WHEN y8 >= v THEN 1 ELSE 0 END) | (CASE WHEN t = 0 THEN 2 ELSE 0 END) | (CASE WHEN (t & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := compare_flags(rp, y8, v);
 
           END;
         ELSIF opcode = 204 THEN -- 0xCC CPY abs
@@ -1620,8 +1657,7 @@ export class PGCPU implements CPU {
             rpc := (rpc + 2) & 65535;
             v := read_byte(cpu, addr);
             y8 := ry & 255;
-            t := (y8 - v) & 255;
-            rp := (rp & ~((1)|2|128)) | (CASE WHEN y8 >= v THEN 1 ELSE 0 END) | (CASE WHEN t = 0 THEN 2 ELSE 0 END) | (CASE WHEN (t & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := compare_flags(rp, y8, v);
 
           END;
         ELSIF opcode = 224 THEN -- 0xE0 CPX #imm
@@ -1630,8 +1666,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, rpc);
             rpc := (rpc + 1) & 65535;
             x8 := rx & 255;
-            t := (x8 - v) & 255;
-            rp := (rp & ~((1)|2|128)) | (CASE WHEN x8 >= v THEN 1 ELSE 0 END) | (CASE WHEN t = 0 THEN 2 ELSE 0 END) | (CASE WHEN (t & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := compare_flags(rp, x8, v);
 
           END;
         ELSIF opcode = 192 THEN -- 0xC0 CPY #imm
@@ -1640,8 +1675,7 @@ export class PGCPU implements CPU {
             v := read_byte(cpu, rpc);
             rpc := (rpc + 1) & 65535;
             y8 := ry & 255;
-            t := (y8 - v) & 255;
-            rp := (rp & ~((1)|2|128)) | (CASE WHEN y8 >= v THEN 1 ELSE 0 END) | (CASE WHEN t = 0 THEN 2 ELSE 0 END) | (CASE WHEN (t & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := compare_flags(rp, y8, v);
 
           END;
         ELSIF opcode = 161 THEN -- 0xA1 LDA (indirect,X)
@@ -1654,7 +1688,7 @@ export class PGCPU implements CPU {
             eff := ((hi << 8) | lo) & 65535;
             v := read_byte(cpu, eff);
             ra := v & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN ra = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ra & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, ra);
 
           END;
         ELSIF opcode = 177 THEN -- 0xB1 LDA (indirect),Y
@@ -1668,7 +1702,7 @@ export class PGCPU implements CPU {
             eff := (base + ry) & 65535;
             v := read_byte(cpu, eff);
             ra := v & 255;
-            rp := (rp & ~(2|128)) | (CASE WHEN ra = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ra & 128) <> 0 THEN 128 ELSE 0 END);
+            rp := set_zn(rp, ra);
 
           END;
         ELSIF opcode = 32 THEN -- 0x20 JSR abs
