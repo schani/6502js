@@ -159,11 +159,13 @@
   - [x] cpu2.ts: factor a `compare()` helper for CMP/CPX/CPY
   - [x] cpu1.ts/cpu2.ts: factor a shared branch helper for the 8 branch opcodes
   - [x] sync-cpu.ts: loop over CPUs for fan-out and over register fields in compareStates
-  - [ ] Extract shared BASIC harness (ROM load, reset, pop16, trap dispatch) used by
+  - [x] Extract shared BASIC harness (ROM load, reset, pop16, trap dispatch) used by
         basic-runner and dsl-runner; fix dsl-runner/web trap addresses (ROM calls
         $FFF1 for ISCNTC, not $FFB7 — verified by disassembling osi.bin); drop
         dsl-runner's import from src/tests; remove push16/unused imports/stale
-        Bun and KIM-1 comments
+        Bun and KIM-1 comments (also fixed a dsl-runner bug: it popped the
+        return address before checking for input, corrupting the stack on
+        every wait/input cycle — LIST/RUN now work in DSL sessions)
   - [ ] web/main.ts: shared trap constants, fix missing awaits (disassemble, readByte), ROM path
   - [ ] Tests: consolidate LDY cluster (5 files → 1; remove weakened assertion)
   - [ ] Tests: consolidate branch cluster (4 files + stragglers → 1)

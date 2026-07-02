@@ -1,146 +1,35 @@
 /**
- * basic-runner.ts – minimal host glue to launch Microsoft BASIC (OSI
- * build, data/osi.bin) inside the JS 6502 core.
+ * basic-runner.ts – interactive host to run Microsoft BASIC (OSI build,
+ * data/osi.bin) on the 6502 cores, wired to stdin/stdout.
  *
  * Usage:
- *   npm run basic              # interactive prompt (CPU1)
- *   npm run basic -- --sync    # run CPU1, CPU2, and PGCPU in lockstep
- *   npm run basic -- --debug   # sync mode with divergence logging
+ *   npm run basic                # interactive prompt (CPU1)
+ *   npm run basic -- --cpu2      # use CPU2
+ *   npm run basic -- --pgcpu     # use PGCPU (PostgreSQL-based)
+ *   npm run basic -- --sync      # run CPU1, CPU2, and PGCPU in lockstep
+ *   npm run basic -- --debug     # sync mode with divergence logging
+ *   npm run basic -- --trace     # per-instruction tracing
  *
- * Prerequisites:
- *   – data/osi.bin (OSI BASIC ROM image, included in the repository).
- *
- * Implementation details
- *   • Loads osi.bin at $A000 and starts at the cold-start entry ($BD11).
- *   • Runs step() until the PC reaches a monitor vector address, at which
- *     point the runner performs the corresponding host I/O and emulates
- *     RTS by popping the return address from the 6502 stack.
+ * ROM loading, register setup, and monitor-vector trapping live in
+ * basic-harness.ts, shared with dsl-runner.ts.
  */
 
-import { readFileSync, appendFileSync } from "fs";
+import { appendFileSync } from "fs";
 import { exit } from "process";
-import { setTimeout } from "timers/promises";
-import type { CPU } from "../core/cpu-interface.ts";
-import { CPU1 } from "../core/cpu1.ts";
-import { CPU2 } from "../core/cpu2.ts";
-import { SyncCPU } from "../core/sync-cpu.ts";
-import { PGCPU } from "../core/pgcpu.ts";
 import { defined } from "@glideapps/ts-necessities";
+import { buildCPU, initBasic, handleTrap, type TrapIO } from "./basic-harness.ts";
 
 // Command line flags
 const TRACE = process.argv.includes("--trace");
 const DEBUG = process.argv.includes("--debug");
-const USE_CPU1 = process.argv.includes("--cpu1");
 const USE_CPU2 = process.argv.includes("--cpu2");
 const USE_PGCPU = process.argv.includes("--pgcpu");
 const USE_SYNC = process.argv.includes("--sync") || DEBUG; // --debug implies --sync
 
-// ---------------------------------------------------------------------------
-// Constants / helpers
-// ---------------------------------------------------------------------------
-
 const DIVERGENCE_LOG = "./cpu-divergence.log";
 
-const ROM_PATH = "./data/osi.bin";
-
-const ROM_ADDR = 0xa000; // in .cfg: BASROM
-const MONRDKEY = 0xffeb; // in .lbl
-const MONCOUT = 0xffee; // in .lbl
-const COLD_START = 0xbd11; // in .lbl
-
-// We still stub these for completeness (not used by KB9 but harmless)
-const MONISCNTC = 0xfff1; // in .lbl
-const LOAD = 0xfff4; // in .lbl
-const SAVE = 0xfff7; // in .lbl
-
-// Fixed stack operations to use the CPU interface
-async function pop16(cpu: CPU): Promise<number> {
-    // Save current SP
-    const sp0 = (await cpu.getState()).sp;
-    await cpu.setStackPointer((sp0 + 1) & 0xff);
-    const sp1 = (await cpu.getState()).sp;
-    const lo = await cpu.readByte(0x0100 + sp1);
-    await cpu.setStackPointer((sp1 + 1) & 0xff);
-    const sp2 = (await cpu.getState()).sp;
-    const hi = await cpu.readByte(0x0100 + sp2);
-    return (hi << 8) | lo;
-}
-
-async function push16(cpu: CPU, val: number) {
-    // Push high byte first
-    const hi = (val >> 8) & 0xff;
-    const lo = val & 0xff;
-
-    const sp0 = (await cpu.getState()).sp;
-    await cpu.loadByte(0x0100 + sp0, hi);
-    await cpu.setStackPointer((sp0 - 1) & 0xff);
-    const sp1 = (await cpu.getState()).sp;
-    await cpu.loadByte(0x0100 + sp1, lo);
-    await cpu.setStackPointer((sp1 - 1) & 0xff);
-}
-
 // ---------------------------------------------------------------------------
-// CPU / memory initialisation
-// ---------------------------------------------------------------------------
-
-async function buildCPU(): Promise<CPU> {
-    // Determine which CPU implementation to use based on command line flags
-    let cpu: CPU;
-
-    if (USE_SYNC) {
-        cpu = new SyncCPU();
-    } else if (USE_PGCPU) {
-        cpu = new PGCPU();
-    } else if (USE_CPU2) {
-        cpu = new CPU2();
-    } else {
-        // Default to CPU1 if no specific implementation is requested
-        cpu = new CPU1();
-    }
-
-    let state = await cpu.getState();
-
-    // Load BASIC ROM image
-    let bin: Buffer;
-    try {
-        bin = readFileSync(ROM_PATH);
-    } catch (e) {
-        console.error(
-            `Cannot read ${ROM_PATH}. Build or download osi.bin first.`,
-        );
-        exit(1);
-    }
-    if (bin.length > 0x10000 - ROM_ADDR) {
-        console.error(
-            `osi.bin too large: got ${bin.length} bytes, expected <=${0x10000 - ROM_ADDR}`,
-        );
-        exit(1);
-    }
-    // KIM-1 kb9.bin layout: single contiguous blob expected to be loaded at $2000
-    const maxLen = Math.min(bin.length, 0x10000 - ROM_ADDR);
-
-    // Use CPU interface methods instead of directly manipulating memory
-    for (let i = 0; i < maxLen; i++) {
-        const byteValue = bin[i];
-        // Ensure byteValue is defined before passing it to loadByte
-        if (byteValue !== undefined) {
-            await cpu.loadByte(ROM_ADDR + i, byteValue);
-        }
-    }
-
-    // Initial state using CPU interface methods
-    await cpu.setAccumulator(0);
-    await cpu.setXRegister(0);
-    await cpu.setYRegister(0);
-    await cpu.setStackPointer(0xfd);
-    await cpu.setStatusRegister(0x24);
-    await cpu.setProgramCounter(COLD_START);
-
-    return cpu;
-}
-
-// ---------------------------------------------------------------------------
-// Async IO helpers (Bun)
+// Async IO helpers (Node stdin/stdout)
 // ---------------------------------------------------------------------------
 
 // Global input buffer
@@ -182,34 +71,29 @@ try {
     );
 }
 
+// Convert LF (0x0A) to CR (0x0D) as expected by MS-BASIC
+function lfToCr(c: number): number {
+    return c === 0x0a ? 0x0d : c;
+}
+
 async function readChar(): Promise<number> {
     // If we have buffered input, use it
     if (inputBuffer.length > 0) {
-        let char = inputBuffer.shift()!;
-
-        // Convert LF (0x0A) to CR (0x0D) as expected by MS-BASIC
-        if (char === 0x0a) {
-            char = 0x0d;
-        }
-
-        return char;
+        return lfToCr(inputBuffer.shift()!);
     }
 
     // Otherwise wait for input
     return new Promise<number>((resolve) => {
-        inputPromiseResolve = (value: number) => {
-            // Convert LF to CR
-            if (value === 0x0a) {
-                value = 0x0d;
-            }
-            resolve(value);
-        };
+        inputPromiseResolve = (value: number) => resolve(lfToCr(value));
     });
 }
 
-function writeChar(c: number) {
-    process.stdout.write(Buffer.from([c]));
-}
+const io: TrapIO = {
+    putChar: (c) => {
+        process.stdout.write(Buffer.from([c]));
+    },
+    getChar: () => readChar(),
+};
 
 // ---------------------------------------------------------------------------
 // Divergence tracking
@@ -248,10 +132,13 @@ function logDivergence(opcode: number, error: string) {
 // ---------------------------------------------------------------------------
 
 async function main() {
-    const cpu = await buildCPU();
-    let state = await cpu.getState();
-
-    const trapSet = new Set([MONRDKEY, MONCOUT, MONISCNTC, LOAD, SAVE]);
+    const cpu = buildCPU(process.argv);
+    try {
+        await initBasic(cpu);
+    } catch (e) {
+        console.error(String(e));
+        exit(1);
+    }
 
     // Console message explaining CPU usage
     if (USE_SYNC) {
@@ -327,32 +214,8 @@ async function main() {
 
     while (true) {
         // Intercept before executing the opcode at PC
-        state = await cpu.getState();
-        if (trapSet.has(state.pc)) {
-            const addr = state.pc;
-            const ret = (await pop16(cpu)) + 1; // emulate RTS using CPU interface
-
-            switch (addr) {
-                case MONRDKEY: {
-                    const c = await readChar();
-                    await cpu.setAccumulator(c & 0xff);
-                    break;
-                }
-                case MONCOUT: {
-                    writeChar((await cpu.getState()).a);
-                    break;
-                }
-                case MONISCNTC: {
-                    // C already clear from stub; nothing else
-                    break;
-                }
-                case LOAD:
-                case SAVE:
-                    // No tape; do nothing
-                    break;
-            }
-
-            await cpu.setProgramCounter(ret);
+        // (getChar blocks until a key arrives, so this never reports need-input)
+        if ((await handleTrap(cpu, io)) !== "not-trapped") {
             continue;
         }
 
