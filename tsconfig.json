@@ -26,5 +26,5 @@
     "noPropertyAccessFromIndexSignature": false
   },
   "include": ["src/**/*"],
-  "exclude": ["src/web/dist"]
+  "exclude": ["src/web"]
 }
