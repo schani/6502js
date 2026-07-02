@@ -36,7 +36,6 @@ export class CPU1 implements CPU {
     /**
      * Execute a single CPU instruction
      * @param trace Whether to log trace information during execution
-     * @returns Number of clock cycles consumed by the instruction
      */
     async step(trace = false): Promise<void> {
         CURRENT_MEM_CPU1 = this.mem;
@@ -239,26 +238,12 @@ function getAbsoluteAddress(cpu: CPUState): number {
     return (highByte << 8) | lowByte;
 }
 
-function getAbsoluteXAddress(cpu: CPUState): {
-    address: number;
-    pageCrossed: boolean;
-} {
-    const baseAddress = getAbsoluteAddress(cpu);
-    const effectiveAddress = (baseAddress + cpu.x) & 0xffff;
-    // Check if page boundary crossed (high byte changed)
-    const pageCrossed = (baseAddress & 0xff00) !== (effectiveAddress & 0xff00);
-    return { address: effectiveAddress, pageCrossed };
+function getAbsoluteXAddress(cpu: CPUState): number {
+    return (getAbsoluteAddress(cpu) + cpu.x) & 0xffff;
 }
 
-function getAbsoluteYAddress(cpu: CPUState): {
-    address: number;
-    pageCrossed: boolean;
-} {
-    const baseAddress = getAbsoluteAddress(cpu);
-    const effectiveAddress = (baseAddress + cpu.y) & 0xffff;
-    // Check if page boundary crossed (high byte changed)
-    const pageCrossed = (baseAddress & 0xff00) !== (effectiveAddress & 0xff00);
-    return { address: effectiveAddress, pageCrossed };
+function getAbsoluteYAddress(cpu: CPUState): number {
+    return (getAbsoluteAddress(cpu) + cpu.y) & 0xffff;
 }
 
 function getIndirectXAddress(cpu: CPUState): number {
@@ -273,10 +258,7 @@ function getIndirectXAddress(cpu: CPUState): number {
     return (highByte << 8) | lowByte;
 }
 
-function getIndirectYAddress(cpu: CPUState): {
-    address: number;
-    pageCrossed: boolean;
-} {
+function getIndirectYAddress(cpu: CPUState): number {
     const zeroPageAddr = readByte(cpu, cpu.pc);
     cpu.pc = (cpu.pc + 1) & 0xFFFF;
 
@@ -284,13 +266,7 @@ function getIndirectYAddress(cpu: CPUState): {
     const lowByte = readByte(cpu, zeroPageAddr);
     const highByte = readByte(cpu, (zeroPageAddr + 1) & 0xff);
 
-    const baseAddress = (highByte << 8) | lowByte;
-    const effectiveAddress = (baseAddress + cpu.y) & 0xffff;
-
-    // Check if page boundary crossed (high byte changed)
-    const pageCrossed = (baseAddress & 0xff00) !== (effectiveAddress & 0xff00);
-
-    return { address: effectiveAddress, pageCrossed };
+    return ((((highByte << 8) | lowByte) + cpu.y)) & 0xffff;
 }
 
 function getIndirectAddress(cpu: CPUState): number {
@@ -420,7 +396,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
     // Fetch opcode
     const opcode = readByte(cpu, cpu.pc);
     cpu.pc = (cpu.pc + 1) & 0xFFFF;
-    let cycles = 0;
 
     if (trace && cpuInterface) {
         // Disassemble the current instruction at the current PC
@@ -449,7 +424,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             cpu.pc = (cpu.pc + 1) & 0xFFFF;
             cpu.a = value;
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 2;
             break;
         }
         case 0xa5: {
@@ -457,7 +431,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const zeroPageAddr = getZeroPageAddress(cpu);
             cpu.a = readByte(cpu, zeroPageAddr);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 3;
             break;
         }
         case 0xb5: {
@@ -465,7 +438,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getZeroPageXAddress(cpu);
             cpu.a = readByte(cpu, addr);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 4;
             break;
         }
         case 0xad: {
@@ -473,23 +445,20 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getAbsoluteAddress(cpu);
             cpu.a = readByte(cpu, addr);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 4;
             break;
         }
         case 0xbd: {
             // LDA Absolute,X
-            const { address, pageCrossed } = getAbsoluteXAddress(cpu);
+            const address = getAbsoluteXAddress(cpu);
             cpu.a = readByte(cpu, address);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 4 + (pageCrossed ? 1 : 0);
             break;
         }
         case 0xb9: {
             // LDA Absolute,Y
-            const { address, pageCrossed } = getAbsoluteYAddress(cpu);
+            const address = getAbsoluteYAddress(cpu);
             cpu.a = readByte(cpu, address);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 4 + (pageCrossed ? 1 : 0);
             break;
         }
         case 0xa1: {
@@ -497,15 +466,13 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getIndirectXAddress(cpu);
             cpu.a = readByte(cpu, addr);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 6;
             break;
         }
         case 0xb1: {
             // LDA (Indirect),Y
-            const { address, pageCrossed } = getIndirectYAddress(cpu);
+            const address = getIndirectYAddress(cpu);
             cpu.a = readByte(cpu, address);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 5 + (pageCrossed ? 1 : 0);
             break;
         }
 
@@ -516,7 +483,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             cpu.pc = (cpu.pc + 1) & 0xFFFF;
             cpu.x = value;
             updateZeroAndNegativeFlags(cpu, cpu.x);
-            cycles = 2;
             break;
         }
         case 0xa6: {
@@ -524,7 +490,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const zeroPageAddr = getZeroPageAddress(cpu);
             cpu.x = readByte(cpu, zeroPageAddr);
             updateZeroAndNegativeFlags(cpu, cpu.x);
-            cycles = 3;
             break;
         }
         case 0xb6: {
@@ -532,7 +497,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getZeroPageYAddress(cpu);
             cpu.x = readByte(cpu, addr);
             updateZeroAndNegativeFlags(cpu, cpu.x);
-            cycles = 4;
             break;
         }
         case 0xae: {
@@ -540,15 +504,13 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getAbsoluteAddress(cpu);
             cpu.x = readByte(cpu, addr);
             updateZeroAndNegativeFlags(cpu, cpu.x);
-            cycles = 4;
             break;
         }
         case 0xbe: {
             // LDX Absolute,Y
-            const { address, pageCrossed } = getAbsoluteYAddress(cpu);
+            const address = getAbsoluteYAddress(cpu);
             cpu.x = readByte(cpu, address);
             updateZeroAndNegativeFlags(cpu, cpu.x);
-            cycles = 4 + (pageCrossed ? 1 : 0);
             break;
         }
 
@@ -559,7 +521,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             cpu.pc = (cpu.pc + 1) & 0xFFFF;
             cpu.y = value;
             updateZeroAndNegativeFlags(cpu, cpu.y);
-            cycles = 2;
             break;
         }
         case 0xa4: {
@@ -567,7 +528,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const zeroPageAddr = getZeroPageAddress(cpu);
             cpu.y = readByte(cpu, zeroPageAddr);
             updateZeroAndNegativeFlags(cpu, cpu.y);
-            cycles = 3;
             break;
         }
         case 0xb4: {
@@ -575,7 +535,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getZeroPageXAddress(cpu);
             cpu.y = readByte(cpu, addr);
             updateZeroAndNegativeFlags(cpu, cpu.y);
-            cycles = 4;
             break;
         }
         case 0xac: {
@@ -583,15 +542,13 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getAbsoluteAddress(cpu);
             cpu.y = readByte(cpu, addr);
             updateZeroAndNegativeFlags(cpu, cpu.y);
-            cycles = 4;
             break;
         }
         case 0xbc: {
             // LDY Absolute,X
-            const { address, pageCrossed } = getAbsoluteXAddress(cpu);
+            const address = getAbsoluteXAddress(cpu);
             cpu.y = readByte(cpu, address);
             updateZeroAndNegativeFlags(cpu, cpu.y);
-            cycles = 4 + (pageCrossed ? 1 : 0);
             break;
         }
 
@@ -600,49 +557,42 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             // STA Zero Page
             const zeroPageAddr = getZeroPageAddress(cpu);
             writeByte(cpu, zeroPageAddr, cpu.a);
-            cycles = 3;
             break;
         }
         case 0x95: {
             // STA Zero Page,X
             const addr = getZeroPageXAddress(cpu);
             writeByte(cpu, addr, cpu.a);
-            cycles = 4;
             break;
         }
         case 0x8d: {
             // STA Absolute
             const addr = getAbsoluteAddress(cpu);
             writeByte(cpu, addr, cpu.a);
-            cycles = 4;
             break;
         }
         case 0x9d: {
             // STA Absolute,X
-            const { address } = getAbsoluteXAddress(cpu);
+            const address = getAbsoluteXAddress(cpu);
             writeByte(cpu, address, cpu.a);
-            cycles = 5; // Always 5 cycles, no page boundary check for stores
             break;
         }
         case 0x99: {
             // STA Absolute,Y
-            const { address } = getAbsoluteYAddress(cpu);
+            const address = getAbsoluteYAddress(cpu);
             writeByte(cpu, address, cpu.a);
-            cycles = 5; // Always 5 cycles, no page boundary check for stores
             break;
         }
         case 0x81: {
             // STA (Indirect,X)
             const addr = getIndirectXAddress(cpu);
             writeByte(cpu, addr, cpu.a);
-            cycles = 6;
             break;
         }
         case 0x91: {
             // STA (Indirect),Y
-            const { address } = getIndirectYAddress(cpu);
+            const address = getIndirectYAddress(cpu);
             writeByte(cpu, address, cpu.a);
-            cycles = 6; // Always 6 cycles, no page boundary check for stores
             break;
         }
 
@@ -651,21 +601,18 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             // STX Zero Page
             const zeroPageAddr = getZeroPageAddress(cpu);
             writeByte(cpu, zeroPageAddr, cpu.x);
-            cycles = 3;
             break;
         }
         case 0x96: {
             // STX Zero Page,Y
             const addr = getZeroPageYAddress(cpu);
             writeByte(cpu, addr, cpu.x);
-            cycles = 4;
             break;
         }
         case 0x8e: {
             // STX Absolute
             const addr = getAbsoluteAddress(cpu);
             writeByte(cpu, addr, cpu.x);
-            cycles = 4;
             break;
         }
 
@@ -674,21 +621,18 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             // STY Zero Page
             const zeroPageAddr = getZeroPageAddress(cpu);
             writeByte(cpu, zeroPageAddr, cpu.y);
-            cycles = 3;
             break;
         }
         case 0x94: {
             // STY Zero Page,X
             const addr = getZeroPageXAddress(cpu);
             writeByte(cpu, addr, cpu.y);
-            cycles = 4;
             break;
         }
         case 0x8c: {
             // STY Absolute
             const addr = getAbsoluteAddress(cpu);
             writeByte(cpu, addr, cpu.y);
-            cycles = 4;
             break;
         }
 
@@ -697,42 +641,36 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             // TAX - Transfer Accumulator to X
             cpu.x = cpu.a;
             updateZeroAndNegativeFlags(cpu, cpu.x);
-            cycles = 2;
             break;
         }
         case 0xa8: {
             // TAY - Transfer Accumulator to Y
             cpu.y = cpu.a;
             updateZeroAndNegativeFlags(cpu, cpu.y);
-            cycles = 2;
             break;
         }
         case 0x8a: {
             // TXA - Transfer X to Accumulator
             cpu.a = cpu.x;
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 2;
             break;
         }
         case 0x98: {
             // TYA - Transfer Y to Accumulator
             cpu.a = cpu.y;
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 2;
             break;
         }
         case 0xba: {
             // TSX - Transfer Stack Pointer to X
             cpu.x = cpu.sp;
             updateZeroAndNegativeFlags(cpu, cpu.x);
-            cycles = 2;
             break;
         }
         case 0x9a: {
             // TXS - Transfer X to Stack Pointer
             cpu.sp = cpu.x;
             // Note: This instruction does not affect any flags
-            cycles = 2;
             break;
         }
 
@@ -740,28 +678,24 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
         case 0x48: {
             // PHA - Push Accumulator on Stack
             pushByte(cpu, cpu.a);
-            cycles = 3;
             break;
         }
         case 0x68: {
             // PLA - Pull Accumulator from Stack
             cpu.a = pullByte(cpu);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 4;
             break;
         }
         case 0x08: {
             // PHP - Push Processor Status on Stack
             // When pushing status to stack, the B flag and unused flag are set
             pushByte(cpu, cpu.p | BREAK | UNUSED);
-            cycles = 3;
             break;
         }
         case 0x28: {
             // PLP - Pull Processor Status from Stack
             // When pulling status from stack, the B flag is ignored and unused is set
             cpu.p = (pullByte(cpu) & ~BREAK) | UNUSED;
-            cycles = 4;
             break;
         }
 
@@ -772,7 +706,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             cpu.pc = (cpu.pc + 1) & 0xFFFF;
             cpu.a &= value;
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 2;
             break;
         }
         case 0x25: {
@@ -780,7 +713,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getZeroPageAddress(cpu);
             cpu.a &= readByte(cpu, addr);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 3;
             break;
         }
         case 0x35: {
@@ -788,7 +720,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getZeroPageXAddress(cpu);
             cpu.a &= readByte(cpu, addr);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 4;
             break;
         }
         case 0x2d: {
@@ -796,23 +727,20 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getAbsoluteAddress(cpu);
             cpu.a &= readByte(cpu, addr);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 4;
             break;
         }
         case 0x3d: {
             // AND Absolute,X
-            const { address, pageCrossed } = getAbsoluteXAddress(cpu);
+            const address = getAbsoluteXAddress(cpu);
             cpu.a &= readByte(cpu, address);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 4 + (pageCrossed ? 1 : 0);
             break;
         }
         case 0x39: {
             // AND Absolute,Y
-            const { address, pageCrossed } = getAbsoluteYAddress(cpu);
+            const address = getAbsoluteYAddress(cpu);
             cpu.a &= readByte(cpu, address);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 4 + (pageCrossed ? 1 : 0);
             break;
         }
         case 0x21: {
@@ -820,15 +748,13 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getIndirectXAddress(cpu);
             cpu.a &= readByte(cpu, addr);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 6;
             break;
         }
         case 0x31: {
             // AND (Indirect),Y
-            const { address, pageCrossed } = getIndirectYAddress(cpu);
+            const address = getIndirectYAddress(cpu);
             cpu.a &= readByte(cpu, address);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 5 + (pageCrossed ? 1 : 0);
             break;
         }
 
@@ -838,7 +764,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             cpu.pc = (cpu.pc + 1) & 0xFFFF;
             cpu.a |= value;
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 2;
             break;
         }
         case 0x05: {
@@ -846,7 +771,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getZeroPageAddress(cpu);
             cpu.a |= readByte(cpu, addr);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 3;
             break;
         }
         case 0x15: {
@@ -854,7 +778,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getZeroPageXAddress(cpu);
             cpu.a |= readByte(cpu, addr);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 4;
             break;
         }
         case 0x0d: {
@@ -862,23 +785,20 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getAbsoluteAddress(cpu);
             cpu.a |= readByte(cpu, addr);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 4;
             break;
         }
         case 0x1d: {
             // ORA Absolute,X
-            const { address, pageCrossed } = getAbsoluteXAddress(cpu);
+            const address = getAbsoluteXAddress(cpu);
             cpu.a |= readByte(cpu, address);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 4 + (pageCrossed ? 1 : 0);
             break;
         }
         case 0x19: {
             // ORA Absolute,Y
-            const { address, pageCrossed } = getAbsoluteYAddress(cpu);
+            const address = getAbsoluteYAddress(cpu);
             cpu.a |= readByte(cpu, address);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 4 + (pageCrossed ? 1 : 0);
             break;
         }
         case 0x01: {
@@ -886,15 +806,13 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getIndirectXAddress(cpu);
             cpu.a |= readByte(cpu, addr);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 6;
             break;
         }
         case 0x11: {
             // ORA (Indirect),Y
-            const { address, pageCrossed } = getIndirectYAddress(cpu);
+            const address = getIndirectYAddress(cpu);
             cpu.a |= readByte(cpu, address);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 5 + (pageCrossed ? 1 : 0);
             break;
         }
 
@@ -904,7 +822,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             cpu.pc = (cpu.pc + 1) & 0xFFFF;
             cpu.a ^= value;
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 2;
             break;
         }
         case 0x45: {
@@ -912,7 +829,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getZeroPageAddress(cpu);
             cpu.a ^= readByte(cpu, addr);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 3;
             break;
         }
         case 0x55: {
@@ -920,7 +836,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getZeroPageXAddress(cpu);
             cpu.a ^= readByte(cpu, addr);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 4;
             break;
         }
         case 0x4d: {
@@ -928,23 +843,20 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getAbsoluteAddress(cpu);
             cpu.a ^= readByte(cpu, addr);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 4;
             break;
         }
         case 0x5d: {
             // EOR Absolute,X
-            const { address, pageCrossed } = getAbsoluteXAddress(cpu);
+            const address = getAbsoluteXAddress(cpu);
             cpu.a ^= readByte(cpu, address);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 4 + (pageCrossed ? 1 : 0);
             break;
         }
         case 0x59: {
             // EOR Absolute,Y
-            const { address, pageCrossed } = getAbsoluteYAddress(cpu);
+            const address = getAbsoluteYAddress(cpu);
             cpu.a ^= readByte(cpu, address);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 4 + (pageCrossed ? 1 : 0);
             break;
         }
         case 0x41: {
@@ -952,15 +864,13 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getIndirectXAddress(cpu);
             cpu.a ^= readByte(cpu, addr);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 6;
             break;
         }
         case 0x51: {
             // EOR (Indirect),Y
-            const { address, pageCrossed } = getIndirectYAddress(cpu);
+            const address = getIndirectYAddress(cpu);
             cpu.a ^= readByte(cpu, address);
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 5 + (pageCrossed ? 1 : 0);
             break;
         }
 
@@ -989,8 +899,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             } else {
                 cpu.p &= ~ZERO;
             }
-
-            cycles = 3;
             break;
         }
         case 0x2c: {
@@ -1018,8 +926,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             } else {
                 cpu.p &= ~ZERO;
             }
-
-            cycles = 4;
             break;
         }
 
@@ -1029,7 +935,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const value = readByte(cpu, cpu.pc);
             cpu.pc = (cpu.pc + 1) & 0xFFFF;
             addWithCarry(cpu, value);
-            cycles = 2;
             break;
         }
         case 0x65: {
@@ -1037,7 +942,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getZeroPageAddress(cpu);
             const value = readByte(cpu, addr);
             addWithCarry(cpu, value);
-            cycles = 3;
             break;
         }
         case 0x75: {
@@ -1045,7 +949,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getZeroPageXAddress(cpu);
             const value = readByte(cpu, addr);
             addWithCarry(cpu, value);
-            cycles = 4;
             break;
         }
         case 0x6d: {
@@ -1053,23 +956,20 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getAbsoluteAddress(cpu);
             const value = readByte(cpu, addr);
             addWithCarry(cpu, value);
-            cycles = 4;
             break;
         }
         case 0x7d: {
             // ADC Absolute,X
-            const { address, pageCrossed } = getAbsoluteXAddress(cpu);
+            const address = getAbsoluteXAddress(cpu);
             const value = readByte(cpu, address);
             addWithCarry(cpu, value);
-            cycles = 4 + (pageCrossed ? 1 : 0);
             break;
         }
         case 0x79: {
             // ADC Absolute,Y
-            const { address, pageCrossed } = getAbsoluteYAddress(cpu);
+            const address = getAbsoluteYAddress(cpu);
             const value = readByte(cpu, address);
             addWithCarry(cpu, value);
-            cycles = 4 + (pageCrossed ? 1 : 0);
             break;
         }
         case 0x61: {
@@ -1077,15 +977,13 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getIndirectXAddress(cpu);
             const value = readByte(cpu, addr);
             addWithCarry(cpu, value);
-            cycles = 6;
             break;
         }
         case 0x71: {
             // ADC (Indirect),Y
-            const { address, pageCrossed } = getIndirectYAddress(cpu);
+            const address = getIndirectYAddress(cpu);
             const value = readByte(cpu, address);
             addWithCarry(cpu, value);
-            cycles = 5 + (pageCrossed ? 1 : 0);
             break;
         }
 
@@ -1094,7 +992,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const value = readByte(cpu, cpu.pc);
             cpu.pc = (cpu.pc + 1) & 0xFFFF;
             subtractWithCarry(cpu, value);
-            cycles = 2;
             break;
         }
         case 0xe5: {
@@ -1102,7 +999,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getZeroPageAddress(cpu);
             const value = readByte(cpu, addr);
             subtractWithCarry(cpu, value);
-            cycles = 3;
             break;
         }
         case 0xf5: {
@@ -1110,7 +1006,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getZeroPageXAddress(cpu);
             const value = readByte(cpu, addr);
             subtractWithCarry(cpu, value);
-            cycles = 4;
             break;
         }
         case 0xed: {
@@ -1118,23 +1013,20 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getAbsoluteAddress(cpu);
             const value = readByte(cpu, addr);
             subtractWithCarry(cpu, value);
-            cycles = 4;
             break;
         }
         case 0xfd: {
             // SBC Absolute,X
-            const { address, pageCrossed } = getAbsoluteXAddress(cpu);
+            const address = getAbsoluteXAddress(cpu);
             const value = readByte(cpu, address);
             subtractWithCarry(cpu, value);
-            cycles = 4 + (pageCrossed ? 1 : 0);
             break;
         }
         case 0xf9: {
             // SBC Absolute,Y
-            const { address, pageCrossed } = getAbsoluteYAddress(cpu);
+            const address = getAbsoluteYAddress(cpu);
             const value = readByte(cpu, address);
             subtractWithCarry(cpu, value);
-            cycles = 4 + (pageCrossed ? 1 : 0);
             break;
         }
         case 0xe1: {
@@ -1142,15 +1034,13 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getIndirectXAddress(cpu);
             const value = readByte(cpu, addr);
             subtractWithCarry(cpu, value);
-            cycles = 6;
             break;
         }
         case 0xf1: {
             // SBC (Indirect),Y
-            const { address, pageCrossed } = getIndirectYAddress(cpu);
+            const address = getIndirectYAddress(cpu);
             const value = readByte(cpu, address);
             subtractWithCarry(cpu, value);
-            cycles = 5 + (pageCrossed ? 1 : 0);
             break;
         }
 
@@ -1159,7 +1049,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const value = readByte(cpu, cpu.pc);
             cpu.pc = (cpu.pc + 1) & 0xFFFF;
             compare(cpu, cpu.a, value);
-            cycles = 2;
             break;
         }
         case 0xc5: {
@@ -1167,7 +1056,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getZeroPageAddress(cpu);
             const value = readByte(cpu, addr);
             compare(cpu, cpu.a, value);
-            cycles = 3;
             break;
         }
         case 0xd5: {
@@ -1175,7 +1063,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getZeroPageXAddress(cpu);
             const value = readByte(cpu, addr);
             compare(cpu, cpu.a, value);
-            cycles = 4;
             break;
         }
         case 0xcd: {
@@ -1183,23 +1070,20 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getAbsoluteAddress(cpu);
             const value = readByte(cpu, addr);
             compare(cpu, cpu.a, value);
-            cycles = 4;
             break;
         }
         case 0xdd: {
             // CMP Absolute,X
-            const { address, pageCrossed } = getAbsoluteXAddress(cpu);
+            const address = getAbsoluteXAddress(cpu);
             const value = readByte(cpu, address);
             compare(cpu, cpu.a, value);
-            cycles = 4 + (pageCrossed ? 1 : 0);
             break;
         }
         case 0xd9: {
             // CMP Absolute,Y
-            const { address, pageCrossed } = getAbsoluteYAddress(cpu);
+            const address = getAbsoluteYAddress(cpu);
             const value = readByte(cpu, address);
             compare(cpu, cpu.a, value);
-            cycles = 4 + (pageCrossed ? 1 : 0);
             break;
         }
         case 0xc1: {
@@ -1207,15 +1091,13 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getIndirectXAddress(cpu);
             const value = readByte(cpu, addr);
             compare(cpu, cpu.a, value);
-            cycles = 6;
             break;
         }
         case 0xd1: {
             // CMP (Indirect),Y
-            const { address, pageCrossed } = getIndirectYAddress(cpu);
+            const address = getIndirectYAddress(cpu);
             const value = readByte(cpu, address);
             compare(cpu, cpu.a, value);
-            cycles = 5 + (pageCrossed ? 1 : 0);
             break;
         }
 
@@ -1224,7 +1106,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const value = readByte(cpu, cpu.pc);
             cpu.pc = (cpu.pc + 1) & 0xFFFF;
             compare(cpu, cpu.x, value);
-            cycles = 2;
             break;
         }
         case 0xe4: {
@@ -1232,7 +1113,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getZeroPageAddress(cpu);
             const value = readByte(cpu, addr);
             compare(cpu, cpu.x, value);
-            cycles = 3;
             break;
         }
         case 0xec: {
@@ -1240,7 +1120,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getAbsoluteAddress(cpu);
             const value = readByte(cpu, addr);
             compare(cpu, cpu.x, value);
-            cycles = 4;
             break;
         }
 
@@ -1249,7 +1128,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const value = readByte(cpu, cpu.pc);
             cpu.pc = (cpu.pc + 1) & 0xFFFF;
             compare(cpu, cpu.y, value);
-            cycles = 2;
             break;
         }
         case 0xc4: {
@@ -1257,7 +1135,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getZeroPageAddress(cpu);
             const value = readByte(cpu, addr);
             compare(cpu, cpu.y, value);
-            cycles = 3;
             break;
         }
         case 0xcc: {
@@ -1265,7 +1142,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const addr = getAbsoluteAddress(cpu);
             const value = readByte(cpu, addr);
             compare(cpu, cpu.y, value);
-            cycles = 4;
             break;
         }
 
@@ -1274,7 +1150,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             // INX
             cpu.x = (cpu.x + 1) & 0xff;
             updateZeroAndNegativeFlags(cpu, cpu.x);
-            cycles = 2;
             break;
         }
 
@@ -1282,7 +1157,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             // INY
             cpu.y = (cpu.y + 1) & 0xff;
             updateZeroAndNegativeFlags(cpu, cpu.y);
-            cycles = 2;
             break;
         }
 
@@ -1290,7 +1164,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             // DEX
             cpu.x = (cpu.x - 1) & 0xff;
             updateZeroAndNegativeFlags(cpu, cpu.x);
-            cycles = 2;
             break;
         }
 
@@ -1298,7 +1171,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             // DEY
             cpu.y = (cpu.y - 1) & 0xff;
             updateZeroAndNegativeFlags(cpu, cpu.y);
-            cycles = 2;
             break;
         }
 
@@ -1308,7 +1180,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const value = (readByte(cpu, addr) + 1) & 0xff;
             writeByte(cpu, addr, value);
             updateZeroAndNegativeFlags(cpu, value);
-            cycles = 5;
             break;
         }
 
@@ -1318,7 +1189,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const value = (readByte(cpu, addr) + 1) & 0xff;
             writeByte(cpu, addr, value);
             updateZeroAndNegativeFlags(cpu, value);
-            cycles = 6;
             break;
         }
 
@@ -1328,17 +1198,15 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const value = (readByte(cpu, addr) + 1) & 0xff;
             writeByte(cpu, addr, value);
             updateZeroAndNegativeFlags(cpu, value);
-            cycles = 6;
             break;
         }
 
         case 0xfe: {
             // INC Absolute,X
-            const { address } = getAbsoluteXAddress(cpu);
+            const address = getAbsoluteXAddress(cpu);
             const value = (readByte(cpu, address) + 1) & 0xff;
             writeByte(cpu, address, value);
             updateZeroAndNegativeFlags(cpu, value);
-            cycles = 7;
             break;
         }
 
@@ -1348,7 +1216,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const value = (readByte(cpu, addr) - 1) & 0xff;
             writeByte(cpu, addr, value);
             updateZeroAndNegativeFlags(cpu, value);
-            cycles = 5;
             break;
         }
 
@@ -1358,7 +1225,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const value = (readByte(cpu, addr) - 1) & 0xff;
             writeByte(cpu, addr, value);
             updateZeroAndNegativeFlags(cpu, value);
-            cycles = 6;
             break;
         }
 
@@ -1368,17 +1234,15 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const value = (readByte(cpu, addr) - 1) & 0xff;
             writeByte(cpu, addr, value);
             updateZeroAndNegativeFlags(cpu, value);
-            cycles = 6;
             break;
         }
 
         case 0xde: {
             // DEC Absolute,X
-            const { address } = getAbsoluteXAddress(cpu);
+            const address = getAbsoluteXAddress(cpu);
             const value = (readByte(cpu, address) - 1) & 0xff;
             writeByte(cpu, address, value);
             updateZeroAndNegativeFlags(cpu, value);
-            cycles = 7;
             break;
         }
 
@@ -1399,7 +1263,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             }
 
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 2;
             break;
         }
         case 0x06: {
@@ -1422,7 +1285,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             }
 
             updateZeroAndNegativeFlags(cpu, result);
-            cycles = 5;
             break;
         }
         case 0x16: {
@@ -1445,7 +1307,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             }
 
             updateZeroAndNegativeFlags(cpu, result);
-            cycles = 6;
             break;
         }
         case 0x0e: {
@@ -1468,12 +1329,11 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             }
 
             updateZeroAndNegativeFlags(cpu, result);
-            cycles = 6;
             break;
         }
         case 0x1e: {
             // ASL Absolute,X
-            const { address } = getAbsoluteXAddress(cpu);
+            const address = getAbsoluteXAddress(cpu);
             const value = readByte(cpu, address);
 
             // Get the bit that will be shifted out
@@ -1491,7 +1351,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             }
 
             updateZeroAndNegativeFlags(cpu, result);
-            cycles = 7;
             break;
         }
 
@@ -1511,7 +1370,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             }
 
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 2;
             break;
         }
         case 0x46: {
@@ -1534,7 +1392,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             }
 
             updateZeroAndNegativeFlags(cpu, result);
-            cycles = 5;
             break;
         }
         case 0x56: {
@@ -1557,7 +1414,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             }
 
             updateZeroAndNegativeFlags(cpu, result);
-            cycles = 6;
             break;
         }
         case 0x4e: {
@@ -1580,12 +1436,11 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             }
 
             updateZeroAndNegativeFlags(cpu, result);
-            cycles = 6;
             break;
         }
         case 0x5e: {
             // LSR Absolute,X
-            const { address } = getAbsoluteXAddress(cpu);
+            const address = getAbsoluteXAddress(cpu);
             const value = readByte(cpu, address);
 
             // Get the bit that will be shifted out
@@ -1603,7 +1458,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             }
 
             updateZeroAndNegativeFlags(cpu, result);
-            cycles = 7;
             break;
         }
 
@@ -1626,7 +1480,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             }
 
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 2;
             break;
         }
         case 0x26: {
@@ -1652,7 +1505,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             }
 
             updateZeroAndNegativeFlags(cpu, result);
-            cycles = 5;
             break;
         }
         case 0x36: {
@@ -1678,7 +1530,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             }
 
             updateZeroAndNegativeFlags(cpu, result);
-            cycles = 6;
             break;
         }
         case 0x2e: {
@@ -1704,12 +1555,11 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             }
 
             updateZeroAndNegativeFlags(cpu, result);
-            cycles = 6;
             break;
         }
         case 0x3e: {
             // ROL Absolute,X
-            const { address } = getAbsoluteXAddress(cpu);
+            const address = getAbsoluteXAddress(cpu);
             const value = readByte(cpu, address);
 
             // Get the current state of the carry flag
@@ -1730,7 +1580,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             }
 
             updateZeroAndNegativeFlags(cpu, result);
-            cycles = 7;
             break;
         }
 
@@ -1753,7 +1602,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             }
 
             updateZeroAndNegativeFlags(cpu, cpu.a);
-            cycles = 2;
             break;
         }
         case 0x66: {
@@ -1779,7 +1627,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             }
 
             updateZeroAndNegativeFlags(cpu, result);
-            cycles = 5;
             break;
         }
         case 0x76: {
@@ -1805,7 +1652,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             }
 
             updateZeroAndNegativeFlags(cpu, result);
-            cycles = 6;
             break;
         }
         case 0x6e: {
@@ -1831,12 +1677,11 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             }
 
             updateZeroAndNegativeFlags(cpu, result);
-            cycles = 6;
             break;
         }
         case 0x7e: {
             // ROR Absolute,X
-            const { address } = getAbsoluteXAddress(cpu);
+            const address = getAbsoluteXAddress(cpu);
             const value = readByte(cpu, address);
 
             // Get the current state of the carry flag
@@ -1857,7 +1702,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             }
 
             updateZeroAndNegativeFlags(cpu, result);
-            cycles = 7;
             break;
         }
 
@@ -1865,14 +1709,12 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
         case 0x4c: {
             // JMP Absolute
             cpu.pc = getAbsoluteAddress(cpu);
-            cycles = 3;
             break;
         }
 
         case 0x6c: {
             // JMP Indirect
             cpu.pc = getIndirectAddress(cpu);
-            cycles = 5;
             break;
         }
 
@@ -1892,7 +1734,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             
             // Jump to target
             cpu.pc = targetAddress;
-            cycles = 6;
             break;
         }
 
@@ -1901,7 +1742,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             // Pull return address from stack and add 1
             // The address on the stack is PC-1, so adding 1 gives us the next instruction
             cpu.pc = (pullWord(cpu) + 1) & 0xFFFF;  // Fixed: should add 1, not 2
-            cycles = 6;
             break;
         }
 
@@ -1909,49 +1749,42 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
         case 0x18: {
             // CLC - Clear Carry Flag
             cpu.p &= ~CARRY;
-            cycles = 2;
             break;
         }
 
         case 0x38: {
             // SEC - Set Carry Flag
             cpu.p |= CARRY;
-            cycles = 2;
             break;
         }
 
         case 0x58: {
             // CLI - Clear Interrupt Disable
             cpu.p &= ~INTERRUPT;
-            cycles = 2;
             break;
         }
 
         case 0x78: {
             // SEI - Set Interrupt Disable
             cpu.p |= INTERRUPT;
-            cycles = 2;
             break;
         }
 
         case 0xb8: {
             // CLV - Clear Overflow Flag
             cpu.p &= ~OVERFLOW;
-            cycles = 2;
             break;
         }
 
         case 0xd8: {
             // CLD - Clear Decimal Mode
             cpu.p &= ~DECIMAL;
-            cycles = 2;
             break;
         }
 
         case 0xf8: {
             // SED - Set Decimal Mode
             cpu.p |= DECIMAL;
-            cycles = 2;
             break;
         }
 
@@ -1961,13 +1794,9 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const offset = readByte(cpu, cpu.pc);
             cpu.pc = (cpu.pc + 1) & 0xFFFF;
             if ((cpu.p & CARRY) === 0) {
-                const oldPc = cpu.pc;
                 // Branch offset is signed
                 cpu.pc =
                     (cpu.pc + (offset & 0x80 ? offset - 256 : offset)) & 0xffff;
-                cycles = 3 + ((oldPc & 0xff00) !== (cpu.pc & 0xff00) ? 1 : 0);
-            } else {
-                cycles = 2;
             }
             break;
         }
@@ -1977,13 +1806,9 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const offset = readByte(cpu, cpu.pc);
             cpu.pc = (cpu.pc + 1) & 0xFFFF;
             if ((cpu.p & CARRY) !== 0) {
-                const oldPc = cpu.pc;
                 // Branch offset is signed
                 cpu.pc =
                     (cpu.pc + (offset & 0x80 ? offset - 256 : offset)) & 0xffff;
-                cycles = 3 + ((oldPc & 0xff00) !== (cpu.pc & 0xff00) ? 1 : 0);
-            } else {
-                cycles = 2;
             }
             break;
         }
@@ -1993,13 +1818,9 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const offset = readByte(cpu, cpu.pc);
             cpu.pc = (cpu.pc + 1) & 0xFFFF;
             if ((cpu.p & ZERO) !== 0) {
-                const oldPc = cpu.pc;
                 // Branch offset is signed
                 cpu.pc =
                     (cpu.pc + (offset & 0x80 ? offset - 256 : offset)) & 0xffff;
-                cycles = 3 + ((oldPc & 0xff00) !== (cpu.pc & 0xff00) ? 1 : 0);
-            } else {
-                cycles = 2;
             }
             break;
         }
@@ -2009,13 +1830,9 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const offset = readByte(cpu, cpu.pc);
             cpu.pc = (cpu.pc + 1) & 0xFFFF;
             if ((cpu.p & ZERO) === 0) {
-                const oldPc = cpu.pc;
                 // Branch offset is signed
                 cpu.pc =
                     (cpu.pc + (offset & 0x80 ? offset - 256 : offset)) & 0xffff;
-                cycles = 3 + ((oldPc & 0xff00) !== (cpu.pc & 0xff00) ? 1 : 0);
-            } else {
-                cycles = 2;
             }
             break;
         }
@@ -2025,13 +1842,9 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const offset = readByte(cpu, cpu.pc);
             cpu.pc = (cpu.pc + 1) & 0xFFFF;
             if ((cpu.p & NEGATIVE) !== 0) {
-                const oldPc = cpu.pc;
                 // Branch offset is signed
                 cpu.pc =
                     (cpu.pc + (offset & 0x80 ? offset - 256 : offset)) & 0xffff;
-                cycles = 3 + ((oldPc & 0xff00) !== (cpu.pc & 0xff00) ? 1 : 0);
-            } else {
-                cycles = 2;
             }
             break;
         }
@@ -2041,13 +1854,9 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const offset = readByte(cpu, cpu.pc);
             cpu.pc = (cpu.pc + 1) & 0xFFFF;
             if ((cpu.p & NEGATIVE) === 0) {
-                const oldPc = cpu.pc;
                 // Branch offset is signed
                 cpu.pc =
                     (cpu.pc + (offset & 0x80 ? offset - 256 : offset)) & 0xffff;
-                cycles = 3 + ((oldPc & 0xff00) !== (cpu.pc & 0xff00) ? 1 : 0);
-            } else {
-                cycles = 2;
             }
             break;
         }
@@ -2057,13 +1866,9 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const offset = readByte(cpu, cpu.pc);
             cpu.pc = (cpu.pc + 1) & 0xFFFF;
             if ((cpu.p & OVERFLOW) === 0) {
-                const oldPc = cpu.pc;
                 // Branch offset is signed
                 cpu.pc =
                     (cpu.pc + (offset & 0x80 ? offset - 256 : offset)) & 0xffff;
-                cycles = 3 + ((oldPc & 0xff00) !== (cpu.pc & 0xff00) ? 1 : 0);
-            } else {
-                cycles = 2;
             }
             break;
         }
@@ -2073,13 +1878,9 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
             const offset = readByte(cpu, cpu.pc);
             cpu.pc = (cpu.pc + 1) & 0xFFFF;
             if ((cpu.p & OVERFLOW) !== 0) {
-                const oldPc = cpu.pc;
                 // Branch offset is signed
                 cpu.pc =
                     (cpu.pc + (offset & 0x80 ? offset - 256 : offset)) & 0xffff;
-                cycles = 3 + ((oldPc & 0xff00) !== (cpu.pc & 0xff00) ? 1 : 0);
-            } else {
-                cycles = 2;
             }
             break;
         }
@@ -2102,8 +1903,6 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
 
             // Load interrupt vector from FFFE-FFFF
             cpu.pc = readWord(cpu, 0xfffe) & 0xFFFF;
-
-            cycles = 7;
             break;
         }
 
@@ -2114,14 +1913,11 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
 
             // Pull program counter from stack (low byte first, then high byte)
             cpu.pc = pullWord(cpu) & 0xFFFF;
-
-            cycles = 6;
             break;
         }
 
         case 0xea: {
             // NOP - No Operation
-            cycles = 2;
             break;
         }
 
