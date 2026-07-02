@@ -169,7 +169,7 @@
   - [x] web/main.ts: shared trap constants, fix missing awaits (disassemble, readByte), ROM path
   - [x] Tests: consolidate LDY cluster (5 files → 1; remove weakened assertion)
   - [x] Tests: consolidate branch cluster (6 files → 1)
-  - [ ] Tests: consolidate shift cluster (+ final-ror-test)
+  - [x] Tests: consolidate shift cluster (4 files → 1, table-driven)
   - [ ] Tests: merge unknown-opcodes/trace-functionality into system tests
   - [ ] Tests: fold unique cases out of the coverage-push grab-bag files, then delete them
   - [ ] pgcpu.ts: add `set_zn` (and ADC/SBC/CMP flag) SQL helpers to kill ~60x repetition
