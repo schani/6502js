@@ -157,7 +157,7 @@
   - [x] cpu2.ts: dedupe `shiftMem2` into `shiftMemOp`; move NOP into the switch; drop IIFE handlers
   - [x] cpu2.ts: use shared flag constants from `constants.ts` instead of local `F`
   - [x] cpu2.ts: factor a `compare()` helper for CMP/CPX/CPY
-  - [ ] cpu1.ts/cpu2.ts: factor a shared branch helper for the 8 branch opcodes
+  - [x] cpu1.ts/cpu2.ts: factor a shared branch helper for the 8 branch opcodes
   - [ ] sync-cpu.ts: loop over CPUs for fan-out and over register fields in compareStates
   - [ ] Extract shared BASIC harness (ROM load, reset, pop16, trap dispatch) used by
         basic-runner and dsl-runner; fix dsl-runner/web trap addresses (ROM calls

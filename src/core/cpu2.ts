@@ -186,6 +186,15 @@ const compare = (s: CPUState, reg: number, v: number) => {
         (r & 0x80);
 };
 
+/* relative branch: consume the signed offset and apply it if taken */
+const branch = (s: CPUState, taken: boolean) => {
+    const off = imm8(s);
+    if (taken) {
+        const rel = off < 0x80 ? off : off - 0x100;
+        s.pc = (s.pc + rel) & 0xffff;
+    }
+};
+
 /* ADC / SBC with BCD if D-flag set */
 const adc = (s: CPUState, v: number) => {
     const c = s.p & CARRY ? 1 : 0;
@@ -470,15 +479,9 @@ export async function step6502(
             s.p |= CARRY;
             return;
         /* BEQ – branch if zero set (relative) */
-        case 0xf0: {
-            const offset = imm8(s);
-            if (s.p & ZERO) {
-                /* Offset is signed 8-bit */
-                const rel = offset < 0x80 ? offset : offset - 0x100;
-                s.pc = (s.pc + rel) & 0xffff;
-            }
+        case 0xf0:
+            branch(s, (s.p & ZERO) !== 0);
             return;
-        }
 
         /* ---------- additional opcodes for extended tests ---------- */
 
@@ -543,14 +546,9 @@ export async function step6502(
         case 0xcc: compare(s, s.y, rd(s, abs16(s))); return;
 
         /* BNE – branch if zero clear (relative) */
-        case 0xd0: {
-            const offset = imm8(s);
-            if (!(s.p & ZERO)) {
-                const rel = offset < 0x80 ? offset : offset - 0x100;
-                s.pc = (s.pc + rel) & 0xffff;
-            }
+        case 0xd0:
+            branch(s, (s.p & ZERO) === 0);
             return;
-        }
 
         /* ---------- AND instructions (Logical AND with Accumulator) ---------- */
         case 0x29: {
@@ -917,51 +915,21 @@ export async function step6502(
         }
 
         /* ---------- Other Branches ---------- */
-        case 0xb0: {
-            // BCS
-            const off = imm8(s);
-            if (s.p & CARRY) {
-                const rel = off < 0x80 ? off : off - 0x100;
-                s.pc = (s.pc + rel) & 0xffff;
-            }
+        case 0xb0: // BCS
+            branch(s, (s.p & CARRY) !== 0);
             return;
-        }
-        case 0x50: {
-            // BVC
-            const off = imm8(s);
-            if (!(s.p & OVERFLOW)) {
-                const rel = off < 0x80 ? off : off - 0x100;
-                s.pc = (s.pc + rel) & 0xffff;
-            }
+        case 0x50: // BVC
+            branch(s, (s.p & OVERFLOW) === 0);
             return;
-        }
-        case 0x70: {
-            // BVS
-            const off = imm8(s);
-            if (s.p & OVERFLOW) {
-                const rel = off < 0x80 ? off : off - 0x100;
-                s.pc = (s.pc + rel) & 0xffff;
-            }
+        case 0x70: // BVS
+            branch(s, (s.p & OVERFLOW) !== 0);
             return;
-        }
-        case 0x30: {
-            // BMI
-            const off = imm8(s);
-            if (s.p & NEGATIVE) {
-                const rel = off < 0x80 ? off : off - 0x100;
-                s.pc = (s.pc + rel) & 0xffff;
-            }
+        case 0x30: // BMI
+            branch(s, (s.p & NEGATIVE) !== 0);
             return;
-        }
-        case 0x10: {
-            // BPL
-            const off = imm8(s);
-            if (!(s.p & NEGATIVE)) {
-                const rel = off < 0x80 ? off : off - 0x100;
-                s.pc = (s.pc + rel) & 0xffff;
-            }
+        case 0x10: // BPL
+            branch(s, (s.p & NEGATIVE) === 0);
             return;
-        }
 
         /* ---------- Quick top-level handlers for remaining failing tests ---------- */
 
@@ -1096,15 +1064,9 @@ export async function step6502(
             s.p &= ~DECIMAL;
             return;
         /* ---------- Branches ---------- */
-        case 0x90: {
-            // BCC
-            const off = imm8(s);
-            if (!(s.p & CARRY)) {
-                const rel = off < 0x80 ? off : off - 0x100;
-                s.pc = (s.pc + rel) & 0xffff;
-            }
+        case 0x90: // BCC
+            branch(s, (s.p & CARRY) === 0);
             return;
-        }
 
         /* DEX - Decrement X register */
         case 0xca: {

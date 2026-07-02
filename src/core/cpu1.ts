@@ -389,6 +389,15 @@ function getStatusString(cpu: CPUState): string {
     );
 }
 
+// Relative branch: consume the signed offset operand and apply it if taken
+function branch(cpu: CPUState, taken: boolean): void {
+    const offset = readByte(cpu, cpu.pc);
+    cpu.pc = (cpu.pc + 1) & 0xFFFF;
+    if (taken) {
+        cpu.pc = (cpu.pc + (offset & 0x80 ? offset - 256 : offset)) & 0xffff;
+    }
+}
+
 export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = false): Promise<void> {
     // Save the current PC for trace output before it gets incremented
     const currentPC = cpu.pc;
@@ -1789,101 +1798,45 @@ export async function step6502(cpu: CPUState, cpuInterface: CPU | null, trace = 
         }
 
         // Branch instructions
-        case 0x90: {
+        case 0x90:
             // BCC - Branch if Carry Clear
-            const offset = readByte(cpu, cpu.pc);
-            cpu.pc = (cpu.pc + 1) & 0xFFFF;
-            if ((cpu.p & CARRY) === 0) {
-                // Branch offset is signed
-                cpu.pc =
-                    (cpu.pc + (offset & 0x80 ? offset - 256 : offset)) & 0xffff;
-            }
+            branch(cpu, (cpu.p & CARRY) === 0);
             break;
-        }
 
-        case 0xb0: {
+        case 0xb0:
             // BCS - Branch if Carry Set
-            const offset = readByte(cpu, cpu.pc);
-            cpu.pc = (cpu.pc + 1) & 0xFFFF;
-            if ((cpu.p & CARRY) !== 0) {
-                // Branch offset is signed
-                cpu.pc =
-                    (cpu.pc + (offset & 0x80 ? offset - 256 : offset)) & 0xffff;
-            }
+            branch(cpu, (cpu.p & CARRY) !== 0);
             break;
-        }
 
-        case 0xf0: {
+        case 0xf0:
             // BEQ - Branch if Equal (Zero Set)
-            const offset = readByte(cpu, cpu.pc);
-            cpu.pc = (cpu.pc + 1) & 0xFFFF;
-            if ((cpu.p & ZERO) !== 0) {
-                // Branch offset is signed
-                cpu.pc =
-                    (cpu.pc + (offset & 0x80 ? offset - 256 : offset)) & 0xffff;
-            }
+            branch(cpu, (cpu.p & ZERO) !== 0);
             break;
-        }
 
-        case 0xd0: {
+        case 0xd0:
             // BNE - Branch if Not Equal (Zero Clear)
-            const offset = readByte(cpu, cpu.pc);
-            cpu.pc = (cpu.pc + 1) & 0xFFFF;
-            if ((cpu.p & ZERO) === 0) {
-                // Branch offset is signed
-                cpu.pc =
-                    (cpu.pc + (offset & 0x80 ? offset - 256 : offset)) & 0xffff;
-            }
+            branch(cpu, (cpu.p & ZERO) === 0);
             break;
-        }
 
-        case 0x30: {
+        case 0x30:
             // BMI - Branch if Minus (Negative Set)
-            const offset = readByte(cpu, cpu.pc);
-            cpu.pc = (cpu.pc + 1) & 0xFFFF;
-            if ((cpu.p & NEGATIVE) !== 0) {
-                // Branch offset is signed
-                cpu.pc =
-                    (cpu.pc + (offset & 0x80 ? offset - 256 : offset)) & 0xffff;
-            }
+            branch(cpu, (cpu.p & NEGATIVE) !== 0);
             break;
-        }
 
-        case 0x10: {
+        case 0x10:
             // BPL - Branch if Plus (Negative Clear)
-            const offset = readByte(cpu, cpu.pc);
-            cpu.pc = (cpu.pc + 1) & 0xFFFF;
-            if ((cpu.p & NEGATIVE) === 0) {
-                // Branch offset is signed
-                cpu.pc =
-                    (cpu.pc + (offset & 0x80 ? offset - 256 : offset)) & 0xffff;
-            }
+            branch(cpu, (cpu.p & NEGATIVE) === 0);
             break;
-        }
 
-        case 0x50: {
+        case 0x50:
             // BVC - Branch if Overflow Clear
-            const offset = readByte(cpu, cpu.pc);
-            cpu.pc = (cpu.pc + 1) & 0xFFFF;
-            if ((cpu.p & OVERFLOW) === 0) {
-                // Branch offset is signed
-                cpu.pc =
-                    (cpu.pc + (offset & 0x80 ? offset - 256 : offset)) & 0xffff;
-            }
+            branch(cpu, (cpu.p & OVERFLOW) === 0);
             break;
-        }
 
-        case 0x70: {
+        case 0x70:
             // BVS - Branch if Overflow Set
-            const offset = readByte(cpu, cpu.pc);
-            cpu.pc = (cpu.pc + 1) & 0xFFFF;
-            if ((cpu.p & OVERFLOW) !== 0) {
-                // Branch offset is signed
-                cpu.pc =
-                    (cpu.pc + (offset & 0x80 ? offset - 256 : offset)) & 0xffff;
-            }
+            branch(cpu, (cpu.p & OVERFLOW) !== 0);
             break;
-        }
 
         // System functions
         case 0x00: {
