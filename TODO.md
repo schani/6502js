@@ -171,7 +171,8 @@
   - [x] Tests: consolidate branch cluster (6 files → 1)
   - [x] Tests: consolidate shift cluster (4 files → 1, table-driven)
   - [x] Tests: merge unknown-opcodes/trace-functionality into system tests
-  - [ ] Tests: fold unique cases out of the coverage-push grab-bag files, then delete them
+  - [x] Tests: delete the coverage-push grab-bag files (verified via raw V8
+        coverage data that nothing became uncovered)
   - [ ] pgcpu.ts: add `set_zn` (and ADC/SBC/CMP flag) SQL helpers to kill ~60x repetition
 
 - [ ] Potential future improvements:
