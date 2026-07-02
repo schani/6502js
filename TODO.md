@@ -168,7 +168,7 @@
         every wait/input cycle — LIST/RUN now work in DSL sessions)
   - [x] web/main.ts: shared trap constants, fix missing awaits (disassemble, readByte), ROM path
   - [x] Tests: consolidate LDY cluster (5 files → 1; remove weakened assertion)
-  - [ ] Tests: consolidate branch cluster (4 files + stragglers → 1)
+  - [x] Tests: consolidate branch cluster (6 files → 1)
   - [ ] Tests: consolidate shift cluster (+ final-ror-test)
   - [ ] Tests: merge unknown-opcodes/trace-functionality into system tests
   - [ ] Tests: fold unique cases out of the coverage-push grab-bag files, then delete them
