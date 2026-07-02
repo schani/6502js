@@ -254,12 +254,11 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode = 188 THEN -- 0xBC LDY abs,X
-          DECLARE base integer; eff integer; v integer; crossed boolean;
+          DECLARE base integer; eff integer; v integer;
           BEGIN
             base := read_word(cpu, rpc);
             rpc := (rpc + 2) & 65535;
             eff := (base + rx) & 65535;
-            crossed := ((base & 65280) <> (eff & 65280));
             v := read_byte(cpu, eff);
             ry := v & 255;
             rp := (rp & ~(2|128)) | (CASE WHEN ry = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ry & 128) <> 0 THEN 128 ELSE 0 END);
@@ -296,24 +295,22 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode = 189 THEN -- 0xBD LDA abs,X
-          DECLARE base integer; eff integer; v10 integer; crossed boolean;
+          DECLARE base integer; eff integer; v10 integer;
           BEGIN
             base := read_word(cpu, rpc);
             rpc := (rpc + 2) & 65535;
             eff := (base + rx) & 65535;
-            crossed := ((base & 65280) <> (eff & 65280));
             v10 := read_byte(cpu, eff);
             ra := v10 & 255;
             rp := (rp & ~(2|128)) | (CASE WHEN ra = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ra & 128) <> 0 THEN 128 ELSE 0 END);
 
           END;
         ELSIF opcode = 185 THEN -- 0xB9 LDA abs,Y
-          DECLARE base2 integer; eff2 integer; v11 integer; crossed2 boolean;
+          DECLARE base2 integer; eff2 integer; v11 integer;
           BEGIN
             base2 := read_word(cpu, rpc);
             rpc := (rpc + 2) & 65535;
             eff2 := (base2 + ry) & 65535;
-            crossed2 := ((base2 & 65280) <> (eff2 & 65280));
             v11 := read_byte(cpu, eff2);
             ra := v11 & 255;
             rp := (rp & ~(2|128)) | (CASE WHEN ra = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ra & 128) <> 0 THEN 128 ELSE 0 END);
@@ -376,12 +373,11 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode = 125 THEN -- 0x7D ADC abs,X
-          DECLARE base integer; eff integer; v integer; a8 integer; carry_in integer; sum integer; res integer; crossed boolean;
+          DECLARE base integer; eff integer; v integer; a8 integer; carry_in integer; sum integer; res integer;
           BEGIN
             base := read_word(cpu, rpc);
             rpc := (rpc + 2) & 65535;
             eff := (base + rx) & 65535;
-            crossed := ((base & 65280) <> (eff & 65280));
             v := read_byte(cpu, eff);
             a8 := ra & 255;
             carry_in := CASE WHEN (rp & 1) <> 0 THEN 1 ELSE 0 END;
@@ -392,12 +388,11 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode = 121 THEN -- 0x79 ADC abs,Y
-          DECLARE base integer; eff integer; v integer; a8 integer; carry_in integer; sum integer; res integer; crossed boolean;
+          DECLARE base integer; eff integer; v integer; a8 integer; carry_in integer; sum integer; res integer;
           BEGIN
             base := read_word(cpu, rpc);
             rpc := (rpc + 2) & 65535;
             eff := (base + ry) & 65535;
-            crossed := ((base & 65280) <> (eff & 65280));
             v := read_byte(cpu, eff);
             a8 := ra & 255;
             carry_in := CASE WHEN (rp & 1) <> 0 THEN 1 ELSE 0 END;
@@ -425,7 +420,7 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode = 113 THEN -- 0x71 ADC (ind),Y
-          DECLARE zp integer; lo integer; hi integer; base integer; eff integer; v integer; a8 integer; carry_in integer; sum integer; res integer; crossed boolean;
+          DECLARE zp integer; lo integer; hi integer; base integer; eff integer; v integer; a8 integer; carry_in integer; sum integer; res integer;
           BEGIN
             zp := read_byte(cpu, rpc) & 255;
             rpc := (rpc + 1) & 65535;
@@ -433,7 +428,6 @@ export class PGCPU implements CPU {
             hi := read_byte(cpu, (zp + 1) & 255);
             base := ((hi << 8) | lo) & 65535;
             eff := (base + ry) & 65535;
-            crossed := ((base & 65280) <> (eff & 65280));
             v := read_byte(cpu, eff);
             a8 := ra & 255;
             carry_in := CASE WHEN (rp & 1) <> 0 THEN 1 ELSE 0 END;
@@ -574,12 +568,11 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode = 190 THEN -- 0xBE LDX abs,Y
-          DECLARE base integer; eff integer; v integer; crossed boolean;
+          DECLARE base integer; eff integer; v integer;
           BEGIN
             base := read_word(cpu, rpc);
             rpc := (rpc + 2) & 65535;
             eff := (base + ry) & 65535;
-            crossed := ((base & 65280) <> (eff & 65280));
             v := read_byte(cpu, eff);
             rx := v & 255;
             rp := (rp & ~(2|128)) | (CASE WHEN rx = 0 THEN 2 ELSE 0 END) | (CASE WHEN (rx & 128) <> 0 THEN 128 ELSE 0 END);
@@ -618,7 +611,7 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode IN (16,48,80,112,144,176,208,240) THEN -- Branches
-          DECLARE off8 integer; cond boolean; oldpc integer; newpc integer; crossed boolean;
+          DECLARE off8 integer; cond boolean; newpc integer;
           BEGIN
             off8 := read_byte(cpu, rpc);
             rpc := (rpc + 1) & 65535;
@@ -634,9 +627,7 @@ export class PGCPU implements CPU {
             IF opcode = 208 THEN cond := (rp & 2) = 0; END IF; -- BNE
             IF opcode = 240 THEN cond := (rp & 2) <> 0; END IF; -- BEQ
             IF cond THEN
-              oldpc := rpc;
               newpc := (rpc + off8) & 65535;
-              crossed := ((oldpc & 65280) <> (newpc & 65280));
               rpc := newpc;
 
             ELSE
@@ -1107,12 +1098,11 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode = 61 THEN -- 0x3D AND abs,X
-          DECLARE base integer; eff integer; v integer; r integer; crossed boolean;
+          DECLARE base integer; eff integer; v integer; r integer;
           BEGIN
             base := read_word(cpu, rpc);
             rpc := (rpc + 2) & 65535;
             eff := (base + rx) & 65535;
-            crossed := ((base & 65280) <> (eff & 65280));
             v := read_byte(cpu, eff);
             r := (ra & v) & 255;
             ra := r;
@@ -1120,12 +1110,11 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode = 57 THEN -- 0x39 AND abs,Y
-          DECLARE base integer; eff integer; v integer; r integer; crossed boolean;
+          DECLARE base integer; eff integer; v integer; r integer;
           BEGIN
             base := read_word(cpu, rpc);
             rpc := (rpc + 2) & 65535;
             eff := (base + ry) & 65535;
-            crossed := ((base & 65280) <> (eff & 65280));
             v := read_byte(cpu, eff);
             r := (ra & v) & 255;
             ra := r;
@@ -1147,7 +1136,7 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode = 49 THEN -- 0x31 AND (ind),Y
-          DECLARE zp integer; lo integer; hi integer; base integer; eff integer; v integer; r integer; crossed boolean;
+          DECLARE zp integer; lo integer; hi integer; base integer; eff integer; v integer; r integer;
           BEGIN
             zp := read_byte(cpu, rpc) & 255;
             rpc := (rpc + 1) & 65535;
@@ -1155,7 +1144,6 @@ export class PGCPU implements CPU {
             hi := read_byte(cpu, (zp + 1) & 255);
             base := ((hi << 8) | lo) & 65535;
             eff := (base + ry) & 65535;
-            crossed := ((base & 65280) <> (eff & 65280));
             v := read_byte(cpu, eff);
             r := (ra & v) & 255;
             ra := r;
@@ -1195,12 +1183,11 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode = 29 THEN -- 0x1D ORA abs,X
-          DECLARE base integer; eff integer; v integer; r integer; crossed boolean;
+          DECLARE base integer; eff integer; v integer; r integer;
           BEGIN
             base := read_word(cpu, rpc);
             rpc := (rpc + 2) & 65535;
             eff := (base + rx) & 65535;
-            crossed := ((base & 65280) <> (eff & 65280));
             v := read_byte(cpu, eff);
             r := (ra | v) & 255;
             ra := r;
@@ -1208,12 +1195,11 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode = 25 THEN -- 0x19 ORA abs,Y
-          DECLARE base integer; eff integer; v integer; r integer; crossed boolean;
+          DECLARE base integer; eff integer; v integer; r integer;
           BEGIN
             base := read_word(cpu, rpc);
             rpc := (rpc + 2) & 65535;
             eff := (base + ry) & 65535;
-            crossed := ((base & 65280) <> (eff & 65280));
             v := read_byte(cpu, eff);
             r := (ra | v) & 255;
             ra := r;
@@ -1246,7 +1232,7 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode = 17 THEN -- 0x11 ORA (ind),Y
-          DECLARE zp integer; lo integer; hi integer; base integer; eff integer; v integer; r integer; crossed boolean;
+          DECLARE zp integer; lo integer; hi integer; base integer; eff integer; v integer; r integer;
           BEGIN
             zp := read_byte(cpu, rpc) & 255;
             rpc := (rpc + 1) & 65535;
@@ -1254,7 +1240,6 @@ export class PGCPU implements CPU {
             hi := read_byte(cpu, (zp + 1) & 255);
             base := ((hi << 8) | lo) & 65535;
             eff := (base + ry) & 65535;
-            crossed := ((base & 65280) <> (eff & 65280));
             v := read_byte(cpu, eff);
             r := (ra | v) & 255;
             ra := r;
@@ -1294,12 +1279,11 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode = 93 THEN -- 0x5D EOR abs,X
-          DECLARE base integer; eff integer; v integer; r integer; crossed boolean;
+          DECLARE base integer; eff integer; v integer; r integer;
           BEGIN
             base := read_word(cpu, rpc);
             rpc := (rpc + 2) & 65535;
             eff := (base + rx) & 65535;
-            crossed := ((base & 65280) <> (eff & 65280));
             v := read_byte(cpu, eff);
             r := (ra # v) & 255;
             ra := r;
@@ -1307,12 +1291,11 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode = 89 THEN -- 0x59 EOR abs,Y
-          DECLARE base integer; eff integer; v integer; r integer; crossed boolean;
+          DECLARE base integer; eff integer; v integer; r integer;
           BEGIN
             base := read_word(cpu, rpc);
             rpc := (rpc + 2) & 65535;
             eff := (base + ry) & 65535;
-            crossed := ((base & 65280) <> (eff & 65280));
             v := read_byte(cpu, eff);
             r := (ra # v) & 255;
             ra := r;
@@ -1345,7 +1328,7 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode = 81 THEN -- 0x51 EOR (ind),Y
-          DECLARE zp integer; lo integer; hi integer; base integer; eff integer; v integer; r integer; crossed boolean;
+          DECLARE zp integer; lo integer; hi integer; base integer; eff integer; v integer; r integer;
           BEGIN
             zp := read_byte(cpu, rpc) & 255;
             rpc := (rpc + 1) & 65535;
@@ -1353,7 +1336,6 @@ export class PGCPU implements CPU {
             hi := read_byte(cpu, (zp + 1) & 255);
             base := ((hi << 8) | lo) & 65535;
             eff := (base + ry) & 65535;
-            crossed := ((base & 65280) <> (eff & 65280));
             v := read_byte(cpu, eff);
             r := (ra # v) & 255;
             ra := r;
@@ -1438,12 +1420,11 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode = 253 THEN -- 0xFD SBC abs,X
-          DECLARE base integer; eff integer; v integer; a8 integer; cin integer; diff integer; res integer; crossed boolean;
+          DECLARE base integer; eff integer; v integer; a8 integer; cin integer; diff integer; res integer;
           BEGIN
             base := read_word(cpu, rpc);
             rpc := (rpc + 2) & 65535;
             eff := (base + rx) & 65535;
-            crossed := ((base & 65280) <> (eff & 65280));
             v := read_byte(cpu, eff);
             a8 := ra & 255;
             cin := CASE WHEN (rp & 1) <> 0 THEN 1 ELSE 0 END;
@@ -1454,12 +1435,11 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode = 249 THEN -- 0xF9 SBC abs,Y
-          DECLARE base integer; eff integer; v integer; a8 integer; cin integer; diff integer; res integer; crossed boolean;
+          DECLARE base integer; eff integer; v integer; a8 integer; cin integer; diff integer; res integer;
           BEGIN
             base := read_word(cpu, rpc);
             rpc := (rpc + 2) & 65535;
             eff := (base + ry) & 65535;
-            crossed := ((base & 65280) <> (eff & 65280));
             v := read_byte(cpu, eff);
             a8 := ra & 255;
             cin := CASE WHEN (rp & 1) <> 0 THEN 1 ELSE 0 END;
@@ -1487,7 +1467,7 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode = 241 THEN -- 0xF1 SBC (ind),Y
-          DECLARE zp integer; lo integer; hi integer; base integer; eff integer; v integer; a8 integer; cin integer; diff integer; res integer; crossed boolean;
+          DECLARE zp integer; lo integer; hi integer; base integer; eff integer; v integer; a8 integer; cin integer; diff integer; res integer;
           BEGIN
             zp := read_byte(cpu, rpc) & 255;
             rpc := (rpc + 1) & 65535;
@@ -1495,7 +1475,6 @@ export class PGCPU implements CPU {
             hi := read_byte(cpu, (zp + 1) & 255);
             base := ((hi << 8) | lo) & 65535;
             eff := (base + ry) & 65535;
-            crossed := ((base & 65280) <> (eff & 65280));
             v := read_byte(cpu, eff);
             a8 := ra & 255;
             cin := CASE WHEN (rp & 1) <> 0 THEN 1 ELSE 0 END;
@@ -1549,12 +1528,11 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode = 221 THEN -- 0xDD CMP abs,X
-          DECLARE base integer; eff integer; v integer; t integer; a8 integer; crossed boolean;
+          DECLARE base integer; eff integer; v integer; t integer; a8 integer;
           BEGIN
             base := read_word(cpu, rpc);
             rpc := (rpc + 2) & 65535;
             eff := (base + rx) & 65535;
-            crossed := ((base & 65280) <> (eff & 65280));
             v := read_byte(cpu, eff);
             a8 := ra & 255;
             t := (a8 - v) & 255;
@@ -1562,12 +1540,11 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode = 217 THEN -- 0xD9 CMP abs,Y
-          DECLARE base integer; eff integer; v integer; t integer; a8 integer; crossed boolean;
+          DECLARE base integer; eff integer; v integer; t integer; a8 integer;
           BEGIN
             base := read_word(cpu, rpc);
             rpc := (rpc + 2) & 65535;
             eff := (base + ry) & 65535;
-            crossed := ((base & 65280) <> (eff & 65280));
             v := read_byte(cpu, eff);
             a8 := ra & 255;
             t := (a8 - v) & 255;
@@ -1589,7 +1566,7 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode = 209 THEN -- 0xD1 CMP (ind),Y
-          DECLARE zp integer; lo integer; hi integer; base integer; eff integer; v integer; t integer; a8 integer; crossed boolean;
+          DECLARE zp integer; lo integer; hi integer; base integer; eff integer; v integer; t integer; a8 integer;
           BEGIN
             zp := read_byte(cpu, rpc) & 255;
             rpc := (rpc + 1) & 65535;
@@ -1597,7 +1574,6 @@ export class PGCPU implements CPU {
             hi := read_byte(cpu, (zp + 1) & 255);
             base := ((hi << 8) | lo) & 65535;
             eff := (base + ry) & 65535;
-            crossed := ((base & 65280) <> (eff & 65280));
             v := read_byte(cpu, eff);
             a8 := ra & 255;
             t := (a8 - v) & 255;
@@ -1682,7 +1658,7 @@ export class PGCPU implements CPU {
 
           END;
         ELSIF opcode = 177 THEN -- 0xB1 LDA (indirect),Y
-          DECLARE zp integer; lo integer; hi integer; base integer; eff integer; v integer; crossed boolean;
+          DECLARE zp integer; lo integer; hi integer; base integer; eff integer; v integer;
           BEGIN
             zp := read_byte(cpu, rpc) & 255;
             rpc := (rpc + 1) & 65535;
@@ -1690,7 +1666,6 @@ export class PGCPU implements CPU {
             hi := read_byte(cpu, (zp + 1) & 255);
             base := ((hi << 8) | lo) & 65535;
             eff := (base + ry) & 65535;
-            crossed := ((base & 65280) <> (eff & 65280));
             v := read_byte(cpu, eff);
             ra := v & 255;
             rp := (rp & ~(2|128)) | (CASE WHEN ra = 0 THEN 2 ELSE 0 END) | (CASE WHEN (ra & 128) <> 0 THEN 128 ELSE 0 END);
