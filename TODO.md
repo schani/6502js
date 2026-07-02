@@ -154,7 +154,7 @@
   - [x] cpu1.ts: remove dead `cycles` plumbing (cycle counting was removed)
   - [x] pgcpu.ts: remove dead page-cross (`crossed`/`oldpc`) remnants
   - [x] cpu2.ts: remove 9 unreachable duplicate `case` labels
-  - [ ] cpu2.ts: dedupe `shiftMem2` into `shiftMemOp`; move NOP into the switch; drop IIFE handlers
+  - [x] cpu2.ts: dedupe `shiftMem2` into `shiftMemOp`; move NOP into the switch; drop IIFE handlers
   - [ ] cpu2.ts: use shared flag constants from `constants.ts` instead of local `F`
   - [ ] cpu2.ts: factor a `compare()` helper for CMP/CPX/CPY
   - [ ] cpu1.ts/cpu2.ts: factor a shared branch helper for the 8 branch opcodes

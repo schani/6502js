@@ -283,25 +283,6 @@ const zpy = (s: CPUState) => (zp(s) + s.y) & 0xff;
 const absx = (s: CPUState) => (abs16(s) + s.x) & 0xffff;
 const absy = (s: CPUState) => (abs16(s) + s.y) & 0xffff;
 
-/* helper function to reduce duplication in shift/rotate instructions */
-const shiftMem2 = (
-    s: CPUState,
-    opLeft: boolean,
-    thruCarry: boolean,
-    addr: number,
-    base: number,
-) => {
-    let v = rd(s, addr);
-    const inC = s.p & F.C ? 1 : 0;
-    const outC = opLeft ? (v >> 7) & 1 : v & 1;
-    v = opLeft
-        ? ((v << 1) & 0xff) | (thruCarry ? inC : 0)
-        : (v >> 1) | (thruCarry ? inC << 7 : 0);
-    wr(s, addr, v);
-    s.p = (s.p & ~F.C) | outC;
-    setZN(s, v);
-};
-
 /* ─────────────────── one-instruction executor ─────────────────── */
 
 export async function step6502(
@@ -1022,62 +1003,56 @@ export async function step6502(
             shiftMemOp(s, absx(s), true, true);
             return; // ROL abs,X
         case 0x6e:
-            shiftMem2(s, false, true, abs16(s), 6); // ROR abs
+            shiftMemOp(s, abs16(s), false, true); // ROR abs
             return;
         case 0x7e:
-            shiftMem2(s, false, true, absx(s), 7); // ROR abs,X
+            shiftMemOp(s, absx(s), false, true); // ROR abs,X
             return;
 
         /* ---------- INC / DEC other addressing modes ---------- */
-        case 0xf6: // INC zp,X
-            return (() => {
-                const a = zpx(s);
-                const v = (rd(s, a) + 1) & 0xff;
-                wr(s, a, v);
-                setZN(s, v);
-                return;
-            })();
-        case 0xfe: // INC abs,X
-            return (() => {
-                const a = absx(s);
-                const v = (rd(s, a) + 1) & 0xff;
-                wr(s, a, v);
-                setZN(s, v);
-                return;
-            })();
-        case 0xee: // INC abs
-            return (() => {
-                const a = abs16(s);
-                const v = (rd(s, a) + 1) & 0xff;
-                wr(s, a, v);
-                setZN(s, v);
-                return;
-            })();
+        case 0xf6: { // INC zp,X
+            const a = zpx(s);
+            const v = (rd(s, a) + 1) & 0xff;
+            wr(s, a, v);
+            setZN(s, v);
+            return;
+        }
+        case 0xfe: { // INC abs,X
+            const a = absx(s);
+            const v = (rd(s, a) + 1) & 0xff;
+            wr(s, a, v);
+            setZN(s, v);
+            return;
+        }
+        case 0xee: { // INC abs
+            const a = abs16(s);
+            const v = (rd(s, a) + 1) & 0xff;
+            wr(s, a, v);
+            setZN(s, v);
+            return;
+        }
 
-        case 0xd6: // DEC zp,X
-            return (() => {
-                const a = zpx(s);
-                const v = (rd(s, a) - 1) & 0xff;
-                wr(s, a, v);
-                setZN(s, v);
-                return;
-            })();
-        case 0xde: // DEC abs,X
-            return (() => {
-                const a = absx(s);
-                const v = (rd(s, a) - 1) & 0xff;
-                wr(s, a, v);
-                setZN(s, v);
-                return;
-            })();
-        case 0xce: // DEC abs
-            return (() => {
-                const a = abs16(s);
-                const v = (rd(s, a) - 1) & 0xff;
-                wr(s, a, v);
-                setZN(s, v);
-                return;
-            })();
+        case 0xd6: { // DEC zp,X
+            const a = zpx(s);
+            const v = (rd(s, a) - 1) & 0xff;
+            wr(s, a, v);
+            setZN(s, v);
+            return;
+        }
+        case 0xde: { // DEC abs,X
+            const a = absx(s);
+            const v = (rd(s, a) - 1) & 0xff;
+            wr(s, a, v);
+            setZN(s, v);
+            return;
+        }
+        case 0xce: { // DEC abs
+            const a = abs16(s);
+            const v = (rd(s, a) - 1) & 0xff;
+            wr(s, a, v);
+            setZN(s, v);
+            return;
+        }
 
         /* ---------- Other Branches ---------- */
         case 0xb0: {
@@ -1289,11 +1264,10 @@ export async function step6502(
             setZN(s, s.y);
             return;
         }
-    }
 
-    // NOP - No Operation
-    if (op === 0xea) {
-        return;
+        /* NOP - No Operation */
+        case 0xea:
+            return;
     }
 
     throw new Error(
