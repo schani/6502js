@@ -167,7 +167,7 @@
         return address before checking for input, corrupting the stack on
         every wait/input cycle — LIST/RUN now work in DSL sessions)
   - [x] web/main.ts: shared trap constants, fix missing awaits (disassemble, readByte), ROM path
-  - [ ] Tests: consolidate LDY cluster (5 files → 1; remove weakened assertion)
+  - [x] Tests: consolidate LDY cluster (5 files → 1; remove weakened assertion)
   - [ ] Tests: consolidate branch cluster (4 files + stragglers → 1)
   - [ ] Tests: consolidate shift cluster (+ final-ror-test)
   - [ ] Tests: merge unknown-opcodes/trace-functionality into system tests
