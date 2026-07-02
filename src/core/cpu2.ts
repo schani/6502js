@@ -195,57 +195,20 @@ const branch = (s: CPUState, taken: boolean) => {
     }
 };
 
-/* ADC / SBC with BCD if D-flag set */
+/* ADC / SBC: binary only — decimal mode is not implemented in any of the
+   CPU implementations (see TODO.md) */
 const adc = (s: CPUState, v: number) => {
     const c = s.p & CARRY ? 1 : 0;
-    if (s.p & DECIMAL) {
-        /* BCD */
-        let lo = (s.a & 0x0f) + (v & 0x0f) + c;
-        let hi = (s.a >> 4) + (v >> 4);
-        if (lo > 9) {
-            lo -= 10;
-            hi += 1;
-        }
-        s.p = (s.p & ~CARRY) | (hi > 9 ? CARRY : 0);
-        if (hi > 9) hi -= 10;
-        s.a = setZN(s, (hi << 4) | lo);
-    } else {
-        /* binary */
-        const r = s.a + v + c;
-        s.p =
-            (s.p & ~(CARRY | OVERFLOW)) |
-            (r > 0xff ? CARRY : 0) |
-            (~(s.a ^ v) & (s.a ^ r) & 0x80 ? OVERFLOW : 0);
-        s.a = setZN(s, r);
-    }
+    const r = s.a + v + c;
+    s.p =
+        (s.p & ~(CARRY | OVERFLOW)) |
+        (r > 0xff ? CARRY : 0) |
+        (~(s.a ^ v) & (s.a ^ r) & 0x80 ? OVERFLOW : 0);
+    s.a = setZN(s, r);
 };
 
 const sbc = (s: CPUState, v: number) => {
-    if (s.p & DECIMAL) {
-        // BCD mode subtraction
-        const borrowIn = s.p & CARRY ? 0 : 1; // carry set means no borrow
-
-        let lo = (s.a & 0x0f) - (v & 0x0f) - borrowIn;
-        let hiBorrow = 0;
-        if (lo < 0) {
-            lo += 10;
-            hiBorrow = 1;
-        }
-
-        let hi = (s.a >> 4) - (v >> 4) - hiBorrow;
-        if (hi < 0) {
-            hi += 10;
-            // borrow out, clear carry
-            s.p &= ~CARRY;
-        } else {
-            // no borrow – set carry
-            s.p |= CARRY;
-        }
-
-        s.a = setZN(s, ((hi & 0x0f) << 4) | (lo & 0x0f));
-    } else {
-        adc(s, ~v & 0xff);
-    }
+    adc(s, ~v & 0xff);
 };
 
 /* generic shift/rotate for memory, shared by multiple opcodes */

@@ -180,4 +180,6 @@
   - [x] Improve debugging with memory dump and trace functionality
   - [x] Add proper SIGINT (Ctrl-C) handling to basic-runner.ts
   - [x] Add a memory visualization feature (web debugger in src/web/)
-  - [ ] Consider implementing decimal mode for ADC and SBC
+  - [ ] Consider implementing decimal mode for ADC and SBC (must be added to
+        all three CPUs at once; CPU2 used to carry a lone BCD implementation,
+        which was a latent SyncCPU divergence and was removed)

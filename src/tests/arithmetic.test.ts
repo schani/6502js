@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { getAccumulator, getXRegister, getYRegister, getProgramCounter, getStatusRegister, createCPU, CARRY, ZERO, NEGATIVE, OVERFLOW } from "./utils.ts";
+import { DECIMAL } from "../core/constants.ts";
 describe("Arithmetic operations", async () => {
   it("should perform ADC immediate instruction", async () => {
     const cpu = createCPU();
@@ -142,6 +143,35 @@ describe("Arithmetic operations", async () => {
     
   });
   
+  it("should ignore decimal mode in ADC and SBC (not implemented)", async () => {
+    // None of the CPU implementations support BCD arithmetic; the D flag
+    // must not change ADC/SBC results (see TODO.md).
+    const cpu = createCPU();
+
+    await cpu.setStatusFlag(DECIMAL);
+    await cpu.setAccumulator(0x15);
+    await cpu.clearStatusFlag(CARRY);
+    await cpu.loadByte(0, 0x69); // ADC immediate
+    await cpu.loadByte(1, 0x27);
+
+    await cpu.step();
+
+    // Binary result 0x3C, not the BCD result 0x42
+    assert.strictEqual(await getAccumulator(cpu), 0x3c);
+
+    await cpu.setAccumulator(0x42);
+    await cpu.setStatusFlag(CARRY);
+    await cpu.setProgramCounter(0);
+    await cpu.loadByte(0, 0xE9); // SBC immediate
+    await cpu.loadByte(1, 0x15);
+
+    await cpu.step();
+
+    // Binary result 0x2D, not the BCD result 0x27
+    assert.strictEqual(await getAccumulator(cpu), 0x2d);
+    await cpu.clearStatusFlag(DECIMAL);
+  });
+
   it("should set the overflow flag on signed SBC overflow", async () => {
     const cpu = createCPU();
 
