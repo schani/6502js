@@ -3,6 +3,7 @@
 
 import type { CPU, CPUState } from "./cpu-interface.ts";
 import { createCPUState } from "./cpu-interface.ts";
+import { CARRY, ZERO, INTERRUPT, DECIMAL, BREAK, UNUSED, OVERFLOW, NEGATIVE } from "./constants.ts";
 import { defined } from "@glideapps/ts-necessities";
 import { disassemble } from "../utils/disasm.ts";
 
@@ -37,7 +38,6 @@ export class CPU2 implements CPU {
     /**
      * Execute a single CPU instruction
      * @param trace Whether to log trace information during execution
-     * @returns Number of clock cycles consumed by the instruction
      */
     async step(trace = false): Promise<void> {
         await step6502(this.state, this.mem, this, trace);
@@ -148,18 +148,6 @@ export class CPU2 implements CPU {
 
 }
 
-/* status-flag bit masks */
-const F = {
-    C: 1,
-    Z: 2,
-    I: 4,
-    D: 8,
-    B: 16,
-    U: 32,
-    V: 64,
-    N: 128,
-} as const;
-
 /* ─────────────────── helpers ─────────────────── */
 
 let CURRENT_MEM_CPU2: Uint8Array;
@@ -184,14 +172,14 @@ const pop = (s: CPUState) => {
 
 const setZN = (s: CPUState, v: number) => {
     v &= 0xff;
-    s.p = (s.p & ~(F.Z | F.N)) | (v === 0 ? F.Z : 0) | (v & 0x80);
+    s.p = (s.p & ~(ZERO | NEGATIVE)) | (v === 0 ? ZERO : 0) | (v & 0x80);
     return v;
 };
 
 /* ADC / SBC with BCD if D-flag set */
 const adc = (s: CPUState, v: number) => {
-    const c = s.p & F.C ? 1 : 0;
-    if (s.p & F.D) {
+    const c = s.p & CARRY ? 1 : 0;
+    if (s.p & DECIMAL) {
         /* BCD */
         let lo = (s.a & 0x0f) + (v & 0x0f) + c;
         let hi = (s.a >> 4) + (v >> 4);
@@ -199,24 +187,24 @@ const adc = (s: CPUState, v: number) => {
             lo -= 10;
             hi += 1;
         }
-        s.p = (s.p & ~F.C) | (hi > 9 ? F.C : 0);
+        s.p = (s.p & ~CARRY) | (hi > 9 ? CARRY : 0);
         if (hi > 9) hi -= 10;
         s.a = setZN(s, (hi << 4) | lo);
     } else {
         /* binary */
         const r = s.a + v + c;
         s.p =
-            (s.p & ~(F.C | F.V)) |
-            (r > 0xff ? F.C : 0) |
-            (~(s.a ^ v) & (s.a ^ r) & 0x80 ? F.V : 0);
+            (s.p & ~(CARRY | OVERFLOW)) |
+            (r > 0xff ? CARRY : 0) |
+            (~(s.a ^ v) & (s.a ^ r) & 0x80 ? OVERFLOW : 0);
         s.a = setZN(s, r);
     }
 };
 
 const sbc = (s: CPUState, v: number) => {
-    if (s.p & F.D) {
+    if (s.p & DECIMAL) {
         // BCD mode subtraction
-        const borrowIn = s.p & F.C ? 0 : 1; // carry set means no borrow
+        const borrowIn = s.p & CARRY ? 0 : 1; // carry set means no borrow
 
         let lo = (s.a & 0x0f) - (v & 0x0f) - borrowIn;
         let hiBorrow = 0;
@@ -229,10 +217,10 @@ const sbc = (s: CPUState, v: number) => {
         if (hi < 0) {
             hi += 10;
             // borrow out, clear carry
-            s.p &= ~F.C;
+            s.p &= ~CARRY;
         } else {
             // no borrow – set carry
-            s.p |= F.C;
+            s.p |= CARRY;
         }
 
         s.a = setZN(s, ((hi & 0x0f) << 4) | (lo & 0x0f));
@@ -249,13 +237,13 @@ const shiftMemOp = (
     thruCarry: boolean,
 ) => {
     let v = rd(s, addr);
-    const inC = s.p & F.C ? 1 : 0;
+    const inC = s.p & CARRY ? 1 : 0;
     const outC = left ? (v >> 7) & 1 : v & 1;
     v = left
         ? ((v << 1) & 0xff) | (thruCarry ? inC : 0)
         : (v >> 1) | (thruCarry ? inC << 7 : 0);
     wr(s, addr, v);
-    s.p = (s.p & ~F.C) | outC;
+    s.p = (s.p & ~CARRY) | outC;
     setZN(s, v);
 };
 
@@ -321,10 +309,10 @@ export async function step6502(
             push(s, nextPC & 0xff);
 
             // Push status with break and unused flags set
-            push(s, s.p | F.B | F.U);
+            push(s, s.p | BREAK | UNUSED);
 
             // Set interrupt disable flag
-            s.p |= F.I;
+            s.p |= INTERRUPT;
 
             // Load IRQ vector from 0xFFFE-0xFFFF and jump
             s.pc = rd16(s, 0xfffe);
@@ -469,12 +457,12 @@ export async function step6502(
 
         /* SEC – set carry */
         case 0x38:
-            s.p |= F.C;
+            s.p |= CARRY;
             return;
         /* BEQ – branch if zero set (relative) */
         case 0xf0: {
             const offset = imm8(s);
-            if (s.p & F.Z) {
+            if (s.p & ZERO) {
                 /* Offset is signed 8-bit */
                 const rel = offset < 0x80 ? offset : offset - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
@@ -491,7 +479,7 @@ export async function step6502(
         /* ASL A – shift accumulator left */
         case 0x0a: {
             const old = s.a;
-            s.p = (s.p & ~F.C) | ((old >> 7) & 1);
+            s.p = (s.p & ~CARRY) | ((old >> 7) & 1);
             s.a = setZN(s, (old << 1) & 0xff);
             return;
         }
@@ -499,7 +487,7 @@ export async function step6502(
         /* LSR A – logical shift right */
         case 0x4a: {
             const old = s.a;
-            s.p = (s.p & ~F.C) | (old & 1);
+            s.p = (s.p & ~CARRY) | (old & 1);
             s.a = setZN(s, old >> 1);
             return;
         }
@@ -507,20 +495,20 @@ export async function step6502(
         /* ROL A – rotate left through carry */
         case 0x2a: {
             const old = s.a;
-            const carryIn = s.p & F.C ? 1 : 0;
+            const carryIn = s.p & CARRY ? 1 : 0;
             const outC = (old >> 7) & 1;
             s.a = setZN(s, ((old << 1) & 0xff) | carryIn);
-            s.p = (s.p & ~F.C) | outC;
+            s.p = (s.p & ~CARRY) | outC;
             return;
         }
 
         /* ROR A – rotate right through carry */
         case 0x6a: {
             const old = s.a;
-            const carryIn = s.p & F.C ? 1 : 0;
+            const carryIn = s.p & CARRY ? 1 : 0;
             const outC = old & 1;
             s.a = setZN(s, (old >> 1) | (carryIn << 7));
-            s.p = (s.p & ~F.C) | outC;
+            s.p = (s.p & ~CARRY) | outC;
             return;
         }
 
@@ -529,9 +517,9 @@ export async function step6502(
             const val = imm8(s);
             const r = (s.a - val) & 0x1ff;
             s.p =
-                (s.p & ~(F.C | F.Z | F.N)) |
-                (r < 0x100 ? F.C : 0) |
-                ((r & 0xff) === 0 ? F.Z : 0) |
+                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
+                (r < 0x100 ? CARRY : 0) |
+                ((r & 0xff) === 0 ? ZERO : 0) |
                 (r & 0x80);
             return;
         }
@@ -541,9 +529,9 @@ export async function step6502(
             const val = imm8(s);
             const r = (s.x - val) & 0x1ff;
             s.p =
-                (s.p & ~(F.C | F.Z | F.N)) |
-                (r < 0x100 ? F.C : 0) |
-                ((r & 0xff) === 0 ? F.Z : 0) |
+                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
+                (r < 0x100 ? CARRY : 0) |
+                ((r & 0xff) === 0 ? ZERO : 0) |
                 (r & 0x80);
             return;
         }
@@ -553,9 +541,9 @@ export async function step6502(
             const val = rd(s, zp(s));
             const r = (s.x - val) & 0x1ff;
             s.p =
-                (s.p & ~(F.C | F.Z | F.N)) |
-                (r < 0x100 ? F.C : 0) |
-                ((r & 0xff) === 0 ? F.Z : 0) |
+                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
+                (r < 0x100 ? CARRY : 0) |
+                ((r & 0xff) === 0 ? ZERO : 0) |
                 (r & 0x80);
             return;
         }
@@ -565,9 +553,9 @@ export async function step6502(
             const val = rd(s, abs16(s));
             const r = (s.x - val) & 0x1ff;
             s.p =
-                (s.p & ~(F.C | F.Z | F.N)) |
-                (r < 0x100 ? F.C : 0) |
-                ((r & 0xff) === 0 ? F.Z : 0) |
+                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
+                (r < 0x100 ? CARRY : 0) |
+                ((r & 0xff) === 0 ? ZERO : 0) |
                 (r & 0x80);
             return;
         }
@@ -577,9 +565,9 @@ export async function step6502(
             const val = rd(s, abs16(s));
             const r = (s.y - val) & 0x1ff;
             s.p =
-                (s.p & ~(F.C | F.Z | F.N)) |
-                (r < 0x100 ? F.C : 0) |
-                ((r & 0xff) === 0 ? F.Z : 0) |
+                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
+                (r < 0x100 ? CARRY : 0) |
+                ((r & 0xff) === 0 ? ZERO : 0) |
                 (r & 0x80);
             return;
         }
@@ -589,9 +577,9 @@ export async function step6502(
             const val = rd(s, zp(s));
             const r = (s.a - val) & 0x1ff;
             s.p =
-                (s.p & ~(F.C | F.Z | F.N)) |
-                (r < 0x100 ? F.C : 0) |
-                (r & 0xff ? 0 : F.Z) |
+                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
+                (r < 0x100 ? CARRY : 0) |
+                (r & 0xff ? 0 : ZERO) |
                 (r & 0x80);
             return;
         }
@@ -599,9 +587,9 @@ export async function step6502(
             const val = rd(s, zpx(s));
             const r = (s.a - val) & 0x1ff;
             s.p =
-                (s.p & ~(F.C | F.Z | F.N)) |
-                (r < 0x100 ? F.C : 0) |
-                (r & 0xff ? 0 : F.Z) |
+                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
+                (r < 0x100 ? CARRY : 0) |
+                (r & 0xff ? 0 : ZERO) |
                 (r & 0x80);
             return;
         }
@@ -609,9 +597,9 @@ export async function step6502(
             const val = rd(s, abs16(s));
             const r = (s.a - val) & 0x1ff;
             s.p =
-                (s.p & ~(F.C | F.Z | F.N)) |
-                (r < 0x100 ? F.C : 0) |
-                (r & 0xff ? 0 : F.Z) |
+                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
+                (r < 0x100 ? CARRY : 0) |
+                (r & 0xff ? 0 : ZERO) |
                 (r & 0x80);
             return;
         }
@@ -619,9 +607,9 @@ export async function step6502(
             const val = rd(s, absx(s));
             const r = (s.a - val) & 0x1ff;
             s.p =
-                (s.p & ~(F.C | F.Z | F.N)) |
-                (r < 0x100 ? F.C : 0) |
-                (r & 0xff ? 0 : F.Z) |
+                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
+                (r < 0x100 ? CARRY : 0) |
+                (r & 0xff ? 0 : ZERO) |
                 (r & 0x80);
             return;
         }
@@ -629,9 +617,9 @@ export async function step6502(
             const val = rd(s, absy(s));
             const r = (s.a - val) & 0x1ff;
             s.p =
-                (s.p & ~(F.C | F.Z | F.N)) |
-                (r < 0x100 ? F.C : 0) |
-                (r & 0xff ? 0 : F.Z) |
+                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
+                (r < 0x100 ? CARRY : 0) |
+                (r & 0xff ? 0 : ZERO) |
                 (r & 0x80);
             return;
         }
@@ -639,9 +627,9 @@ export async function step6502(
             const val = rd(s, indx(s));
             const r = (s.a - val) & 0x1ff;
             s.p =
-                (s.p & ~(F.C | F.Z | F.N)) |
-                (r < 0x100 ? F.C : 0) |
-                (r & 0xff ? 0 : F.Z) |
+                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
+                (r < 0x100 ? CARRY : 0) |
+                (r & 0xff ? 0 : ZERO) |
                 (r & 0x80);
             return;
         }
@@ -649,9 +637,9 @@ export async function step6502(
             const val = rd(s, indy(s));
             const r = (s.a - val) & 0x1ff;
             s.p =
-                (s.p & ~(F.C | F.Z | F.N)) |
-                (r < 0x100 ? F.C : 0) |
-                (r & 0xff ? 0 : F.Z) |
+                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
+                (r < 0x100 ? CARRY : 0) |
+                (r & 0xff ? 0 : ZERO) |
                 (r & 0x80);
             return;
         }
@@ -661,9 +649,9 @@ export async function step6502(
             const val = imm8(s);
             const r = (s.y - val) & 0x1ff;
             s.p =
-                (s.p & ~(F.C | F.Z | F.N)) |
-                (r < 0x100 ? F.C : 0) |
-                ((r & 0xff) === 0 ? F.Z : 0) |
+                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
+                (r < 0x100 ? CARRY : 0) |
+                ((r & 0xff) === 0 ? ZERO : 0) |
                 (r & 0x80);
             return;
         }
@@ -673,9 +661,9 @@ export async function step6502(
             const val = rd(s, zp(s));
             const r = (s.y - val) & 0x1ff;
             s.p =
-                (s.p & ~(F.C | F.Z | F.N)) |
-                (r < 0x100 ? F.C : 0) |
-                ((r & 0xff) === 0 ? F.Z : 0) |
+                (s.p & ~(CARRY | ZERO | NEGATIVE)) |
+                (r < 0x100 ? CARRY : 0) |
+                ((r & 0xff) === 0 ? ZERO : 0) |
                 (r & 0x80);
             return;
         }
@@ -683,7 +671,7 @@ export async function step6502(
         /* BNE – branch if zero clear (relative) */
         case 0xd0: {
             const offset = imm8(s);
-            if (!(s.p & F.Z)) {
+            if (!(s.p & ZERO)) {
                 const rel = offset < 0x80 ? offset : offset - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
             }
@@ -905,17 +893,17 @@ export async function step6502(
         case 0x24: {
             const v = rd(s, zp(s));
             s.p =
-                (s.p & ~(F.N | F.V | F.Z)) |
+                (s.p & ~(NEGATIVE | OVERFLOW | ZERO)) |
                 (v & 0xc0) |
-                ((s.a & v) === 0 ? F.Z : 0);
+                ((s.a & v) === 0 ? ZERO : 0);
             return;
         }
         case 0x2c: {
             const v = rd(s, abs16(s));
             s.p =
-                (s.p & ~(F.N | F.V | F.Z)) |
+                (s.p & ~(NEGATIVE | OVERFLOW | ZERO)) |
                 (v & 0xc0) |
-                ((s.a & v) === 0 ? F.Z : 0);
+                ((s.a & v) === 0 ? ZERO : 0);
             return;
         }
 
@@ -927,7 +915,7 @@ export async function step6502(
             const outC = (val >> 7) & 1;
             const res = (val << 1) & 0xff;
             wr(s, addr, res);
-            s.p = (s.p & ~F.C) | outC;
+            s.p = (s.p & ~CARRY) | outC;
             setZN(s, res);
             return;
         }
@@ -938,7 +926,7 @@ export async function step6502(
             const outC = val & 1;
             const res = val >> 1;
             wr(s, addr, res);
-            s.p = (s.p & ~F.C) | outC;
+            s.p = (s.p & ~CARRY) | outC;
             setZN(s, res);
             return;
         }
@@ -946,11 +934,11 @@ export async function step6502(
         case 0x26: {
             const addr = zp(s);
             const val = rd(s, addr);
-            const inC = s.p & F.C ? 1 : 0;
+            const inC = s.p & CARRY ? 1 : 0;
             const outC = (val >> 7) & 1;
             const res = ((val << 1) & 0xff) | inC;
             wr(s, addr, res);
-            s.p = (s.p & ~F.C) | outC;
+            s.p = (s.p & ~CARRY) | outC;
             setZN(s, res);
             return;
         }
@@ -958,11 +946,11 @@ export async function step6502(
         case 0x66: {
             const addr = zp(s);
             const val = rd(s, addr);
-            const inC = s.p & F.C ? 1 : 0;
+            const inC = s.p & CARRY ? 1 : 0;
             const outC = val & 1;
             const res = (val >> 1) | (inC << 7);
             wr(s, addr, res);
-            s.p = (s.p & ~F.C) | outC;
+            s.p = (s.p & ~CARRY) | outC;
             setZN(s, res);
             return;
         }
@@ -1058,7 +1046,7 @@ export async function step6502(
         case 0xb0: {
             // BCS
             const off = imm8(s);
-            if (s.p & F.C) {
+            if (s.p & CARRY) {
                 const rel = off < 0x80 ? off : off - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
             }
@@ -1067,7 +1055,7 @@ export async function step6502(
         case 0x50: {
             // BVC
             const off = imm8(s);
-            if (!(s.p & F.V)) {
+            if (!(s.p & OVERFLOW)) {
                 const rel = off < 0x80 ? off : off - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
             }
@@ -1076,7 +1064,7 @@ export async function step6502(
         case 0x70: {
             // BVS
             const off = imm8(s);
-            if (s.p & F.V) {
+            if (s.p & OVERFLOW) {
                 const rel = off < 0x80 ? off : off - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
             }
@@ -1085,7 +1073,7 @@ export async function step6502(
         case 0x30: {
             // BMI
             const off = imm8(s);
-            if (s.p & F.N) {
+            if (s.p & NEGATIVE) {
                 const rel = off < 0x80 ? off : off - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
             }
@@ -1094,7 +1082,7 @@ export async function step6502(
         case 0x10: {
             // BPL
             const off = imm8(s);
-            if (!(s.p & F.N)) {
+            if (!(s.p & NEGATIVE)) {
                 const rel = off < 0x80 ? off : off - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
             }
@@ -1181,7 +1169,7 @@ export async function step6502(
         /* RTI - Return from Interrupt */
         case 0x40: {
             // Pull status register from stack (ignore B flag, keep U flag set)
-            s.p = (pop(s) & ~F.B) | F.U;
+            s.p = (pop(s) & ~BREAK) | UNUSED;
 
             // Pull program counter from stack (low byte first, then high byte)
             const lo = pop(s);
@@ -1192,10 +1180,10 @@ export async function step6502(
 
         /* PHP / PLP */
         case 0x08:
-            push(s, s.p | F.B | F.U);
+            push(s, s.p | BREAK | UNUSED);
             return;
         case 0x28:
-            s.p = (pop(s) & ~F.B) | F.U;
+            s.p = (pop(s) & ~BREAK) | UNUSED;
             // Removed setZN call - the PLP instruction doesn't affect Z/N based on A
             return;
         /* ---------- INC / DEC memory (zero-page) ---------- */
@@ -1216,28 +1204,28 @@ export async function step6502(
 
         /* ---------- Flag ops ---------- */
         case 0x18: // CLC
-            s.p &= ~F.C;
+            s.p &= ~CARRY;
             return;
         case 0x58: // CLI – clear Interrupt Disable
-            s.p &= ~F.I;
+            s.p &= ~INTERRUPT;
             return;
         case 0x78: // SEI – set Interrupt Disable
-            s.p |= F.I;
+            s.p |= INTERRUPT;
             return;
         case 0xb8: // CLV – clear overflow
-            s.p &= ~F.V;
+            s.p &= ~OVERFLOW;
             return;
         case 0xf8: // SED – set decimal flag
-            s.p |= F.D;
+            s.p |= DECIMAL;
             return;
         case 0xd8: // CLD – clear decimal flag
-            s.p &= ~F.D;
+            s.p &= ~DECIMAL;
             return;
         /* ---------- Branches ---------- */
         case 0x90: {
             // BCC
             const off = imm8(s);
-            if (!(s.p & F.C)) {
+            if (!(s.p & CARRY)) {
                 const rel = off < 0x80 ? off : off - 0x100;
                 s.pc = (s.pc + rel) & 0xffff;
             }

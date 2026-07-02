@@ -155,7 +155,7 @@
   - [x] pgcpu.ts: remove dead page-cross (`crossed`/`oldpc`) remnants
   - [x] cpu2.ts: remove 9 unreachable duplicate `case` labels
   - [x] cpu2.ts: dedupe `shiftMem2` into `shiftMemOp`; move NOP into the switch; drop IIFE handlers
-  - [ ] cpu2.ts: use shared flag constants from `constants.ts` instead of local `F`
+  - [x] cpu2.ts: use shared flag constants from `constants.ts` instead of local `F`
   - [ ] cpu2.ts: factor a `compare()` helper for CMP/CPX/CPY
   - [ ] cpu1.ts/cpu2.ts: factor a shared branch helper for the 8 branch opcodes
   - [ ] sync-cpu.ts: loop over CPUs for fan-out and over register fields in compareStates
