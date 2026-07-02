@@ -179,14 +179,6 @@ function writeByte(cpu: CPUState, address: number, value: number): void {
     CURRENT_MEM_CPU1[address & 0xffff] = value & 0xff;
 }
 
-function writeWord(cpu: CPUState, address: number, value: number): void {
-    writeByte(cpu, address, value & 0xff);
-    writeByte(cpu, (address + 1) & 0xffff, (value >> 8) & 0xff); // Ensure wrap-around at memory boundary
-}
-
-// Export helper functions for testing
-export { readByte, readWord, writeByte, writeWord };
-
 // Stack operations
 function pushByte(cpu: CPUState, value: number): void {
     writeByte(cpu, 0x0100 + cpu.sp, value);

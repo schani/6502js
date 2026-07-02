@@ -142,6 +142,45 @@ describe("Arithmetic operations", async () => {
     
   });
   
+  it("should set the overflow flag on signed SBC overflow", async () => {
+    const cpu = createCPU();
+
+    // 0x50 - 0xB0 = 80 - (-80) = 160, which overflows signed 8-bit
+    await cpu.setAccumulator(0x50);
+    await cpu.setStatusFlag(CARRY); // No borrow
+    await cpu.loadByte(0, 0xE9); // SBC immediate
+    await cpu.loadByte(1, 0xB0);
+
+    await cpu.step();
+
+    assert.strictEqual(await getAccumulator(cpu), 0xA0);
+    assert.strictEqual(await getStatusRegister(cpu) & OVERFLOW, OVERFLOW);
+    assert.strictEqual(await getStatusRegister(cpu) & CARRY, 0); // Borrow occurred
+
+    // 0xD0 - 0x70 = -48 - 112 = -160, which also overflows
+    await cpu.setAccumulator(0xD0);
+    await cpu.setStatusFlag(CARRY);
+    await cpu.setProgramCounter(0);
+    await cpu.loadByte(1, 0x70);
+
+    await cpu.step();
+
+    assert.strictEqual(await getAccumulator(cpu), 0x60);
+    assert.strictEqual(await getStatusRegister(cpu) & OVERFLOW, OVERFLOW);
+    assert.strictEqual(await getStatusRegister(cpu) & CARRY, CARRY); // No borrow
+
+    // 0x50 - 0x10 does not overflow and must clear the flag
+    await cpu.setAccumulator(0x50);
+    await cpu.setStatusFlag(CARRY);
+    await cpu.setProgramCounter(0);
+    await cpu.loadByte(1, 0x10);
+
+    await cpu.step();
+
+    assert.strictEqual(await getAccumulator(cpu), 0x40);
+    assert.strictEqual(await getStatusRegister(cpu) & OVERFLOW, 0);
+  });
+
   it("should perform CMP immediate instruction", async () => {
     const cpu = createCPU();
     
