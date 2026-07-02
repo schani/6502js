@@ -1128,20 +1128,6 @@ export async function step6502(
 
         /* ---------- Quick top-level handlers for remaining failing tests ---------- */
 
-        /* ORA absolute */
-        case 0x0d: {
-            const addr = abs16(s);
-            s.a = setZN(s, s.a | rd(s, addr));
-            return;
-        }
-
-        /* EOR (indirect),Y */
-        case 0x51: {
-            const addr = indy(s);
-            s.a = setZN(s, s.a ^ rd(s, addr));
-            return;
-        }
-
         /* ADC absolute */
         case 0x6d: {
             const addr = abs16(s);
@@ -1229,43 +1215,6 @@ export async function step6502(
             return;
         }
 
-        /* ---------- Additional logical/arithmetic addressing modes ---------- */
-
-        /* AND absolute,X */
-        case 0x3d: {
-            const addr = absx(s);
-            s.a = setZN(s, s.a & rd(s, addr));
-            return;
-        }
-
-        /* EOR absolute,X */
-        case 0x5d: {
-            const addr = absx(s);
-            s.a = setZN(s, s.a ^ rd(s, addr));
-            return;
-        }
-
-        /* ORA absolute,X */
-        case 0x1d: {
-            const addr = absx(s);
-            s.a = setZN(s, s.a | rd(s, addr));
-            return;
-        }
-
-        /* ADC (indirect,X) */
-        case 0x61: {
-            const addr = indx(s);
-            adc(s, rd(s, addr));
-            return;
-        }
-
-        /* SBC (indirect,X) */
-        case 0xe1: {
-            const addr = indx(s);
-            sbc(s, rd(s, addr));
-            return;
-        }
-
         /* PHP / PLP */
         case 0x08:
             push(s, s.p | F.B | F.U);
@@ -1293,9 +1242,6 @@ export async function step6502(
         /* ---------- Flag ops ---------- */
         case 0x18: // CLC
             s.p &= ~F.C;
-            return;
-        case 0x38: // SEC (already elsewhere but ensure reachability)
-            s.p |= F.C;
             return;
         case 0x58: // CLI – clear Interrupt Disable
             s.p &= ~F.I;
@@ -1327,13 +1273,6 @@ export async function step6502(
         case 0xca: {
             s.x = (s.x - 1) & 0xff;
             setZN(s, s.x);
-            return;
-        }
-
-        /* AND immediate */
-        case 0x29: {
-            const value = imm8(s);
-            s.a = setZN(s, s.a & value);
             return;
         }
 

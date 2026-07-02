@@ -153,7 +153,7 @@
   - [x] Remove legacy synchronous getters if unused (CPU1/CPU2/SyncCPU)
   - [x] cpu1.ts: remove dead `cycles` plumbing (cycle counting was removed)
   - [x] pgcpu.ts: remove dead page-cross (`crossed`/`oldpc`) remnants
-  - [ ] cpu2.ts: remove 9 unreachable duplicate `case` labels
+  - [x] cpu2.ts: remove 9 unreachable duplicate `case` labels
   - [ ] cpu2.ts: dedupe `shiftMem2` into `shiftMemOp`; move NOP into the switch; drop IIFE handlers
   - [ ] cpu2.ts: use shared flag constants from `constants.ts` instead of local `F`
   - [ ] cpu2.ts: factor a `compare()` helper for CMP/CPX/CPY
