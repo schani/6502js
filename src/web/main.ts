@@ -1,25 +1,10 @@
-import type { CPU } from "../core/cpu-interface.ts";
+import type { CPU, CPUState } from "../core/cpu-interface.ts";
 import { CPU1 } from "../core/cpu1.ts";
 import { disassemble } from "../utils/disasm.ts";
+import { handleTrap, initBasicFromRom, type TrapIO } from "../runners/basic-traps.ts";
 
-// BASIC ROM (OSI)
-const ROM_PATH = "./osi.bin";
-const ROM_ADDR = 0xa000;
-const COLD_START = 0xbd11;
-const MONRDKEY = 0xffeb;
-const MONCOUT = 0xffee;
-const ISCNTC = 0xffb7;
-const LOAD = 0xffb9;
-const SAVE = 0xffbc;
-
-type Snapshot = {
-    a: number;
-    x: number;
-    y: number;
-    sp: number;
-    p: number;
-    pc: number;
-};
+// BASIC ROM (OSI), served from the repository root
+const ROM_PATH = "./data/osi.bin";
 
 class DebuggerModel {
     cpu: CPU;
@@ -31,39 +16,26 @@ class DebuggerModel {
     waitingForInput = false;
     memSnapshot: Uint8Array | null = null;
     lastDiffCount = 0;
+    private io: TrapIO;
 
     constructor() {
         this.cpu = new CPU1();
+        this.io = {
+            putChar: (c) => {
+                this.output += String.fromCharCode(c);
+            },
+            getChar: () => this.inputBuf.shift(),
+        };
     }
 
     async init() {
         const res = await fetch(ROM_PATH);
-        const buf = new Uint8Array(await res.arrayBuffer());
-        for (let i = 0; i < buf.length; i++)
-            await this.cpu.loadByte(ROM_ADDR + i, buf[i]!);
-        await this.cpu.setAccumulator(0);
-        await this.cpu.setXRegister(0);
-        await this.cpu.setYRegister(0);
-        await this.cpu.setStackPointer(0xfd);
-        await this.cpu.setStatusRegister(0x24);
-        await this.cpu.setProgramCounter(COLD_START);
+        if (!res.ok) throw new Error(`Cannot fetch ${ROM_PATH}: ${res.status}`);
+        const rom = new Uint8Array(await res.arrayBuffer());
+        await initBasicFromRom(this.cpu, rom);
     }
 
-    get snap(): Snapshot {
-        // NOTE: UI calls should await getState() before using snap in async flows.
-        // For rendering cycles initiated after awaits, ensure state is refreshed.
-        const s = (this.cpu as any)._state || {
-            a: 0,
-            x: 0,
-            y: 0,
-            sp: 0xfd,
-            p: 0x24,
-            pc: 0,
-        };
-        return { a: s.a, x: s.x, y: s.y, sp: s.sp, p: s.p, pc: s.pc };
-    }
-
-    async setReg(name: keyof Snapshot, valHex: string) {
+    async setReg(name: keyof CPUState, valHex: string) {
         const v = parseInt(valHex, 16) >>> 0;
         if (Number.isNaN(v)) return;
         switch (name) {
@@ -88,44 +60,16 @@ class DebuggerModel {
         }
     }
 
-    private async pop16(): Promise<number> {
-        const sp1 = ((await this.cpu.getState()).sp + 1) & 0xff;
-        await this.cpu.setStackPointer(sp1);
-        const s1 = await this.cpu.getState();
-        const lo = await this.cpu.readByte(0x0100 + s1.sp);
-        const sp2 = (s1.sp + 1) & 0xff;
-        await this.cpu.setStackPointer(sp2);
-        const s2 = await this.cpu.getState();
-        const hi = await this.cpu.readByte(0x0100 + s2.sp);
-        return (hi << 8) | lo;
-    }
-
     async step(): Promise<void> {
-        const pc = (await this.cpu.getState()).pc;
-        if (
-            pc === MONRDKEY ||
-            pc === MONCOUT ||
-            pc === ISCNTC ||
-            pc === LOAD ||
-            pc === SAVE
-        ) {
-            const ret = ((await this.pop16()) + 1) & 0xffff;
-            if (pc === MONCOUT) {
-                const c = (await this.cpu.getState()).a & 0xff;
-                this.output += String.fromCharCode(c);
-            } else if (pc === MONRDKEY) {
-                if (this.inputBuf.length === 0) {
-                    this.waitingForInput = true;
-                    return;
-                }
-                const c = this.inputBuf.shift()!;
-                await this.cpu.setAccumulator(c & 0xff);
-                this.waitingForInput = false;
-            }
-            await this.cpu.setProgramCounter(ret);
+        const result = await handleTrap(this.cpu, this.io);
+        if (result === "need-input") {
+            this.waitingForInput = true;
             return;
         }
-
+        if (result === "handled") {
+            this.waitingForInput = false;
+            return;
+        }
         await this.cpu.step(false);
         this.instrCount++;
     }
@@ -151,8 +95,7 @@ const $ = (id: string) => document.getElementById(id)!;
 const fmt8 = (v: number) => v.toString(16).toUpperCase().padStart(2, "0");
 const fmt16 = (v: number) => v.toString(16).toUpperCase().padStart(4, "0");
 
-function renderRegs() {
-    const s = model.snap;
+function renderRegs(s: CPUState) {
     (document.getElementById("reg-a") as HTMLInputElement).value = fmt8(s.a);
     (document.getElementById("reg-x") as HTMLInputElement).value = fmt8(s.x);
     (document.getElementById("reg-y") as HTMLInputElement).value = fmt8(s.y);
@@ -184,18 +127,20 @@ async function renderDisasm() {
         cache[(pc + i) & 0xffff] =
             (await model.cpu.readByte((pc + i) & 0xffff)) & 0xff;
     }
+    // A synchronous in-memory reader; disassemble only needs the two
+    // read methods of the CPU interface.
     const reader = {
-        readByte: (addr: number) => cache[addr & 0xffff] || 0,
-        readWord: (addr: number) => {
+        readByte: async (addr: number) => cache[addr & 0xffff] || 0,
+        readWord: async (addr: number) => {
             const lo = cache[addr & 0xffff] || 0;
             const hi = cache[(addr + 1) & 0xffff] || 0;
             return (hi << 8) | lo;
         },
-    } as any;
+    } as unknown as CPU;
     const lines: { addr: number; text: string; len: number }[] = [];
     let addr = pc;
     for (let i = 0; i < 40; i++) {
-        const [asm, len] = disassemble(reader, addr);
+        const [asm, len] = await disassemble(reader, addr);
         lines.push({ addr, text: `${fmt16(addr)}: ${asm}`, len });
         addr = (addr + len) & 0xffff;
     }
@@ -241,7 +186,7 @@ async function takeSnapshot() {
     model.memSnapshot = snap;
     model.lastDiffCount = 0;
     $("diff-summary").textContent = `Snapshot taken.`;
-    renderAll();
+    await renderAll();
 }
 
 async function compareSnapshot() {
@@ -262,7 +207,7 @@ async function compareSnapshot() {
             const currBytes: number[] = [];
             while (i < 65536) {
                 const pv = model.memSnapshot[i]!;
-                const cv = model.cpu.readByte(i) & 0xff;
+                const cv = (await model.cpu.readByte(i)) & 0xff;
                 if (pv === cv) break;
                 prevBytes.push(pv);
                 currBytes.push(cv);
@@ -307,7 +252,7 @@ async function compareSnapshot() {
         }
     }
     $("diff-summary").textContent = lines.join("\n");
-    renderAll();
+    await renderAll();
 }
 
 function renderConsole() {
@@ -317,7 +262,8 @@ function renderConsole() {
 }
 
 async function renderAll() {
-    renderRegs();
+    const state = await model.cpu.getState();
+    renderRegs(state);
     await renderDisasm();
     const baseHex = (document.getElementById("mem-base") as HTMLInputElement)
         .value;
@@ -326,8 +272,8 @@ async function renderAll() {
     renderConsole();
     const waiting = model.waitingForInput;
     $("status").textContent = waiting
-        ? `Waiting for input… PC=$${fmt16(model.snap.pc)} instr=${model.instrCount} (queue=${model.inputBuf.length})`
-        : `PC=$${fmt16(model.snap.pc)}  instr=${model.instrCount}`;
+        ? `Waiting for input… PC=$${fmt16(state.pc)} instr=${model.instrCount} (queue=${model.inputBuf.length})`
+        : `PC=$${fmt16(state.pc)}  instr=${model.instrCount}`;
 
     // Toggle controls based on state
     const btnRun = $("btn-run");
@@ -355,7 +301,7 @@ async function main() {
     // Wire controls
     $("btn-reset").addEventListener("click", async () => {
         await model.init();
-        renderAll();
+        await renderAll();
     });
     $("btn-step").addEventListener("click", async () => {
         if (model.waitingForInput) return;
@@ -383,7 +329,7 @@ async function main() {
     $("mem-compare").addEventListener("click", async () => {
         await compareSnapshot();
     });
-    $("send").addEventListener("click", () => {
+    $("send").addEventListener("click", async () => {
         const inp = $("console-in") as HTMLInputElement;
         const s = inp.value + "\r";
         for (const ch of s) model.inputBuf.push(ch.charCodeAt(0) & 0xff);
@@ -395,7 +341,7 @@ async function main() {
             if (model.running) scheduleRunLoop();
         }
     });
-    $("disasm").addEventListener("click", (e) => {
+    $("disasm").addEventListener("click", async (e) => {
         const t = e.target as HTMLElement;
         const row = t.closest(".disasm-line") as HTMLElement | null;
         if (!row || !row.dataset.addr) return;
@@ -409,7 +355,7 @@ async function main() {
     for (const id of ["a", "x", "y", "sp", "pc", "p"]) {
         const el = document.getElementById(`reg-${id}`) as HTMLInputElement;
         el.addEventListener("change", () =>
-            model.setReg(id as keyof Snapshot, el.value),
+            model.setReg(id as keyof CPUState, el.value),
         );
     }
 
@@ -431,7 +377,7 @@ async function main() {
         requestAnimationFrame(runLoopTick);
     }
 
-    renderAll();
+    await renderAll();
 }
 
 main();

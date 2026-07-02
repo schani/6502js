@@ -23,7 +23,6 @@ in `6502.md` and carefully determine which of the implementations (if any) are c
 - Run DSL runner: `npm run dsl example.dsl`
 - Run with tracing: pass `--trace` to the runners
 
-Known issues:
-- `src/web/` is excluded from the root typecheck because it doesn't typecheck
-  (`serve.ts` still uses `Bun.serve`, and `main.ts` needs DOM lib types).
-  `npm run web:serve` therefore requires Bun despite the Node migration.
+Notes:
+- `src/web/` is excluded from the root tsconfig because it needs DOM lib types;
+  it has its own `src/web/tsconfig.json`, and `npm run typecheck` checks both.

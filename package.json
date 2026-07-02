@@ -3,7 +3,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "typecheck": "tsc --noEmit",
+        "typecheck": "tsc --noEmit && tsc -p src/web/tsconfig.json --noEmit",
         "test": "node --experimental-strip-types --test src/tests/**/*.test.ts",
         "test:coverage": "node --experimental-strip-types --test --experimental-test-coverage src/tests/**/*.test.ts",
         "basic": "node --experimental-strip-types src/runners/basic-runner.ts",

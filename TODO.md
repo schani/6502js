@@ -143,10 +143,10 @@
   - [x] Support PGCPU in SyncCPU (all three CPUs run in lockstep)
   - [x] Support PGCPU in the BASIC runner (--pgcpu flag)
 
-- [ ] Fix typecheck errors in src/web/ and re-include it in the root typecheck
-      (currently excluded via tsconfig.json "exclude")
-  - [ ] Port src/web/serve.ts from Bun.serve to Node (npm run web:serve currently requires Bun)
-  - [ ] Fix missing DOM/browser types in src/web/main.ts (requestAnimationFrame etc.)
+- [x] Fix typecheck errors in src/web/ (npm run typecheck now also checks
+      src/web via its own tsconfig, which provides the DOM lib types)
+  - [x] Port src/web/serve.ts from Bun.serve to Node
+  - [x] Fix missing DOM/browser types and missing awaits in src/web/main.ts
 
 - [ ] Code cleanup from 2026-07-02 review (repetition/inconsistency audit)
   - [x] Delete dead files: `src/utils/6502.ts`, `src/core/cpu.ts`, `src/tests/compat.ts`
@@ -166,7 +166,7 @@
         Bun and KIM-1 comments (also fixed a dsl-runner bug: it popped the
         return address before checking for input, corrupting the stack on
         every wait/input cycle — LIST/RUN now work in DSL sessions)
-  - [ ] web/main.ts: shared trap constants, fix missing awaits (disassemble, readByte), ROM path
+  - [x] web/main.ts: shared trap constants, fix missing awaits (disassemble, readByte), ROM path
   - [ ] Tests: consolidate LDY cluster (5 files → 1; remove weakened assertion)
   - [ ] Tests: consolidate branch cluster (4 files + stragglers → 1)
   - [ ] Tests: consolidate shift cluster (+ final-ror-test)
