@@ -12,6 +12,19 @@ import {
 } from "./utils.ts";
 
 describe("SyncCPU", () => {
+    test("throws when the CPU implementations diverge", async () => {
+        const syncCpu = createCPU();
+
+        await syncCpu.loadByte(0x0000, 0xea); // NOP
+        await syncCpu.setProgramCounter(0x0000);
+
+        // Force a divergence by mutating one underlying CPU directly
+        const cpu2 = (syncCpu as any).others[0].cpu;
+        await cpu2.setAccumulator(0x99);
+
+        await assert.rejects(syncCpu.step(), /CPU1\/CPU2 divergence: A/);
+    });
+
     test("correctly synchronizes CPU states for basic operations", async () => {
         const syncCpu = createCPU();
 
